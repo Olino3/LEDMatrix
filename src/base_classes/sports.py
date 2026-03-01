@@ -45,8 +45,8 @@ class SportsCore(ABC):
             self.odds_manager = None
             self.logger.warning("OddsManager not available - odds functionality disabled")
         self.display_manager = display_manager
-        self.display_width = self.display_manager.matrix.width
-        self.display_height = self.display_manager.matrix.height
+        self.display_width = self.display_manager.width
+        self.display_height = self.display_manager.height
 
         self.sport_key = sport_key
         self.sport = None
@@ -241,13 +241,16 @@ class SportsCore(ABC):
     def _load_fonts(self):
         """Load fonts used by the scoreboard."""
         fonts = {}
+        h = self.display_height
+        score_size = 8 if h < 24 else 10
+        main_size = 6 if h < 20 else 8
         try:
-            fonts['score'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", 10)
-            fonts['time'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", 8)
-            fonts['team'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", 8)
+            fonts['score'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", score_size)
+            fonts['time'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", main_size)
+            fonts['team'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", main_size)
             fonts['status'] = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6) # Using 4x6 for status
             fonts['detail'] = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6) # Added detail font
-            fonts['rank'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", 10)
+            fonts['rank'] = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", score_size)
             logging.info("Successfully loaded fonts") # Changed log prefix
         except IOError:
             logging.warning("Fonts not found, using default PIL font.") # Changed log prefix
@@ -386,8 +389,8 @@ class SportsCore(ABC):
             if logo.mode != 'RGBA':
                 logo = logo.convert('RGBA')
 
-            max_width = int(self.display_width * 1.5)
-            max_height = int(self.display_height * 1.5)
+            max_height = self.display_height
+            max_width = self.display_width // 2
             logo.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
             self._logo_cache[team_abbrev] = logo
             return logo
@@ -836,7 +839,7 @@ class SportsUpcoming(SportsCore):
 
             # "Next Game" at the top (use smaller status font)
             status_font = self.fonts['status']
-            if self.display_width > 128:
+            if self.display_width > 96:
                 status_font = self.fonts['time']
             status_text = "Next Game"
             status_width = draw_overlay.textlength(status_text, font=status_font)
@@ -854,7 +857,7 @@ class SportsUpcoming(SportsCore):
             # Time text (centered, below Date)
             time_width = draw_overlay.textlength(game_time, font=self.fonts['time'])
             time_x = (self.display_width - time_width) // 2
-            time_y = date_y + 9 # Place time below date
+            time_y = date_y + self.fonts['time'].size + 1 # Place time below date
             self._draw_text_with_outline(draw_overlay, game_time, (time_x, time_y), self.fonts['time'])
 
             # Draw odds if available
@@ -1156,7 +1159,8 @@ class SportsRecent(SportsCore):
             score_text = f"{away_score}-{home_score}"
             score_width = draw_overlay.textlength(score_text, font=self.fonts['score'])
             score_x = (self.display_width - score_width) // 2
-            score_y = self.display_height - 14
+            score_font_h = self.fonts['score'].size
+            score_y = max(1, self.display_height - score_font_h - 2)
             self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts['score'])
 
             # "Final" text (Top center)
@@ -1170,19 +1174,19 @@ class SportsRecent(SportsCore):
             if 'odds' in game and game['odds']:
                 self._draw_dynamic_odds(draw_overlay, game['odds'], self.display_width, self.display_height)
 
-            # Draw records or rankings if enabled
-            if self.show_records or self.show_ranking:
+            # Draw records or rankings if enabled (skip on short displays to avoid overlap)
+            if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                     self.logger.debug(f"Loaded 6px record font successfully")
                 except IOError:
                     record_font = ImageFont.load_default()
                     self.logger.warning(f"Failed to load 6px font, using default font (size: {record_font.size})")
-                
+
                 # Get team abbreviations
                 away_abbr = game.get('away_abbr', '')
                 home_abbr = game.get('home_abbr', '')
-                
+
                 record_bbox = draw_overlay.textbbox((0,0), "0-0", font=record_font)
                 record_height = record_bbox[3] - record_bbox[1]
                 record_y = self.display_height - record_height
@@ -1210,7 +1214,7 @@ class SportsRecent(SportsCore):
                         away_text = game.get('away_record', '')
                     else:
                         away_text = ''
-                    
+
                     if away_text:
                         away_record_x = 0
                         self.logger.debug(f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}")
@@ -1238,7 +1242,7 @@ class SportsRecent(SportsCore):
                         home_text = game.get('home_record', '')
                     else:
                         home_text = ''
-                    
+
                     if home_text:
                         home_record_bbox = draw_overlay.textbbox((0,0), home_text, font=record_font)
                         home_record_width = home_record_bbox[2] - home_record_bbox[0]

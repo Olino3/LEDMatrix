@@ -245,8 +245,9 @@ class DisplayManager:
             # Draw a diagonal line
             self.draw.line([0, 0, self.matrix.width-1, self.matrix.height-1], fill=(0, 255, 0))
             
-            # Draw some text - changed from "TEST" to "Initializing" with smaller font
-            self.draw.text((10, 10), "Initializing", font=self.font, fill=(0, 0, 255))
+            # Draw some text - position relative to display height
+            text_y = max(0, (self.matrix.height // 2) - 4)
+            self.draw.text((2, text_y), "Init", font=self.font, fill=(0, 0, 255))
             
             # Update the display once after everything is drawn
             self.update_display()

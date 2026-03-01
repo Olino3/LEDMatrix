@@ -246,15 +246,17 @@ class HockeyLive(Hockey, SportsLive):
             score_text = f"{away_score}-{home_score}"
             score_width = draw_overlay.textlength(score_text, font=self.fonts["score"])
             score_x = (self.display_width - score_width) // 2
-            score_y = (
-                self.display_height // 2
-            ) - 3  # centered #from 14 # Position score higher
+            if self.display_height < 24:
+                score_font_h = self.fonts["score"].size
+                score_y = self.display_height - score_font_h - 2
+            else:
+                score_y = (self.display_height // 2) - 3
             self._draw_text_with_outline(
                 draw_overlay, score_text, (score_x, score_y), self.fonts["score"]
             )
 
             # Shots on Goal
-            if self.show_shots_on_goal:
+            if self.show_shots_on_goal and self.display_height >= 24:
                 shots_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                 home_shots = str(game.get("home_shots", "0"))
                 away_shots = str(game.get("away_shots", "0"))
@@ -274,8 +276,8 @@ class HockeyLive(Hockey, SportsLive):
                     draw_overlay, game["odds"], self.display_width, self.display_height
                 )
 
-            # Draw records or rankings if enabled
-            if self.show_records or self.show_ranking:
+            # Draw records or rankings if enabled (skip on short displays to avoid overlap)
+            if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                     self.logger.debug(f"Loaded 6px record font successfully")

@@ -130,8 +130,8 @@ class MarchMadnessPlugin(BasePlugin):
         self._duration_cache_time: float = 0
 
         # Display dimensions
-        self.display_width: int = self.display_manager.matrix.width
-        self.display_height: int = self.display_manager.matrix.height
+        self.display_width: int = self.display_manager.width
+        self.display_height: int = self.display_manager.height
 
         # HTTP session with retry
         self.session = requests.Session()
@@ -636,7 +636,7 @@ class MarchMadnessPlugin(BasePlugin):
         # Score (bottom center of center block, for live/final)
         if score_text:
             score_x = center_mid - score_w // 2
-            score_y = height - 13
+            score_y = max(1, height - 13) if height >= 24 else height - 7
             # Upset highlighting
             if game["is_final"] and game["is_upset"] and self.highlight_upsets:
                 score_color = COLOR_GOLD

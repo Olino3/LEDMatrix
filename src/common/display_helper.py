@@ -133,13 +133,14 @@ class DisplayHelper:
                                y_position=self.display_height // 2 - 3)
         
         # Draw team abbreviations (bottom)
+        abbr_y = max(0, self.display_height - 8)
         if away_abbr:
-            self._draw_text_with_outline(draw, away_abbr, (0, self.display_height - 12), 
+            self._draw_text_with_outline(draw, away_abbr, (0, abbr_y),
                                        fonts.get('team'))
         if home_abbr:
             text_width = draw.textlength(home_abbr, font=fonts.get('team'))
-            self._draw_text_with_outline(draw, home_abbr, 
-                                       (self.display_width - text_width, self.display_height - 12), 
+            self._draw_text_with_outline(draw, home_abbr,
+                                       (self.display_width - text_width, abbr_y),
                                        fonts.get('team'))
         
         # Composite and return
@@ -196,7 +197,8 @@ class DisplayHelper:
         
         # Calculate center position
         text_width = draw.textlength(text, font=font)
-        text_height = 12  # Approximate height
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_height = bbox[3] - bbox[1]
         x = (self.display_width - text_width) // 2
         y = (self.display_height - text_height) // 2
         

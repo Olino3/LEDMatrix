@@ -200,7 +200,11 @@ class FootballLive(Football, SportsLive):
             score_text = f"{away_score}-{home_score}"
             score_width = draw_overlay.textlength(score_text, font=self.fonts['score'])
             score_x = (self.display_width - score_width) // 2
-            score_y = (self.display_height // 2) - 3 #centered #from 14 # Position score higher
+            if self.display_height < 24:
+                score_font_h = self.fonts['score'].size
+                score_y = self.display_height - score_font_h - 2
+            else:
+                score_y = (self.display_height // 2) - 3
             self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts['score'])
 
             # Period/Quarter and Clock (Top center)
@@ -215,99 +219,100 @@ class FootballLive(Football, SportsLive):
             status_y = 1 # Position at top
             self._draw_text_with_outline(draw_overlay, period_clock_text, (status_x, status_y), self.fonts['time'])
 
-            # Down & Distance or Scoring Event (Below Period/Clock)
-            scoring_event = game.get("scoring_event", "")
-            down_distance = game.get("down_distance_text", "")
-            if self.display_width > 128:
-                down_distance = game.get("down_distance_text_long", "")
-            
-            # Show scoring event if detected, otherwise show down & distance
-            if scoring_event and game.get("is_live"):
-                # Display scoring event with special formatting
-                event_width = draw_overlay.textlength(scoring_event, font=self.fonts['detail'])
-                event_x = (self.display_width - event_width) // 2
-                event_y = (self.display_height) - 7
-                
-                # Color coding for different scoring events
-                if scoring_event == "TOUCHDOWN":
-                    event_color = (255, 215, 0)  # Gold
-                elif scoring_event == "FIELD GOAL":
-                    event_color = (0, 255, 0)    # Green
-                elif scoring_event == "PAT":
-                    event_color = (255, 165, 0)  # Orange
-                else:
-                    event_color = (255, 255, 255)  # White
-                
-                self._draw_text_with_outline(draw_overlay, scoring_event, (event_x, event_y), self.fonts['detail'], fill=event_color)
-            elif down_distance and game.get("is_live"): # Only show if live and available
-                dd_width = draw_overlay.textlength(down_distance, font=self.fonts['detail'])
-                dd_x = (self.display_width - dd_width) // 2
-                dd_y = (self.display_height)- 7 # Top of D&D text
-                down_color = (200, 200, 0) if not game.get("is_redzone", False) else (255,0,0) # Yellowish text
-                self._draw_text_with_outline(draw_overlay, down_distance, (dd_x, dd_y), self.fonts['detail'], fill=down_color)
+            if self.display_height >= 24:
+                # Down & Distance or Scoring Event (Below Period/Clock)
+                scoring_event = game.get("scoring_event", "")
+                down_distance = game.get("down_distance_text", "")
+                if self.display_width > 96:
+                    down_distance = game.get("down_distance_text_long", "")
 
-                # Possession Indicator (small football icon)
-                possession = game.get("possession_indicator")
-                if possession: # Only draw if possession is known
-                    ball_radius_x = 3  # Wider for football shape
-                    ball_radius_y = 2  # Shorter for football shape
-                    ball_color = (139, 69, 19) # Brown color for the football
-                    lace_color = (255, 255, 255) # White for laces
+                # Show scoring event if detected, otherwise show down & distance
+                if scoring_event and game.get("is_live"):
+                    # Display scoring event with special formatting
+                    event_width = draw_overlay.textlength(scoring_event, font=self.fonts['detail'])
+                    event_x = (self.display_width - event_width) // 2
+                    event_y = (self.display_height) - 7
 
-                    # Approximate height of the detail font (4x6 font at size 6 is roughly 6px tall)
-                    detail_font_height_approx = 6
-                    ball_y_center = dd_y + (detail_font_height_approx // 2) # Center ball vertically with D&D text
-
-                    possession_ball_padding = 3 # Pixels between D&D text and ball
-
-                    if possession == "away":
-                        # Position ball to the left of D&D text
-                        ball_x_center = dd_x - possession_ball_padding - ball_radius_x
-                    elif possession == "home":
-                        # Position ball to the right of D&D text
-                        ball_x_center = dd_x + dd_width + possession_ball_padding + ball_radius_x
+                    # Color coding for different scoring events
+                    if scoring_event == "TOUCHDOWN":
+                        event_color = (255, 215, 0)  # Gold
+                    elif scoring_event == "FIELD GOAL":
+                        event_color = (0, 255, 0)    # Green
+                    elif scoring_event == "PAT":
+                        event_color = (255, 165, 0)  # Orange
                     else:
-                        ball_x_center = 0 # Should not happen / no indicator
+                        event_color = (255, 255, 255)  # White
 
-                    if ball_x_center > 0: # Draw if position is valid
-                        # Draw the football shape (ellipse)
-                        draw_overlay.ellipse(
-                            (ball_x_center - ball_radius_x, ball_y_center - ball_radius_y,  # x0, y0
-                             ball_x_center + ball_radius_x, ball_y_center + ball_radius_y), # x1, y1
-                            fill=ball_color, outline=(0,0,0)
-                        )
-                        # Draw a simple horizontal lace
-                        draw_overlay.line(
-                            (ball_x_center - 1, ball_y_center, ball_x_center + 1, ball_y_center),
-                            fill=lace_color, width=1
-                        )
+                    self._draw_text_with_outline(draw_overlay, scoring_event, (event_x, event_y), self.fonts['detail'], fill=event_color)
+                elif down_distance and game.get("is_live"): # Only show if live and available
+                    dd_width = draw_overlay.textlength(down_distance, font=self.fonts['detail'])
+                    dd_x = (self.display_width - dd_width) // 2
+                    dd_y = (self.display_height)- 7 # Top of D&D text
+                    down_color = (200, 200, 0) if not game.get("is_redzone", False) else (255,0,0) # Yellowish text
+                    self._draw_text_with_outline(draw_overlay, down_distance, (dd_x, dd_y), self.fonts['detail'], fill=down_color)
 
-            # Timeouts (Bottom corners) - 3 small bars per team
-            timeout_bar_width = 4
-            timeout_bar_height = 2
-            timeout_spacing = 1
-            timeout_y = self.display_height - timeout_bar_height - 1 # Bottom edge
+                    # Possession Indicator (small football icon)
+                    possession = game.get("possession_indicator")
+                    if possession: # Only draw if possession is known
+                        ball_radius_x = 3  # Wider for football shape
+                        ball_radius_y = 2  # Shorter for football shape
+                        ball_color = (139, 69, 19) # Brown color for the football
+                        lace_color = (255, 255, 255) # White for laces
 
-            # Away Timeouts (Bottom Left)
-            away_timeouts_remaining = game.get("away_timeouts", 0)
-            for i in range(3):
-                to_x = 2 + i * (timeout_bar_width + timeout_spacing)
-                color = (255, 255, 255) if i < away_timeouts_remaining else (80, 80, 80) # White if available, gray if used
-                draw_overlay.rectangle([to_x, timeout_y, to_x + timeout_bar_width, timeout_y + timeout_bar_height], fill=color, outline=(0,0,0))
+                        # Approximate height of the detail font (4x6 font at size 6 is roughly 6px tall)
+                        detail_font_height_approx = 6
+                        ball_y_center = dd_y + (detail_font_height_approx // 2) # Center ball vertically with D&D text
 
-             # Home Timeouts (Bottom Right)
-            home_timeouts_remaining = game.get("home_timeouts", 0)
-            for i in range(3):
-                to_x = self.display_width - 2 - timeout_bar_width - (2-i) * (timeout_bar_width + timeout_spacing)
-                color = (255, 255, 255) if i < home_timeouts_remaining else (80, 80, 80) # White if available, gray if used
-                draw_overlay.rectangle([to_x, timeout_y, to_x + timeout_bar_width, timeout_y + timeout_bar_height], fill=color, outline=(0,0,0))
+                        possession_ball_padding = 3 # Pixels between D&D text and ball
+
+                        if possession == "away":
+                            # Position ball to the left of D&D text
+                            ball_x_center = dd_x - possession_ball_padding - ball_radius_x
+                        elif possession == "home":
+                            # Position ball to the right of D&D text
+                            ball_x_center = dd_x + dd_width + possession_ball_padding + ball_radius_x
+                        else:
+                            ball_x_center = 0 # Should not happen / no indicator
+
+                        if ball_x_center > 0: # Draw if position is valid
+                            # Draw the football shape (ellipse)
+                            draw_overlay.ellipse(
+                                (ball_x_center - ball_radius_x, ball_y_center - ball_radius_y,  # x0, y0
+                                 ball_x_center + ball_radius_x, ball_y_center + ball_radius_y), # x1, y1
+                                fill=ball_color, outline=(0,0,0)
+                            )
+                            # Draw a simple horizontal lace
+                            draw_overlay.line(
+                                (ball_x_center - 1, ball_y_center, ball_x_center + 1, ball_y_center),
+                                fill=lace_color, width=1
+                            )
+
+                # Timeouts (Bottom corners) - 3 small bars per team
+                timeout_bar_width = 4
+                timeout_bar_height = 2
+                timeout_spacing = 1
+                timeout_y = self.display_height - timeout_bar_height - 1 # Bottom edge
+
+                # Away Timeouts (Bottom Left)
+                away_timeouts_remaining = game.get("away_timeouts", 0)
+                for i in range(3):
+                    to_x = 2 + i * (timeout_bar_width + timeout_spacing)
+                    color = (255, 255, 255) if i < away_timeouts_remaining else (80, 80, 80) # White if available, gray if used
+                    draw_overlay.rectangle([to_x, timeout_y, to_x + timeout_bar_width, timeout_y + timeout_bar_height], fill=color, outline=(0,0,0))
+
+                # Home Timeouts (Bottom Right)
+                home_timeouts_remaining = game.get("home_timeouts", 0)
+                for i in range(3):
+                    to_x = self.display_width - 2 - timeout_bar_width - (2-i) * (timeout_bar_width + timeout_spacing)
+                    color = (255, 255, 255) if i < home_timeouts_remaining else (80, 80, 80) # White if available, gray if used
+                    draw_overlay.rectangle([to_x, timeout_y, to_x + timeout_bar_width, timeout_y + timeout_bar_height], fill=color, outline=(0,0,0))
 
             # Draw odds if available
             if 'odds' in game and game['odds']:
                 self._draw_dynamic_odds(draw_overlay, game['odds'], self.display_width, self.display_height)
 
-            # Draw records or rankings if enabled
-            if self.show_records or self.show_ranking:
+            # Draw records or rankings if enabled (skip on short displays to avoid overlap)
+            if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                     self.logger.debug(f"Loaded 6px record font successfully")

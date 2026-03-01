@@ -312,8 +312,8 @@ class StarlarkAppsPlugin(BasePlugin):
             Recommended magnify value (1-8)
         """
         try:
-            display_width = self.display_manager.matrix.width
-            display_height = self.display_manager.matrix.height
+            display_width = self.display_manager.width
+            display_height = self.display_manager.height
 
             # Tronbyte native resolution
             NATIVE_WIDTH = 64
@@ -351,8 +351,8 @@ class StarlarkAppsPlugin(BasePlugin):
             Dictionary with recommendation details
         """
         try:
-            display_width = self.display_manager.matrix.width
-            display_height = self.display_manager.matrix.height
+            display_width = self.display_manager.width
+            display_height = self.display_manager.height
 
             NATIVE_WIDTH = 64
             NATIVE_HEIGHT = 32
