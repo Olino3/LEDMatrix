@@ -6,120 +6,142 @@ matrix — LEDMatrix developer CLI.
  and I show you how deep the rabbit hole goes."
 """
 
-import argparse
 import json
 import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
-# Resolve the LEDMatrix project root relative to this script's real location,
-# so the /usr/local/bin/matrix symlink works correctly from any directory.
+import click
+import requests
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.rule import Rule
+from rich.table import Table
+from rich.text import Text
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+# Resolved via the real path of this script so the /usr/local/bin/matrix
+# symlink works from any directory.
 LEDMATRIX_ROOT = Path(__file__).resolve().parent.parent
 
-# Prefer the project venv so all LEDMatrix dependencies (PIL, rgbmatrix, etc.)
-# are available. Fall back to the current interpreter if the venv isn't present.
 _venv_python = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
 PYTHON = str(_venv_python) if _venv_python.exists() else sys.executable
 
-# ANSI
-GREEN  = "\033[32m"
-DIM    = "\033[2m"
-RESET  = "\033[0m"
-BOLD   = "\033[1m"
+DEV_SETUP = LEDMATRIX_ROOT / "scripts" / "dev" / "dev_plugin_setup.sh"
+PLUGINS_DIR = LEDMATRIX_ROOT / "plugins"
+CONFIG_PATH = LEDMATRIX_ROOT / "config" / "config.json"
 
+API_BASE = "http://localhost:5000/api/v3"
+REGISTRY_URL = "https://raw.githubusercontent.com/ChuckBuilds/ledmatrix-plugins/main/plugins.json"
 
 # ---------------------------------------------------------------------------
-# Banner
+# Console + Banner
 # ---------------------------------------------------------------------------
 
-BANNER = f"""{GREEN}
-  ░▒▓ MATRIX ▓▒░  LED edition
-  {"─" * 36}
-  {DIM}"There is no spoon. There is only the display."{RESET}{GREEN}
-{RESET}"""
-
-BANNER_PLAIN = """
-  ░▒▓ MATRIX ▓▒░  LED edition
-  ────────────────────────────────────
-  "There is no spoon. There is only the display."
-"""
+console = Console()
 
 
 def print_banner() -> None:
-    if sys.stdout.isatty():
-        print(BANNER)
-    else:
-        print(BANNER_PLAIN)
+    title = Text()
+    title.append("░▒▓ MATRIX ▓▒░", style="bold green")
+    title.append("  LED edition", style="dim green")
+    quote = Text('"There is no spoon. There is only the display."', style="italic dim green")
+    console.print(Panel.fit(Text.assemble(title, "\n", quote), border_style="green", padding=(0, 2)))
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def run(cmd: list, **kwargs) -> int:
-    """Run a command and return its exit code."""
+def _run(cmd: list, **kwargs) -> int:
     return subprocess.run(cmd, **kwargs).returncode
 
 
-def die(msg: str, code: int = 1) -> None:
-    print(f"  [error] {msg}", file=sys.stderr)
-    sys.exit(code)
+def _dev_setup(*args) -> int:
+    if not DEV_SETUP.exists():
+        console.print(f"[red]dev_plugin_setup.sh not found at {DEV_SETUP}[/red]")
+        return 1
+    return _run(["bash", str(DEV_SETUP), *args], cwd=str(LEDMATRIX_ROOT))
 
 
-def ok(msg: str) -> None:
-    prefix = f"{GREEN}  >{RESET}" if sys.stdout.isatty() else "  >"
-    print(f"{prefix} {msg}")
+def _read_config() -> dict:
+    if CONFIG_PATH.exists():
+        return json.loads(CONFIG_PATH.read_text())
+    return {}
 
 
-def info(msg: str) -> None:
-    prefix = f"{DIM}  ·{RESET}" if sys.stdout.isatty() else "  ·"
-    print(f"{prefix} {msg}")
+def _write_config(config: dict) -> None:
+    CONFIG_PATH.write_text(json.dumps(config, indent=2) + "\n")
+
+
+def _read_manifest(plugin_dir: Path) -> Optional[dict]:
+    mf = plugin_dir / "manifest.json"
+    if mf.exists():
+        try:
+            return json.loads(mf.read_text())
+        except Exception:
+            return None
+    return None
+
+
+def _to_class_name(plugin_id: str) -> str:
+    return "".join(p.capitalize() for p in plugin_id.replace("_", "-").split("-")) + "Plugin"
+
+
+def _to_display_name(plugin_id: str) -> str:
+    return " ".join(p.capitalize() for p in plugin_id.replace("_", "-").split("-"))
+
+
+def _detect_web() -> bool:
+    try:
+        requests.get(f"{API_BASE}/plugins/health", timeout=1)
+        return True
+    except Exception:
+        return False
+
+
+def _require_web() -> bool:
+    """Print an error and return False if web interface is not running."""
+    if not _detect_web():
+        console.print(Panel(
+            "[yellow]Web interface is not running.[/yellow]\n\n"
+            "Start it in another terminal with:\n"
+            "  [bold green]matrix web[/bold green]",
+            title="[red]Service Unavailable[/red]",
+            border_style="red",
+        ))
+        return False
+    return True
+
+
+def _api_post(path: str, payload: dict) -> Optional[dict]:
+    try:
+        r = requests.post(f"{API_BASE}{path}", json=payload, timeout=30)
+        return r.json()
+    except Exception as e:
+        console.print(f"[red]API error:[/red] {e}")
+        return None
+
+
+def _api_get(path: str) -> Optional[dict]:
+    try:
+        r = requests.get(f"{API_BASE}{path}", timeout=10)
+        return r.json()
+    except Exception as e:
+        console.print(f"[red]API error:[/red] {e}")
+        return None
 
 
 # ---------------------------------------------------------------------------
-# matrix run
+# Scaffold templates
 # ---------------------------------------------------------------------------
-
-def cmd_run(args: argparse.Namespace) -> int:
-    """Start the LED display in emulator mode."""
-    print_banner()
-    ok("Starting display — emulator mode.")
-    info(f"root: {LEDMATRIX_ROOT}")
-    env = {**os.environ, "EMULATOR": "true"}
-    return run([PYTHON, str(LEDMATRIX_ROOT / "run.py")], env=env)
-
-
-# ---------------------------------------------------------------------------
-# matrix web
-# ---------------------------------------------------------------------------
-
-def cmd_web(args: argparse.Namespace) -> int:
-    """Start the web interface."""
-    print_banner()
-    ok("Starting web interface on http://localhost:5000")
-    return run([PYTHON, str(LEDMATRIX_ROOT / "web_interface" / "start.py")])
-
-
-# ---------------------------------------------------------------------------
-# matrix plugin new
-# ---------------------------------------------------------------------------
-
-MANIFEST_TEMPLATE = {
-    "id": "{id}",
-    "name": "{name}",
-    "version": "0.1.0",
-    "author": "",
-    "description": "",
-    "entry_point": "manager.py",
-    "class_name": "{class_name}",
-    "category": "other",
-    "tags": [],
-    "display_modes": ["{id}"],
-    "update_interval": 60,
-    "default_duration": 15,
-}
 
 SCHEMA_TEMPLATE = """\
 {{
@@ -142,21 +164,9 @@ SCHEMA_TEMPLATE = """\
     "transition": {{
       "type": "object",
       "properties": {{
-        "type": {{
-          "type": "string",
-          "enum": ["redraw", "fade", "slide", "wipe"],
-          "default": "redraw"
-        }},
-        "speed": {{
-          "type": "integer",
-          "default": 2,
-          "minimum": 1,
-          "maximum": 10
-        }},
-        "enabled": {{
-          "type": "boolean",
-          "default": true
-        }}
+        "type": {{"type": "string", "enum": ["redraw", "fade", "slide", "wipe"], "default": "redraw"}},
+        "speed": {{"type": "integer", "default": 2, "minimum": 1, "maximum": 10}},
+        "enabled": {{"type": "boolean", "default": true}}
       }}
     }}
   }},
@@ -184,11 +194,9 @@ class {class_name}(BasePlugin):
         super().__init__(plugin_id, config, display_manager, cache_manager, plugin_manager)
 
     def update(self) -> None:
-        """Fetch or prepare data for display."""
         self.logger.debug("{id}: update() called")
 
     def display(self, force_clear: bool = False) -> None:
-        """Render content to the LED matrix."""
         self.logger.debug("{id}: display() called — %dx%d",
                           self.display_manager.width, self.display_manager.height)
         self.display_manager.clear()
@@ -200,250 +208,607 @@ class {class_name}(BasePlugin):
         super().on_config_change(new_config)
 '''
 
-GITIGNORE_CONTENT = """\
-__pycache__/
-*.py[cod]
-*.egg-info/
-.dependencies_installed
-.env
-"""
+GITIGNORE_CONTENT = "__pycache__/\n*.py[cod]\n*.egg-info/\n.dependencies_installed\n.env\n"
+REQUIREMENTS_CONTENT = "# Add plugin dependencies here, e.g.:\n# requests>=2.28.0\n"
 
-REQUIREMENTS_CONTENT = """\
-# Add your plugin dependencies here, e.g.:
-# requests>=2.28.0
-"""
+# ---------------------------------------------------------------------------
+# CLI root
+# ---------------------------------------------------------------------------
 
-
-def _to_class_name(plugin_id: str) -> str:
-    """transit-board -> TransitBoardPlugin"""
-    return "".join(part.capitalize() for part in plugin_id.replace("_", "-").split("-")) + "Plugin"
-
-
-def _to_display_name(plugin_id: str) -> str:
-    """transit-board -> Transit Board"""
-    return " ".join(part.capitalize() for part in plugin_id.replace("_", "-").split("-"))
-
-
-def cmd_plugin_new(args: argparse.Namespace) -> int:
-    """Scaffold a new plugin directory with all required files."""
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx: click.Context) -> None:
+    """
+    \b
+    LEDMatrix developer CLI.
+    "Wake up, Neo."
+    """
     print_banner()
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
-    plugin_id = args.id
-    base_path = Path(args.path).resolve() if args.path else Path.cwd()
+
+# ---------------------------------------------------------------------------
+# matrix run
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.option("--debug", is_flag=True, help="Enable verbose debug logging.")
+def run(debug: bool) -> None:
+    """Start the LED display in emulator mode."""
+    flags = ["--debug"] if debug else []
+    env = {**os.environ, "EMULATOR": "true"}
+    console.print(Rule("[green]display[/green]"))
+    console.print(f"  [dim]root:[/dim] {LEDMATRIX_ROOT}")
+    sys.exit(_run([PYTHON, str(LEDMATRIX_ROOT / "run.py"), *flags], env=env))
+
+
+# ---------------------------------------------------------------------------
+# matrix web
+# ---------------------------------------------------------------------------
+
+@cli.command()
+def web() -> None:
+    """Start the web interface on localhost:5000."""
+    console.print(Rule("[green]web interface[/green]"))
+    console.print("  [dim]http://localhost:5000[/dim]")
+    sys.exit(_run([PYTHON, str(LEDMATRIX_ROOT / "web_interface" / "start.py")]))
+
+
+# ---------------------------------------------------------------------------
+# matrix logs
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.option("--service", type=click.Choice(["display", "web", "all"]), default="display",
+              show_default=True, help="Which service log to tail.")
+def logs(service: str) -> None:
+    """Tail live service logs (Raspberry Pi / systemd only)."""
+    services = {
+        "display": ["ledmatrix"],
+        "web": ["ledmatrix-web"],
+        "all": ["ledmatrix", "ledmatrix-web"],
+    }
+    units = services[service]
+    cmd = ["journalctl", "-f", "--no-pager"] + [f"-u{u}" for u in units]
+    console.print(Rule(f"[green]logs — {service}[/green]"))
+    try:
+        sys.exit(_run(cmd))
+    except FileNotFoundError:
+        console.print("[yellow]journalctl not found — not running on a systemd host.[/yellow]")
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# matrix service
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.argument("action", type=click.Choice(["start", "stop", "restart", "status"]))
+@click.option("--service", type=click.Choice(["display", "web", "all"]), default="display",
+              show_default=True, help="Which service to act on.")
+def service(action: str, service: str) -> None:
+    """Manage LEDMatrix systemd services (Raspberry Pi only)."""
+    service_map = {
+        "display": ["ledmatrix"],
+        "web": ["ledmatrix-web"],
+        "all": ["ledmatrix", "ledmatrix-web"],
+    }
+    units = service_map[service]
+    console.print(Rule(f"[green]service {action} — {service}[/green]"))
+    try:
+        rc = 0
+        for unit in units:
+            rc |= _run(["sudo", "systemctl", action, unit])
+        sys.exit(rc)
+    except FileNotFoundError:
+        console.print("[yellow]systemctl not found — not running on a systemd host.[/yellow]")
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin (group)
+# ---------------------------------------------------------------------------
+
+@cli.group()
+@click.pass_context
+def plugin(ctx: click.Context) -> None:
+    """Plugin management — scaffold, install, link, inspect."""
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin new
+# ---------------------------------------------------------------------------
+
+CATEGORIES = ["sports", "time", "weather", "transportation", "finance", "system", "media", "other"]
+
+
+@plugin.command("new")
+@click.argument("id")
+@click.option("--path", "dest", default=None, help="Parent directory (default: cwd).")
+@click.option("--no-interactive", is_flag=True, help="Skip prompts; use derived defaults.")
+def plugin_new(id: str, dest: Optional[str], no_interactive: bool) -> None:
+    """Scaffold a new plugin with all required files.
+
+    Prompts for author, description, category, and tags unless
+    --no-interactive is set.
+    """
+    plugin_id = id
+    base_path = Path(dest).resolve() if dest else Path.cwd()
     plugin_dir = base_path / plugin_id
 
-    class_name = _to_class_name(plugin_id)
-    display_name = _to_display_name(plugin_id)
-
     if plugin_dir.exists():
-        die(f"Directory already exists: {plugin_dir}")
+        console.print(f"[red]Directory already exists:[/red] {plugin_dir}")
+        sys.exit(1)
 
-    ok(f"Scaffolding plugin '{plugin_id}' at {plugin_dir}")
+    display_name = _to_display_name(plugin_id)
+    class_name = _to_class_name(plugin_id)
+
+    console.print(Rule(f"[green]new plugin — {plugin_id}[/green]"))
+
+    if not no_interactive:
+        display_name = click.prompt("  Display name", default=display_name)
+        author      = click.prompt("  Author", default="")
+        description = click.prompt("  Description", default="")
+        category    = click.prompt(
+            "  Category",
+            type=click.Choice(CATEGORIES),
+            default="other",
+            show_choices=True,
+        )
+        tags_raw    = click.prompt("  Tags (comma-separated)", default="")
+        tags        = [t.strip() for t in tags_raw.split(",") if t.strip()]
+        update_interval = click.prompt("  Update interval (seconds)", default=60, type=int)
+    else:
+        author = ""
+        description = ""
+        category = "other"
+        tags = []
+        update_interval = 60
+
     plugin_dir.mkdir(parents=True)
 
     # manifest.json
-    manifest = {k: v.format(id=plugin_id, name=display_name, class_name=class_name)
-                if isinstance(v, str) else v
-                for k, v in MANIFEST_TEMPLATE.items()}
-    manifest["id"] = plugin_id
-    manifest["display_modes"] = [plugin_id]
+    manifest = {
+        "id": plugin_id,
+        "name": display_name,
+        "version": "0.1.0",
+        "author": author,
+        "description": description,
+        "entry_point": "manager.py",
+        "class_name": class_name,
+        "category": category,
+        "tags": tags,
+        "display_modes": [plugin_id],
+        "update_interval": update_interval,
+        "default_duration": 15,
+    }
     (plugin_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    info("manifest.json")
 
     # config_schema.json
-    (plugin_dir / "config_schema.json").write_text(
-        SCHEMA_TEMPLATE.format(name=display_name)
-    )
-    info("config_schema.json")
+    (plugin_dir / "config_schema.json").write_text(SCHEMA_TEMPLATE.format(name=display_name))
 
     # manager.py
     (plugin_dir / "manager.py").write_text(
         MANAGER_TEMPLATE.format(id=plugin_id, name=display_name, class_name=class_name)
     )
-    info("manager.py")
 
-    # requirements.txt
+    # requirements.txt + .gitignore
     (plugin_dir / "requirements.txt").write_text(REQUIREMENTS_CONTENT)
-    info("requirements.txt")
-
-    # .gitignore
     (plugin_dir / ".gitignore").write_text(GITIGNORE_CONTENT)
-    info(".gitignore")
 
     # git init
-    run(["git", "init", "-b", "main", str(plugin_dir)],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    info("git init (branch: main)")
+    _run(["git", "init", "-b", "main", str(plugin_dir)],
+         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # pre-push versioning hook
+    # pre-push hook
     hook_src = LEDMATRIX_ROOT / "scripts" / "git-hooks" / "pre-push-plugin-version"
     hooks_dir = plugin_dir / ".git" / "hooks"
     hooks_dir.mkdir(parents=True, exist_ok=True)
     if hook_src.exists():
         shutil.copy(hook_src, hooks_dir / "pre-push")
         (hooks_dir / "pre-push").chmod(0o755)
-        info(".git/hooks/pre-push (auto-version bump on push)")
-    else:
-        info(f".git/hooks/pre-push — hook source not found at {hook_src}, skipping")
 
-    print()
-    ok(f"Plugin '{plugin_id}' created.")
-    print(f"\n  Next steps:\n")
-    print(f"    matrix plugin link {plugin_id} {plugin_dir}")
-    print(f"    matrix plugin render {plugin_id}")
-    print()
-    return 0
+    # Summary table
+    t = Table.grid(padding=(0, 2))
+    t.add_column(style="dim")
+    t.add_column()
+    t.add_row("id",       plugin_id)
+    t.add_row("class",    class_name)
+    t.add_row("category", category)
+    t.add_row("location", str(plugin_dir))
+    console.print(Panel(t, title="[green]created[/green]", border_style="green"))
+
+    console.print(f"\n  [dim]Next:[/dim]  matrix plugin link [bold]{plugin_id}[/bold] {plugin_dir}\n")
 
 
 # ---------------------------------------------------------------------------
-# matrix plugin link / unlink / list / status
+# matrix plugin link / unlink / status
 # ---------------------------------------------------------------------------
 
-DEV_SETUP = LEDMATRIX_ROOT / "scripts" / "dev" / "dev_plugin_setup.sh"
+@plugin.command("link")
+@click.argument("id")
+@click.argument("path")
+def plugin_link(id: str, path: str) -> None:
+    """Link a local plugin repo into the display runtime."""
+    console.print(Rule(f"[green]link — {id}[/green]"))
+    sys.exit(_dev_setup("link", id, path))
 
 
-def _dev_setup(*args_) -> int:
-    if not DEV_SETUP.exists():
-        die(f"dev_plugin_setup.sh not found at {DEV_SETUP}")
-    return run(["bash", str(DEV_SETUP), *args_], cwd=str(LEDMATRIX_ROOT))
+@plugin.command("unlink")
+@click.argument("id")
+def plugin_unlink(id: str) -> None:
+    """Remove a dev plugin symlink (preserves the repo)."""
+    console.print(Rule(f"[green]unlink — {id}[/green]"))
+    sys.exit(_dev_setup("unlink", id))
 
 
-def cmd_plugin_link(args: argparse.Namespace) -> int:
-    print_banner()
-    ok(f"Linking '{args.id}' from {args.path}")
-    return _dev_setup("link", args.id, args.path)
+@plugin.command("status")
+def plugin_status() -> None:
+    """Show git status of all linked plugin repos."""
+    console.print(Rule("[green]plugin repo status[/green]"))
+    sys.exit(_dev_setup("status"))
 
 
-def cmd_plugin_unlink(args: argparse.Namespace) -> int:
-    print_banner()
-    ok(f"Unlinking '{args.id}'")
-    return _dev_setup("unlink", args.id)
+# ---------------------------------------------------------------------------
+# matrix plugin list
+# ---------------------------------------------------------------------------
 
+@plugin.command("list")
+def plugin_list() -> None:
+    """Rich table of all installed plugins and their state."""
+    console.print(Rule("[green]installed plugins[/green]"))
 
-def cmd_plugin_list(args: argparse.Namespace) -> int:
-    print_banner()
-    return _dev_setup("list")
+    config = _read_config()
+    plugin_dirs = sorted(p for p in PLUGINS_DIR.iterdir() if p.is_dir() or p.is_symlink())
 
+    if not plugin_dirs:
+        console.print("  [dim]No plugins found in plugins/[/dim]")
+        return
 
-def cmd_plugin_status(args: argparse.Namespace) -> int:
-    print_banner()
-    return _dev_setup("status")
+    t = Table(show_header=True, header_style="bold green", border_style="dim")
+    t.add_column("Plugin", min_width=20)
+    t.add_column("Status", min_width=10)
+    t.add_column("Version", min_width=8)
+    t.add_column("Category", min_width=12)
+    t.add_column("Dev link", min_width=6)
+
+    for p in plugin_dirs:
+        mf = _read_manifest(p)
+        if mf is None:
+            continue
+        pid      = mf.get("id", p.name)
+        version  = mf.get("version", "—")
+        category = mf.get("category", "—")
+        enabled  = config.get(pid, {}).get("enabled", True)
+        is_link  = p.is_symlink()
+
+        status_text = Text("enabled", style="green") if enabled else Text("disabled", style="dim")
+        link_text   = Text("yes", style="cyan") if is_link else Text("no", style="dim")
+
+        t.add_row(pid, status_text, version, category, link_text)
+
+    console.print(t)
 
 
 # ---------------------------------------------------------------------------
 # matrix plugin render
 # ---------------------------------------------------------------------------
 
-def cmd_plugin_render(args: argparse.Namespace) -> int:
+@plugin.command("render")
+@click.argument("id")
+@click.option("--output", "-o", default=None, help="Output PNG path.")
+@click.option("--width",  default=None, type=int, help="Display width in pixels.")
+@click.option("--height", default=None, type=int, help="Display height in pixels.")
+@click.option("--skip-update", is_flag=True, help="Skip update(), render display only.")
+def plugin_render(id: str, output: Optional[str], width: Optional[int],
+                  height: Optional[int], skip_update: bool) -> None:
     """Render a plugin to PNG without running the full display loop."""
-    print_banner()
     render_script = LEDMATRIX_ROOT / "scripts" / "render_plugin.py"
     if not render_script.exists():
-        die(f"render_plugin.py not found at {render_script}")
+        console.print(f"[red]render_plugin.py not found at {render_script}[/red]")
+        sys.exit(1)
 
-    cmd = [PYTHON, str(render_script), "--plugin", args.id]
-    if args.output:
-        cmd += ["--output", args.output]
-    if args.width:
-        cmd += ["--width", str(args.width)]
-    if args.height:
-        cmd += ["--height", str(args.height)]
+    cmd = [PYTHON, str(render_script), "--plugin", id]
+    if output:     cmd += ["--output", output]
+    if width:      cmd += ["--width",  str(width)]
+    if height:     cmd += ["--height", str(height)]
+    if skip_update: cmd += ["--skip-update"]
 
-    ok(f"Rendering plugin '{args.id}'")
-    return run(cmd, cwd=str(LEDMATRIX_ROOT))
+    console.print(Rule(f"[green]render — {id}[/green]"))
+    out_path = output or "/tmp/plugin_render.png"
+    console.print(f"  [dim]output:[/dim] {out_path}")
+    sys.exit(_run(cmd, cwd=str(LEDMATRIX_ROOT)))
 
 
 # ---------------------------------------------------------------------------
-# Argument parser
+# matrix plugin install
 # ---------------------------------------------------------------------------
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="matrix",
-        description="LEDMatrix developer CLI — LED edition.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='  "Wake up, Neo." — run `matrix run` to find out how deep it goes.',
-    )
-    sub = parser.add_subparsers(dest="command", metavar="<command>")
+@plugin.command("install")
+@click.argument("target")
+@click.option("--branch", default=None, help="Git branch to install from.")
+def plugin_install(target: str, branch: Optional[str]) -> None:
+    """Install a plugin from the store or a GitHub URL.
 
-    # matrix run
-    p_run = sub.add_parser("run", help="Start the display in emulator mode")
-    p_run.set_defaults(func=cmd_run)
+    TARGET can be a plugin ID (e.g. clock-simple) or a full GitHub URL.
+    """
+    if not _require_web():
+        sys.exit(1)
 
-    # matrix web
-    p_web = sub.add_parser("web", help="Start the web interface (localhost:5000)")
-    p_web.set_defaults(func=cmd_web)
+    console.print(Rule(f"[green]install — {target}[/green]"))
 
-    # matrix plugin <subcommand>
-    p_plugin = sub.add_parser("plugin", help="Plugin management commands")
-    plugin_sub = p_plugin.add_subparsers(dest="plugin_command", metavar="<subcommand>")
+    is_url = target.startswith("http") or "github.com" in target
 
-    # matrix plugin new
-    p_new = plugin_sub.add_parser("new", help="Scaffold a new plugin")
-    p_new.add_argument("id", help="Plugin ID (e.g. transit-board)")
-    p_new.add_argument("path", nargs="?", default=None,
-                       help="Directory to create plugin in (default: current directory)")
-    p_new.set_defaults(func=cmd_plugin_new)
+    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
+                  console=console, transient=True) as progress:
+        progress.add_task("Installing...", total=None)
+        if is_url:
+            result = _api_post("/plugins/install-from-url",
+                               {"repo_url": target, **({"branch": branch} if branch else {})})
+        else:
+            result = _api_post("/plugins/install",
+                               {"plugin_id": target, **({"branch": branch} if branch else {})})
 
-    # matrix plugin link
-    p_link = plugin_sub.add_parser("link", help="Link a plugin repo into the display runtime")
-    p_link.add_argument("id", help="Plugin ID")
-    p_link.add_argument("path", help="Path to the plugin repo")
-    p_link.set_defaults(func=cmd_plugin_link)
+    if result is None:
+        sys.exit(1)
 
-    # matrix plugin unlink
-    p_unlink = plugin_sub.add_parser("unlink", help="Remove a plugin symlink")
-    p_unlink.add_argument("id", help="Plugin ID")
-    p_unlink.set_defaults(func=cmd_plugin_unlink)
+    if result.get("success") or result.get("status") == "success":
+        pid = result.get("plugin_id", target)
+        console.print(f"  [green]Installed:[/green] [bold]{pid}[/bold]")
+    else:
+        msg = result.get("error") or result.get("message") or str(result)
+        console.print(f"  [red]Install failed:[/red] {msg}")
+        sys.exit(1)
 
-    # matrix plugin list
-    p_list = plugin_sub.add_parser("list", help="List all plugins and their link status")
-    p_list.set_defaults(func=cmd_plugin_list)
 
-    # matrix plugin status
-    p_status = plugin_sub.add_parser("status", help="Show git status of all linked plugin repos")
-    p_status.set_defaults(func=cmd_plugin_status)
+# ---------------------------------------------------------------------------
+# matrix plugin uninstall
+# ---------------------------------------------------------------------------
 
-    # matrix help
-    sub.add_parser("help", help="Show this help message")
+@plugin.command("uninstall")
+@click.argument("id")
+@click.option("--keep-config", is_flag=True,
+              help="Preserve the plugin's config.json entry after removal.")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt.")
+def plugin_uninstall(id: str, keep_config: bool, yes: bool) -> None:
+    """Uninstall a plugin. Prompts for confirmation."""
+    if not _require_web():
+        sys.exit(1)
 
-    # matrix plugin render
-    p_render = plugin_sub.add_parser("render", help="Render a plugin to PNG")
-    p_render.add_argument("id", help="Plugin ID")
-    p_render.add_argument("--output", "-o", default=None,
-                          help="Output PNG path (default: /tmp/plugin_render.png)")
-    p_render.add_argument("--width", type=int, default=None, help="Display width in pixels")
-    p_render.add_argument("--height", type=int, default=None, help="Display height in pixels")
-    p_render.set_defaults(func=cmd_plugin_render)
+    if not yes:
+        click.confirm(f"  Uninstall [bold]{id}[/bold]? This cannot be undone.", abort=True)
 
-    return parser
+    console.print(Rule(f"[green]uninstall — {id}[/green]"))
+
+    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
+                  console=console, transient=True) as progress:
+        progress.add_task("Uninstalling...", total=None)
+        result = _api_post("/plugins/uninstall",
+                           {"plugin_id": id, "preserve_config": keep_config})
+
+    if result is None:
+        sys.exit(1)
+
+    if result.get("success") or result.get("status") == "success":
+        console.print(f"  [green]Uninstalled:[/green] [bold]{id}[/bold]")
+    else:
+        msg = result.get("error") or result.get("message") or str(result)
+        console.print(f"  [red]Uninstall failed:[/red] {msg}")
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin update
+# ---------------------------------------------------------------------------
+
+@plugin.command("update")
+@click.argument("id", required=False, default=None)
+def plugin_update(id: Optional[str]) -> None:
+    """Update a plugin, or all plugins if no ID is given."""
+    if not _require_web():
+        sys.exit(1)
+
+    if id:
+        targets = [id]
+    else:
+        # Discover all installed plugin IDs from plugins dir
+        targets = sorted(
+            m["id"]
+            for p in PLUGINS_DIR.iterdir()
+            if (p.is_dir() or p.is_symlink()) and (m := _read_manifest(p))
+        )
+
+    console.print(Rule("[green]update[/green]"))
+
+    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
+                  BarColumn(), TaskProgressColumn(), console=console) as progress:
+        task = progress.add_task("Updating plugins...", total=len(targets))
+        results = []
+        for pid in targets:
+            progress.update(task, description=f"Updating [bold]{pid}[/bold]...")
+            r = _api_post("/plugins/update", {"plugin_id": pid})
+            results.append((pid, r))
+            progress.advance(task)
+
+    t = Table(show_header=True, header_style="bold green", border_style="dim")
+    t.add_column("Plugin", min_width=20)
+    t.add_column("Result")
+
+    for pid, r in results:
+        if r is None:
+            t.add_row(pid, Text("error", style="red"))
+        elif r.get("success") or r.get("status") == "success":
+            t.add_row(pid, Text("updated", style="green"))
+        else:
+            msg = r.get("message") or r.get("error") or "failed"
+            t.add_row(pid, Text(msg, style="yellow"))
+
+    console.print(t)
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin enable / disable
+# ---------------------------------------------------------------------------
+
+@plugin.command("enable")
+@click.argument("id")
+def plugin_enable(id: str) -> None:
+    """Enable a plugin (edits config directly — no service required)."""
+    _toggle_plugin(id, enabled=True)
+
+
+@plugin.command("disable")
+@click.argument("id")
+def plugin_disable(id: str) -> None:
+    """Disable a plugin (edits config directly — no service required)."""
+    _toggle_plugin(id, enabled=False)
+
+
+def _toggle_plugin(plugin_id: str, enabled: bool) -> None:
+    action = "enable" if enabled else "disable"
+    console.print(Rule(f"[green]{action} — {plugin_id}[/green]"))
+
+    config = _read_config()
+    if plugin_id not in config:
+        config[plugin_id] = {}
+    config[plugin_id]["enabled"] = enabled
+    _write_config(config)
+
+    state = "[green]enabled[/green]" if enabled else "[dim]disabled[/dim]"
+    console.print(f"  [bold]{plugin_id}[/bold] → {state}")
+    console.print(f"  [dim]Takes effect on next display loop cycle.[/dim]")
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin health
+# ---------------------------------------------------------------------------
+
+@plugin.command("health")
+@click.argument("id", required=False, default=None)
+def plugin_health(id: Optional[str]) -> None:
+    """Show runtime plugin health. Requires the web interface to be running."""
+    if not _require_web():
+        sys.exit(1)
+
+    console.print(Rule("[green]plugin health[/green]"))
+
+    path = f"/plugins/health/{id}" if id else "/plugins/health"
+    data = _api_get(path)
+    if data is None:
+        sys.exit(1)
+
+    # Normalise — single plugin returns a dict, all plugins returns a list or dict
+    if isinstance(data, dict) and "plugins" in data:
+        entries = data["plugins"]
+    elif isinstance(data, dict) and "plugin_id" in data:
+        entries = [data]
+    elif isinstance(data, list):
+        entries = data
+    else:
+        entries = [data]
+
+    t = Table(show_header=True, header_style="bold green", border_style="dim")
+    t.add_column("Plugin", min_width=20)
+    t.add_column("State", min_width=10)
+    t.add_column("Errors", min_width=7, justify="right")
+    t.add_column("Last error", min_width=40)
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        pid        = entry.get("plugin_id") or entry.get("id", "—")
+        state      = entry.get("state", "—")
+        error_cnt  = str(entry.get("error_count", 0))
+        last_error = (entry.get("last_error") or "—")[:60]
+
+        if state in ("running", "enabled"):
+            state_text = Text(state, style="green")
+        elif state in ("errored", "error"):
+            state_text = Text(state, style="red")
+        else:
+            state_text = Text(state, style="dim")
+
+        t.add_row(pid, state_text, error_cnt, last_error)
+
+    console.print(t)
+
+
+# ---------------------------------------------------------------------------
+# matrix plugin store
+# ---------------------------------------------------------------------------
+
+@plugin.command("store")
+@click.argument("query", required=False, default=None)
+def plugin_store(query: Optional[str]) -> None:
+    """Browse the plugin store. Optionally filter by name or tag."""
+    console.print(Rule("[green]plugin store[/green]"))
+
+    with Progress(SpinnerColumn(), TextColumn("Fetching registry..."),
+                  console=console, transient=True) as progress:
+        progress.add_task("", total=None)
+        try:
+            resp = requests.get(REGISTRY_URL, timeout=10)
+            resp.raise_for_status()
+            registry = resp.json()
+        except Exception as e:
+            console.print(f"[red]Could not fetch registry:[/red] {e}")
+            sys.exit(1)
+
+    plugins = registry.get("plugins", [])
+
+    if query:
+        q = query.lower()
+        plugins = [
+            p for p in plugins
+            if q in p.get("name", "").lower()
+            or q in p.get("id", "").lower()
+            or any(q in tag.lower() for tag in p.get("tags", []))
+            or q in p.get("category", "").lower()
+        ]
+
+    if not plugins:
+        console.print(f"  [dim]No plugins found{f' matching \"{query}\"' if query else ''}.[/dim]")
+        return
+
+    # Mark locally installed plugins
+    installed_ids = {
+        _read_manifest(p).get("id")
+        for p in PLUGINS_DIR.iterdir()
+        if (p.is_dir() or p.is_symlink()) and _read_manifest(p)
+    }
+
+    t = Table(show_header=True, header_style="bold green", border_style="dim")
+    t.add_column("Plugin", min_width=22)
+    t.add_column("Author", min_width=14)
+    t.add_column("Category", min_width=14)
+    t.add_column("Version", min_width=8)
+    t.add_column("Verified", min_width=9, justify="center")
+    t.add_column("Installed", min_width=10, justify="center")
+
+    for p in sorted(plugins, key=lambda x: x.get("name", "")):
+        pid       = p.get("id", "—")
+        name      = p.get("name", pid)
+        author    = p.get("author", "—")
+        category  = p.get("category", "—")
+        version   = p.get("latest_version", "—")
+        verified  = Text("✓", style="green") if p.get("verified") else Text("✗", style="dim")
+        inst_text = Text("✓", style="cyan") if pid in installed_ids else Text("—", style="dim")
+
+        t.add_row(name, author, category, version, verified, inst_text)
+
+    console.print(t)
+    if query:
+        console.print(f"  [dim]{len(plugins)} result(s) for \"{query}\"[/dim]\n")
+    else:
+        console.print(f"  [dim]{len(plugins)} plugins in registry[/dim]\n")
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    parser = build_parser()
-    args = parser.parse_args()
-
-    if not args.command or args.command == "help":
-        print_banner()
-        parser.print_help()
-        sys.exit(0)
-
-    if args.command == "plugin" and not args.plugin_command:
-        print_banner()
-        parser.parse_args(["plugin", "--help"])
-        sys.exit(0)
-
-    if not hasattr(args, "func"):
-        print_banner()
-        parser.print_help()
-        sys.exit(1)
-
-    sys.exit(args.func(args))
-
-
 if __name__ == "__main__":
-    main()
+    cli()
