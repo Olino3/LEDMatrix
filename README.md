@@ -882,7 +882,12 @@ The `matrix` CLI wraps common development tasks into a single ergonomic command:
 
 **Quick install** (from the project root):
 ```bash
-sudo ln -sf "$(pwd)/scripts/matrix_cli.py" /usr/local/bin/matrix
+sudo make install-matrix
+```
+
+**Remove**:
+```bash
+sudo make remove-matrix
 ```
 
 **Common commands:**

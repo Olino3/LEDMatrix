@@ -7,9 +7,25 @@
 From the LEDMatrix project root:
 
 ```bash
+sudo make install-matrix
+```
+
+This creates a symlink at `/usr/local/bin/matrix` pointing to the CLI script and makes it executable.
+
+To remove the CLI:
+
+```bash
+sudo make remove-matrix
+```
+
+<details>
+<summary>Manual installation (alternative)</summary>
+
+```bash
 sudo ln -sf "$(pwd)/scripts/matrix_cli.py" /usr/local/bin/matrix
 chmod +x scripts/matrix_cli.py
 ```
+</details>
 
 Dependencies (`click`, `rich`, `requests`) are already present in the project venv at `.venv/`. The CLI auto-detects and uses `.venv/bin/python3` when available.
 

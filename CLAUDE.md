@@ -48,6 +48,12 @@ pytest -m unit
 mypy src/
 ```
 
+### Matrix CLI (install / remove)
+```bash
+sudo make install-matrix   # symlink matrix CLI to /usr/local/bin/matrix
+sudo make remove-matrix    # remove the symlink
+```
+
 ## Architecture Overview
 
 ### Entry Points

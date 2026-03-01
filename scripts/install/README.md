@@ -11,6 +11,15 @@ This directory contains scripts for installing and configuring the LEDMatrix sys
 - **`configure_web_sudo.sh`** - Configures passwordless sudo access for web interface actions
 - **`migrate_config.sh`** - Migrates configuration files to new formats (if needed)
 
+## Matrix CLI
+
+The `matrix` developer CLI can be installed or removed via the Makefile in the project root:
+
+```bash
+sudo make install-matrix   # install the matrix CLI
+sudo make remove-matrix    # remove the matrix CLI
+```
+
 ## Usage
 
 These scripts are typically called by `first_time_install.sh` in the project root, but can also be run individually if needed.
