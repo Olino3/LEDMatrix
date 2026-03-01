@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# pre-push-plugin-version
+# Bumps the patch version in manifest.json and creates a git tag before each push.
+# Install: cp this file to .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# Skip tagging: SKIP_TAG=1 git push
+
+set -e
+
+MANIFEST="manifest.json"
+
+if [ ! -f "$MANIFEST" ]; then
+    echo "[pre-push] No manifest.json found — skipping version bump." >&2
+    exit 0
+fi
+
+# Read current version
+CURRENT=$(python3 -c "import json,sys; print(json.load(open('$MANIFEST'))['version'])")
+
+if [ -z "$CURRENT" ]; then
+    echo "[pre-push] Could not read version from $MANIFEST — skipping." >&2
+    exit 0
+fi
+
+# Bump patch version (e.g. 0.1.0 -> 0.1.1)
+MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+MINOR=$(echo "$CURRENT" | cut -d. -f2)
+PATCH=$(echo "$CURRENT" | cut -d. -f3)
+NEW_PATCH=$((PATCH + 1))
+NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+
+# Write new version back to manifest.json
+python3 - <<EOF
+import json
+with open("$MANIFEST", "r") as f:
+    manifest = json.load(f)
+manifest["version"] = "$NEW_VERSION"
+with open("$MANIFEST", "w") as f:
+    json.dump(manifest, f, indent=2)
+    f.write("\n")
+EOF
+
+echo "[pre-push] Bumped version $CURRENT -> $NEW_VERSION"
+
+# Stage and commit the version bump
+git add "$MANIFEST"
+git commit -m "chore: bump version to $NEW_VERSION [skip ci]" --no-verify
+
+# Create a git tag unless SKIP_TAG is set
+if [ -z "$SKIP_TAG" ]; then
+    TAG="v$NEW_VERSION"
+    git tag "$TAG"
+    echo "[pre-push] Created tag $TAG"
+else
+    echo "[pre-push] SKIP_TAG set — skipping tag creation."
+fi
