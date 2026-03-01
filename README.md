@@ -873,4 +873,28 @@ sudo systemctl enable ledmatrix-web.service
 </details>
 
 
-### If you've read this far — thanks!  
+## For Plugin Developers
+
+<details>
+<summary>Matrix CLI — developer workflow tool</summary>
+
+The `matrix` CLI wraps common development tasks into a single ergonomic command: running the emulator, scaffolding plugins, managing symlinks, rendering plugin output, and interacting with the plugin store.
+
+**Quick install** (from the project root):
+```bash
+sudo ln -sf "$(pwd)/scripts/matrix_cli.py" /usr/local/bin/matrix
+```
+
+**Common commands:**
+```bash
+matrix run                      # start display in emulator mode
+matrix plugin new my-plugin     # scaffold a new plugin
+matrix plugin list              # list installed plugins
+matrix plugin store             # browse the plugin registry
+```
+
+See [docs/MATRIX_CLI.md](docs/MATRIX_CLI.md) for the complete command reference.
+
+</details>
+
+### If you've read this far — thanks!
