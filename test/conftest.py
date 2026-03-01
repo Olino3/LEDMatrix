@@ -272,7 +272,42 @@ def test_plugin_manager(mock_config_manager, mock_display_manager, mock_cache_ma
 
 
 @pytest.fixture
-def test_display_controller(mock_config_manager, mock_display_manager, mock_cache_manager, 
+def cli_runner():
+    """Click CliRunner for matrix CLI tests."""
+    from click.testing import CliRunner
+    return CliRunner()
+
+
+@pytest.fixture
+def fake_plugins_dir(tmp_path):
+    """Temp plugins/ directory with two plugins (one enabled, one disabled)."""
+    import json
+    plugins_dir = tmp_path / 'plugins'
+    plugins_dir.mkdir()
+    for pid, cat in [('clock-simple', 'time'), ('weather-board', 'weather')]:
+        p = plugins_dir / pid
+        p.mkdir()
+        (p / 'manifest.json').write_text(json.dumps({
+            'id': pid, 'name': pid.replace('-', ' ').title(),
+            'version': '1.0.0', 'category': cat,
+        }))
+    return plugins_dir
+
+
+@pytest.fixture
+def fake_config_path(tmp_path):
+    """Temp config.json with two plugin entries."""
+    import json
+    cfg = tmp_path / 'config.json'
+    cfg.write_text(json.dumps({
+        'clock-simple': {'enabled': True},
+        'weather-board': {'enabled': False},
+    }))
+    return cfg
+
+
+@pytest.fixture
+def test_display_controller(mock_config_manager, mock_display_manager, mock_cache_manager,
                             test_config_with_plugins, emulator_mode):
     """Create a test DisplayController instance with mocked dependencies."""
     from unittest.mock import patch, MagicMock
