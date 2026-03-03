@@ -273,5 +273,5 @@ In the GitHub Actions UI:
 
 ### Adaptations from ticket spec:
 1. **Branch names:** All workflows use `master` and `develop` instead of `main` and `develop` — the repo's default branch is `master`, not `main`.
-2. **Audit workflow:** `uv pip audit` does not exist as a subcommand. Replaced with `uv pip install pip-audit && uv run pip-audit`, which installs the `pip-audit` package into the project venv and runs it against all installed dependencies.
+2. **Audit workflow:** `uv pip audit` does not exist as a subcommand. Instead, `pip-audit==2.7.3` is declared as a `dev` optional dependency in `pyproject.toml` and locked in `uv.lock` (with hash verification). The audit workflow installs it via `uv sync --frozen --extra dev`, which resolves the pinned version and verifies hashes from the lockfile before running `uv run pip-audit`.
 3. **Workflow pass validation** (acceptance criteria item 6) is left unchecked — requires pushing to a branch with a PR to validate in GitHub Actions. The YAML is syntactically valid and the commands match the local tooling.
