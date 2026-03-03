@@ -84,7 +84,7 @@ FILES_TO_CHECK=(
     "scripts/utils/start_web_conditionally.py"
     "web_interface/start.py"
     "web_interface/app.py"
-    "web_interface/requirements.txt"
+    "pyproject.toml"
     "web_interface/blueprints/api_v3.py"
     "web_interface/blueprints/pages_v3.py"
 )
@@ -153,16 +153,18 @@ echo ""
 
 echo "9. Checking dependencies..."
 echo "------------------------------"
-if [ -f "${PROJECT_DIR}/web_interface/requirements.txt" ]; then
-    echo "Checking if Flask is installed..."
-    if python3 -c "import flask; print(f'Flask {flask.__version__}')" 2>/dev/null; then
+VENV_PYTHON="${PROJECT_DIR}/.venv/bin/python3"
+if [ -d "${PROJECT_DIR}/.venv" ] && [ -x "$VENV_PYTHON" ]; then
+    echo "Checking if Flask is installed in .venv..."
+    if "$VENV_PYTHON" -c "import flask; print(f'Flask {flask.__version__}')" 2>/dev/null; then
         echo -e "${GREEN}✓ Flask is installed${NC}"
     else
         echo -e "${RED}✗ Flask is NOT installed${NC}"
-        echo "   Run: pip3 install --break-system-packages -r web_interface/requirements.txt"
+        echo "   Run: uv sync"
     fi
 else
-    echo -e "${YELLOW}⚠ requirements.txt not found${NC}"
+    echo -e "${RED}✗ .venv not found at ${PROJECT_DIR}/.venv${NC}"
+    echo "   Run: uv sync   (this will create the venv and install all dependencies)"
 fi
 echo ""
 
@@ -180,9 +182,10 @@ echo ""
 echo "Most common issues:"
 echo "  1. web_display_autostart is false or missing in config.json"
 echo "  2. Service not enabled or not started"
-echo "  3. Missing dependencies (Flask, etc.)"
-echo "  4. Import errors in web_interface/app.py"
-echo "  5. Port 5000 already in use"
+echo "  3. .venv not created (run: uv sync)"
+echo "  4. Missing dependencies — run: uv sync"
+echo "  5. Import errors in web_interface/app.py"
+echo "  6. Port 5000 already in use"
 echo ""
 echo "Next steps:"
 echo "  - Review the checks above for any RED ✗ marks"

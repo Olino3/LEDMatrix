@@ -35,13 +35,39 @@ echo "CPU info:"
 grep -E "^model name|^Hardware|^Revision" /proc/cpuinfo | head -3 || echo "CPU info not available"
 echo ""
 
-# Check Python and pip versions
+# Check for .venv
+echo "=== Virtual Environment ==="
+VENV_DIR="$PROJECT_ROOT_DIR/.venv"
+VENV_PYTHON="$VENV_DIR/bin/python3"
+if [ -d "$VENV_DIR" ]; then
+    echo -e "${GREEN}✓${NC} .venv/ directory exists"
+    if [ -x "$VENV_PYTHON" ]; then
+        echo -e "${GREEN}✓${NC} .venv/bin/python3 is executable"
+    else
+        echo -e "${RED}✗${NC} .venv/bin/python3 not found or not executable"
+        echo "  Run: uv sync"
+    fi
+else
+    echo -e "${RED}✗${NC} .venv/ directory not found at $VENV_DIR"
+    echo "  Run: uv sync   (this will create the venv and install all dependencies)"
+fi
+echo ""
+
+# Check Python and uv versions
 echo "=== Python Environment ==="
 echo "Python version:"
-python3 --version
+if [ -x "$VENV_PYTHON" ]; then
+    echo "  venv: $($VENV_PYTHON --version)"
+fi
+python3 --version 2>/dev/null && echo "  system: $(python3 --version)" || true
 echo ""
-echo "Pip version:"
-python3 -m pip --version || echo "pip not available"
+echo "uv version:"
+if command -v uv >/dev/null 2>&1; then
+    uv --version
+else
+    echo -e "${RED}✗${NC} uv not found"
+    echo "  Install: curl -LsSf https://astral.sh/uv/install.sh | sh"
+fi
 echo ""
 
 # Check if timeout command is available
@@ -71,39 +97,53 @@ for tool in "${BUILD_TOOLS[@]}"; do
 done
 echo ""
 
-# Check pip cache
-echo "=== Pip Cache ==="
-PIP_CACHE_DIR=$(python3 -m pip cache dir 2>/dev/null || echo "unknown")
-echo "Pip cache directory: $PIP_CACHE_DIR"
-if [ -d "$PIP_CACHE_DIR" ]; then
-    CACHE_SIZE=$(du -sh "$PIP_CACHE_DIR" 2>/dev/null | cut -f1 || echo "unknown")
-    echo "Cache size: $CACHE_SIZE"
-    echo "You can clear the cache with: python3 -m pip cache purge"
+# Check uv cache
+echo "=== uv Cache ==="
+if command -v uv >/dev/null 2>&1; then
+    UV_CACHE_DIR=$(uv cache dir 2>/dev/null || echo "unknown")
+    echo "uv cache directory: $UV_CACHE_DIR"
+    if [ -d "$UV_CACHE_DIR" ]; then
+        CACHE_SIZE=$(du -sh "$UV_CACHE_DIR" 2>/dev/null | cut -f1 || echo "unknown")
+        echo "Cache size: $CACHE_SIZE"
+        echo "You can clear the cache with: uv cache clean"
+    fi
+else
+    echo -e "${YELLOW}⚠${NC} uv not installed — cache check skipped"
 fi
 echo ""
 
-# Check requirements.txt
-echo "=== Requirements File ==="
-if [ -f "$PROJECT_ROOT_DIR/requirements.txt" ]; then
-    echo -e "${GREEN}✓${NC} requirements.txt found"
-    TOTAL_PACKAGES=$(grep -v '^#' "$PROJECT_ROOT_DIR/requirements.txt" | grep -v '^$' | wc -l)
-    echo "Total packages: $TOTAL_PACKAGES"
+# Check pyproject.toml
+echo "=== Project Configuration ==="
+if [ -f "$PROJECT_ROOT_DIR/pyproject.toml" ]; then
+    echo -e "${GREEN}✓${NC} pyproject.toml found"
+    TOTAL_DEPS=$(grep -E '^\s+"[a-zA-Z]' "$PROJECT_ROOT_DIR/pyproject.toml" | wc -l)
+    echo "Approximate dependency count: $TOTAL_DEPS"
     echo ""
     echo "Packages that may need building from source:"
-    grep -v '^#' "$PROJECT_ROOT_DIR/requirements.txt" | grep -v '^$' | grep -E "(numpy|freetype|cython|scipy|pandas)" || echo "  (none detected)"
+    grep -E '^\s+"(numpy|freetype|cython|scipy|pandas)' "$PROJECT_ROOT_DIR/pyproject.toml" || echo "  (none detected)"
 else
-    echo -e "${RED}✗${NC} requirements.txt not found at $PROJECT_ROOT_DIR/requirements.txt"
+    echo -e "${RED}✗${NC} pyproject.toml not found at $PROJECT_ROOT_DIR/pyproject.toml"
+fi
+if [ -f "$PROJECT_ROOT_DIR/uv.lock" ]; then
+    echo -e "${GREEN}✓${NC} uv.lock found"
+else
+    echo -e "${YELLOW}⚠${NC} uv.lock not found — run: uv sync"
 fi
 echo ""
 
-# Test installing a simple package
+# Test uv sync
 echo "=== Test Installation ==="
-echo "Testing pip with a simple package (setuptools)..."
-if python3 -m pip install --break-system-packages --upgrade --quiet setuptools >/dev/null 2>&1; then
-    echo -e "${GREEN}✓${NC} Pip is working correctly"
+if command -v uv >/dev/null 2>&1; then
+    echo "Testing uv with a dry-run sync..."
+    if uv sync --project "$PROJECT_ROOT_DIR" --dry-run >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC} uv sync dry-run succeeded"
+    else
+        echo -e "${RED}✗${NC} uv sync dry-run failed"
+        echo "Try: uv sync --project $PROJECT_ROOT_DIR"
+    fi
 else
-    echo -e "${RED}✗${NC} Pip installation test failed"
-    echo "Try: python3 -m pip install --break-system-packages --upgrade pip setuptools wheel"
+    echo -e "${RED}✗${NC} uv not installed — cannot test dependency resolution"
+    echo "Install: curl -LsSf https://astral.sh/uv/install.sh | sh"
 fi
 echo ""
 
@@ -135,25 +175,24 @@ echo ""
 # Recommendations
 echo "=== Recommendations ==="
 echo ""
-echo "If pip gets stuck on 'Preparing metadata (pyproject.toml)':"
+echo "If dependency installation fails:"
 echo ""
-echo "1. Install/upgrade build tools:"
-echo "   sudo apt update && sudo apt install -y build-essential python3-dev python3-pip python3-setuptools python3-wheel cython3"
+echo "1. Install uv (if not installed):"
+echo "   curl -LsSf https://astral.sh/uv/install.sh | sh"
 echo ""
-echo "2. Upgrade pip and build tools:"
-echo "   python3 -m pip install --break-system-packages --upgrade pip setuptools wheel"
+echo "2. Create/sync the virtual environment:"
+echo "   uv sync"
 echo ""
-echo "3. Try installing packages one at a time with verbose output:"
-echo "   python3 -m pip install --break-system-packages --no-cache-dir --verbose <package-name>"
+echo "3. Install build tools (needed for packages that compile from source):"
+echo "   sudo apt update && sudo apt install -y build-essential python3-dev cython3"
 echo ""
-echo "4. For packages that build from source (like numpy), try:"
-echo "   - Install pre-built wheels: python3 -m pip install --break-system-packages --only-binary :all: <package>"
-echo "   - Or install via apt if available: sudo apt install python3-<package>"
+echo "4. Reinstall with verbose output if sync fails:"
+echo "   uv sync -v"
 echo ""
-echo "5. Clear pip cache if corrupted:"
-echo "   python3 -m pip cache purge"
+echo "5. Clear uv cache if corrupted:"
+echo "   uv cache clean"
 echo ""
-echo "6. Check disk space - building packages requires temporary space"
+echo "6. Check disk space - building packages requires temporary space:"
 echo "   df -h"
 echo ""
 echo "7. For slow builds, increase swap space:"
@@ -162,32 +201,19 @@ echo "   sudo nano /etc/dphys-swapfile  # Set CONF_SWAPSIZE=2048"
 echo "   sudo dphys-swapfile setup"
 echo "   sudo dphys-swapfile swapon"
 echo ""
-echo "8. Install packages with timeout to identify problematic ones:"
-echo "   timeout 600 python3 -m pip install --break-system-packages --no-cache-dir --verbose <package>"
-echo ""
 
 # Check which packages are already installed
 echo "=== Currently Installed Packages ==="
-echo "Checking which requirements are already satisfied..."
-if [ -f "$PROJECT_ROOT_DIR/requirements.txt" ]; then
-    while IFS= read -r line || [ -n "$line" ]; do
-        line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        if [[ "$line" =~ ^#.*$ ]] || [[ -z "$line" ]]; then
-            continue
-        fi
-        
-        PACKAGE_NAME=$(echo "$line" | sed -E 's/[<>=!].*$//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')
-        
-        # Try importing the package (basic check)
-        if python3 -c "import $PACKAGE_NAME" >/dev/null 2>&1; then
-            INSTALLED_VERSION=$(python3 -c "import $PACKAGE_NAME; print(getattr($PACKAGE_NAME, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
-            echo -e "${GREEN}✓${NC} $PACKAGE_NAME ($INSTALLED_VERSION)"
-        else
-            echo -e "${RED}✗${NC} $PACKAGE_NAME (not installed or import failed)"
-        fi
-    done < "$PROJECT_ROOT_DIR/requirements.txt" | head -20
+if [ -d "$VENV_DIR" ] && command -v uv >/dev/null 2>&1; then
+    echo "Packages installed in .venv (via uv pip list):"
     echo ""
-    echo "(Showing first 20 packages - run full check with: python3 -m pip check)"
+    uv pip list --python "$VENV_PYTHON" 2>/dev/null || echo -e "${RED}✗${NC} Could not list packages from .venv"
+elif [ -d "$VENV_DIR" ] && [ -x "$VENV_PYTHON" ]; then
+    echo "Packages installed in .venv (via pip list):"
+    echo ""
+    "$VENV_PYTHON" -m pip list 2>/dev/null || echo -e "${RED}✗${NC} Could not list packages from .venv"
+else
+    echo -e "${RED}✗${NC} No .venv found — run 'uv sync' to create the virtual environment and install dependencies"
 fi
 echo ""
 

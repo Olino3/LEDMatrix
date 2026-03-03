@@ -182,6 +182,17 @@ SPIKE-002 updated the core docs (`HOW_TO_RUN_TESTS.md`, `EMULATOR_SETUP_GUIDE.md
 | `docs/DEVELOPMENT.md` (lines 52, 102, 115) | CI/CD examples use bare `pip install .` for building the `rgbmatrix` submodule — deferred to FOUND-004. |
 
 These are **not blocking** FOUND-002 — they can be done as a follow-up doc pass after FOUND-002 merges, since the exact commands depend on the venv bootstrap approach chosen here.
+### Impact from SPIKE-001 (Update Diagnostic Scripts)
+
+SPIKE-001 updated the four diagnostic/utility scripts that referenced the now-deleted `requirements*.txt` files. The following downstream impacts were identified during that work:
+
+1. **`scripts/utils/start_web_conditionally.py`** (line 23) still references `web_interface/requirements.txt` and calls `pip install -r` against it. When FOUND-002 ensures all Python invocations use `.venv/bin/python3`, this file's `install_dependencies()` function should be updated to use `uv sync` instead, or removed entirely if the venv bootstrap in `matrix_cli.py` / `install_service.sh` makes it redundant. **Recommendation:** handle as part of FOUND-002's install script changes since it is tightly coupled to the venv bootstrap flow.
+
+2. **`scripts/install_plugin_dependencies.sh`** still reads per-plugin `requirements.txt` files and uses `pip3 install`. This is out of scope for SPIKE-001 (plugin-level deps are separate from project-level), but FOUND-002 should decide whether plugin deps should also be installed into `.venv/` via `uv pip install` rather than system pip. **Recommendation:** create a separate spike if plugin dependency installation needs reworking for the venv world; the current approach works but uses system pip which may conflict with the venv-first strategy.
+
+3. **`matrix doctor` overlap (FOUND-003):** The spike ticket noted that `matrix doctor` may make `diagnose_dependencies.sh` and `diagnose_web_interface.sh` partially redundant. The diagnostic scripts have been updated for now but should be evaluated for deprecation once `matrix doctor` is implemented. No immediate action needed.
+
+4. **`first_time_install.sh`** still contains dead code paths that check for `requirements.txt` (lines 634-729, 768-778). These skip gracefully via `[ -f ... ]` guards but are confusing. Consider cleaning up as part of FOUND-002 or FOUND-003 install work.
 
 ### Impact from FOUND-001
 

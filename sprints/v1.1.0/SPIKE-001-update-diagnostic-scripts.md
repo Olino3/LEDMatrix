@@ -1,6 +1,6 @@
 # SPIKE-001 — Update Diagnostic Scripts for `uv` Migration
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md)
@@ -27,12 +27,12 @@ After FOUND-001, the three `requirements*.txt` files have been removed in favor 
 
 ## Acceptance Criteria
 
-- [ ] `scripts/diagnose_dependencies.sh` uses `uv pip list` or `uv tree` (or reads from `pyproject.toml`) instead of parsing `requirements.txt`
-- [ ] `scripts/diagnose_web_ui.sh` checks that `pyproject.toml` exists instead of `web_interface/requirements.txt`
-- [ ] `scripts/diagnose_web_interface.sh` updated similarly
-- [ ] `scripts/install/uninstall.sh` uses `uv pip list --format=freeze` or similar to determine installed packages for removal
-- [ ] All four scripts still function correctly when `.venv/` exists (normal case)
-- [ ] All four scripts produce a clear error message when `.venv/` does not exist
+- [x] `scripts/diagnose_dependencies.sh` uses `uv pip list` or `uv tree` (or reads from `pyproject.toml`) instead of parsing `requirements.txt`
+- [x] `scripts/diagnose_web_ui.sh` checks that `pyproject.toml` exists instead of `web_interface/requirements.txt`
+- [x] `scripts/diagnose_web_interface.sh` updated similarly
+- [x] `scripts/install/uninstall.sh` uses `uv pip list --format=freeze` or similar to determine installed packages for removal
+- [x] All four scripts still function correctly when `.venv/` exists (normal case)
+- [x] All four scripts produce a clear error message when `.venv/` does not exist
 
 ---
 
