@@ -10,8 +10,8 @@
 
 | ID | Title | Status | Depends On |
 |---|---|---|---|
-| [FOUND-001](FOUND-001-pyproject-uv-migration.md) | Migrate to `pyproject.toml` + `uv` | Open | — |
-| [FOUND-002](FOUND-002-venv-bootstrap.md) | Virtual environment bootstrap everywhere | Open | FOUND-001 |
+| [FOUND-001](FOUND-001-pyproject-uv-migration.md) | Migrate to `pyproject.toml` + `uv` | Done | — |
+| [FOUND-002](FOUND-002-venv-bootstrap.md) | Virtual environment bootstrap everywhere | Done | FOUND-001 |
 | [FOUND-003](FOUND-003-matrix-cli-install-doctor.md) | `matrix` CLI — `install`, `setup`, and `doctor` commands | Open | FOUND-001, FOUND-002 |
 | [FOUND-004](FOUND-004-ci-pipeline.md) | GitHub Actions CI pipeline | Open | FOUND-001 |
 | [FOUND-005](FOUND-005-precommit-ruff.md) | Migrate pre-commit hooks to `ruff` | Open | FOUND-004 |

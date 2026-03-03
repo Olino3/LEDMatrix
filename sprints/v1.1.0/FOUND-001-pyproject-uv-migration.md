@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** _(none — start here)_

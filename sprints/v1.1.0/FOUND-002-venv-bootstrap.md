@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md) — `pyproject.toml` and `uv.lock` must exist first
@@ -26,13 +26,13 @@ This ticket ensures that:
 
 ## Acceptance Criteria
 
-- [ ] `systemd/ledmatrix.service` template uses `__VENV_PYTHON__` placeholder instead of `/usr/bin/python3`
-- [ ] `systemd/ledmatrix-web.service` template uses `__VENV_PYTHON__` placeholder
-- [ ] `scripts/install/install_service.sh` resolves `VENV_PYTHON` to `<project_root>/.venv/bin/python3` and substitutes it when generating both unit files
-- [ ] `scripts/install/install_service.sh` creates the venv via `uv sync` if `.venv/` does not exist before installing services
-- [ ] `scripts/matrix_cli.py` checks for `.venv/` at startup; if absent, runs `uv sync` automatically before proceeding (or exits with a clear message if `uv` itself is not installed)
-- [ ] Running `matrix run` from a freshly cloned repo (no `.venv/`) either auto-creates the venv or prints actionable instructions
-- [ ] No change to public APIs or plugin behavior
+- [x] `systemd/ledmatrix.service` template uses `__VENV_PYTHON__` placeholder instead of `/usr/bin/python3`
+- [x] `systemd/ledmatrix-web.service` template uses `__VENV_PYTHON__` placeholder
+- [x] `scripts/install/install_service.sh` resolves `VENV_PYTHON` to `<project_root>/.venv/bin/python3` and substitutes it when generating both unit files
+- [x] `scripts/install/install_service.sh` creates the venv via `uv sync` if `.venv/` does not exist before installing services
+- [x] `scripts/matrix_cli.py` checks for `.venv/` at startup; if absent, runs `uv sync` automatically before proceeding (or exits with a clear message if `uv` itself is not installed)
+- [x] Running `matrix run` from a freshly cloned repo (no `.venv/`) either auto-creates the venv or prints actionable instructions
+- [x] No change to public APIs or plugin behavior
 
 ---
 
