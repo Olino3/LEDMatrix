@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=ledpi
+Group=ledpi
 WorkingDirectory=__PROJECT_ROOT_DIR__
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=__VENV_PYTHON__ __PROJECT_ROOT_DIR__/run.py
