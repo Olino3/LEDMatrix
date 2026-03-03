@@ -7,7 +7,7 @@ It enables dynamic loading, management, and discovery of display plugins.
 API Version: 1.0.0
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __api_version__ = "1.0.0"
 
 from .base_plugin import BasePlugin

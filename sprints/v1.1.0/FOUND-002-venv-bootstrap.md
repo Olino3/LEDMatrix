@@ -169,3 +169,13 @@ print('OK: venv python exists at', venv_py)
 - The `ExecStart` line in the _dynamically generated_ web service content (the heredoc in `install_service.sh` lines 51–70) must also be updated — it is separate from the template file.
 - On Raspberry Pi, `root` runs the display service; confirm `root` owns the `.venv/` or that permissions allow execution.
 - Do not remove `/usr/bin/python3` fallback in scripts that run _before_ the venv is created (e.g., the `uv` bootstrap step itself must use system Python or the `uv` binary directly).
+
+### Impact from FOUND-001
+
+After FOUND-001 is merged, the following changes affect this ticket:
+
+- **`pyproject.toml` and `uv.lock`** now exist at repo root. `uv sync` is the single command to install all dependencies (replaces `pip install -r requirements.txt`).
+- **`.venv/` must be created via `uv sync`**, not `python3 -m venv` — uv creates the venv automatically and installs deps in one step.
+- **`first_time_install.sh`** lines 634-729 (main deps) and 768-778 (web deps) now skip gracefully since they check `[ -f requirements.txt ]` before reading. They install **zero** project deps — FOUND-002/003 must ensure `uv sync` replaces those code paths entirely.
+- **`pytest.ini` and `mypy.ini`** no longer exist — their configuration is in `[tool.pytest.ini_options]` and `[tool.mypy]` sections of `pyproject.toml`.
+- **Optional dependency groups** are available: `uv sync --extra emulator` for emulator, `uv sync --extra dev --extra test` for development.

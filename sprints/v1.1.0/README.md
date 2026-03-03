@@ -16,6 +16,8 @@
 | [FOUND-004](FOUND-004-ci-pipeline.md) | GitHub Actions CI pipeline | Open | FOUND-001 |
 | [FOUND-005](FOUND-005-precommit-ruff.md) | Migrate pre-commit hooks to `ruff` | Open | FOUND-004 |
 | [FOUND-006](FOUND-006-plugin-quickfixes.md) | Plugin quick-fixes: `matrix.width` / `matrix.height` refs | Open | — |
+| [SPIKE-001](SPIKE-001-update-diagnostic-scripts.md) | Update diagnostic scripts for `uv` migration | Open | FOUND-001 |
+| [SPIKE-002](SPIKE-002-update-docs-for-uv-migration.md) | Update documentation for `uv` migration | Open | FOUND-001 |
 
 ## Dependency Graph
 
