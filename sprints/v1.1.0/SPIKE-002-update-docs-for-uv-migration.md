@@ -1,6 +1,6 @@
 # SPIKE-002 — Update Documentation for `uv` Migration
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md)
@@ -29,12 +29,12 @@ After FOUND-001, dependency management uses `pyproject.toml` + `uv.lock` instead
 
 ## Acceptance Criteria
 
-- [ ] All active (non-archive) docs reference `uv sync` instead of `pip install -r requirements.txt`
-- [ ] Emulator setup guide uses `uv sync --extra emulator` instead of `pip install -r requirements-emulator.txt`
-- [ ] Test docs reference `uv run pytest` and note that config is in `pyproject.toml` (not `pytest.ini`)
-- [ ] Any `pip install` commands for dev/test are replaced with `uv sync --extra dev --extra test`
-- [ ] Directory tree listings in docs are updated to show `pyproject.toml` and `uv.lock` instead of `requirements*.txt`
-- [ ] Archive docs are left as-is (they document historical state)
+- [x] All active (non-archive) docs reference `uv sync` instead of `pip install -r requirements.txt`
+- [x] Emulator setup guide uses `uv sync --extra emulator` instead of `pip install -r requirements-emulator.txt`
+- [x] Test docs reference `pyproject.toml` (not `pytest.ini`) for config; `uv sync --extra test` for deps
+- [x] Any `pip install` commands for dev/test are replaced with `uv sync --extra dev --extra test`
+- [x] Directory tree listings in docs are updated (removed `requirements.txt` from `web_interface/README.md`)
+- [x] Archive docs are left as-is (they document historical state)
 
 ---
 

@@ -10,10 +10,10 @@ Make sure you have the testing packages installed:
 
 ```bash
 # Install all dependencies including test packages
-pip install -r requirements.txt
+uv sync --extra test
 
-# Or install just the test dependencies
-pip install pytest pytest-cov pytest-mock pytest-timeout
+# Or install dev + test extras together
+uv sync --extra dev --extra test
 ```
 
 ### 2. Set Environment Variables
@@ -174,10 +174,12 @@ The HTML report shows:
 
 ### Coverage Threshold
 
-The tests are configured to fail if coverage drops below 30%. To change this, edit `pytest.ini`:
+The tests are configured to fail if coverage drops below 30%. To change this, edit the `[tool.pytest.ini_options]` section in `pyproject.toml`:
 
-```ini
---cov-fail-under=30  # Change this value
+```toml
+addopts = [
+    "--cov-fail-under=30",  # Change this value
+]
 ```
 
 ## Common Test Scenarios
@@ -206,7 +208,7 @@ pytest --pdb test/test_display_controller.py::TestDisplayControllerModeRotation:
 
 ```bash
 # Install pytest-xdist first
-pip install pytest-xdist
+uv pip install pytest-xdist
 
 # Run tests in parallel (4 workers)
 pytest -n 4
@@ -276,11 +278,11 @@ pytest
 If tests fail due to missing packages:
 
 ```bash
-# Install all dependencies
-pip install -r requirements.txt
+# Install all dependencies including test packages
+uv sync --extra test
 
-# Or install specific missing package
-pip install <package-name>
+# Or install a specific missing package
+uv pip install <package-name>
 ```
 
 ### Hardware Tests Failing
@@ -300,8 +302,8 @@ pytest -m "not hardware"
 If coverage reports aren't generating:
 
 ```bash
-# Make sure pytest-cov is installed
-pip install pytest-cov
+# Make sure test dependencies are installed (includes pytest-cov)
+uv sync --extra test
 
 # Run with explicit coverage
 pytest --cov=src --cov-report=html
@@ -351,4 +353,4 @@ pytest --pdb              # Drop into debugger on failure
 - Check test output for error messages
 - Look at the test file to understand what's being tested
 - Check `conftest.py` for available fixtures
-- Review `pytest.ini` for configuration options
+- Review `[tool.pytest.ini_options]` in `pyproject.toml` for configuration options
