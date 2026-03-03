@@ -179,3 +179,13 @@ uv run ruff format --check src/ && echo "OK: ruff format (no changes needed)"
 - The `bandit.yaml` config file referenced in the bandit hook — confirm it exists at the repo root before pushing. If it doesn't, remove the `-c bandit.yaml` arg from the hook.
 - Do not change the `gitleaks` version — it scans for secrets and should only be updated deliberately.
 - mypy `mirrors-mypy` pin should match the version in `pyproject.toml` `[dev]` extras to avoid confusing version mismatches between local hook and CI.
+
+---
+
+## Upstream Notes from FOUND-004 (2026-03-03)
+
+FOUND-004 is now **Done**. The CI workflows are in `.github/workflows/`. Key details for FOUND-005:
+- **Branch triggers use `master`** (not `main`) — the repo's default branch is `master`. The pre-commit hooks themselves don't reference branches, but keep this in mind for any CI integration docs.
+- **`ruff` config in `pyproject.toml`** is already present at `[tool.ruff]` with `select = ["E", "F", "W", "B", "I"]` and `ignore = ["E501"]`. The pre-commit ruff hooks should pick this up automatically — no duplicate config needed.
+- **CI lint step runs:** `uv run ruff check src/` and `uv run ruff format --check src/`. The pre-commit ruff hook with `--fix` will be the developer-side complement to this.
+- **CI typecheck runs:** `uv run mypy src/ --ignore-missing-imports`. Match the mypy version in pre-commit to the one in `pyproject.toml` dev extras (`mypy>=1.5.0`).
