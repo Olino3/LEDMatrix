@@ -119,26 +119,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Remove Python packages (system-wide pip installs)
+# 5. Remove Python virtual environment
 # ---------------------------------------------------------------------------
-print_step "Removing Python dependencies"
+print_step "Removing Python virtual environment"
 
-REQUIREMENTS="$PROJECT_ROOT/requirements.txt"
-if [ -f "$REQUIREMENTS" ]; then
-    read -r -p "  Remove system Python packages listed in requirements.txt? (y/N): " PIP_CONFIRM
-    if [[ "$PIP_CONFIRM" =~ ^[Yy]$ ]]; then
-        if command -v pip3 > /dev/null 2>&1; then
-            pip3 uninstall -r "$REQUIREMENTS" -y 2>/dev/null && print_ok "Python packages removed" || print_warn "Some packages could not be removed (may not have been installed system-wide)"
-        elif command -v pip > /dev/null 2>&1; then
-            pip uninstall -r "$REQUIREMENTS" -y 2>/dev/null && print_ok "Python packages removed" || print_warn "Some packages could not be removed"
-        else
-            print_warn "pip not found — skipping Python package removal"
-        fi
+VENV_DIR="$PROJECT_ROOT/.venv"
+if [ -d "$VENV_DIR" ]; then
+    read -r -p "  Remove .venv/ directory (all installed Python packages)? (y/N): " VENV_CONFIRM
+    if [[ "$VENV_CONFIRM" =~ ^[Yy]$ ]]; then
+        rm -rf "$VENV_DIR"
+        print_ok "Removed $VENV_DIR"
     else
-        print_skip "Python packages (user declined)"
+        print_skip ".venv/ directory (user declined)"
     fi
 else
-    print_skip "requirements.txt not found"
+    print_skip ".venv/ directory"
 fi
 
 # ---------------------------------------------------------------------------
