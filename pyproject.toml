@@ -78,6 +78,7 @@ dev = [
     "types-pytz",
     "click>=8.0.0",
     "rich>=13.0.0",
+    "pip-audit==2.7.3",
 ]
 test = [
     "pytest>=7.4.0,<9",

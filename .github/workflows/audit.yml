@@ -27,8 +27,5 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra test --extra dev --extra emulator
 
-      - name: Install pip-audit
-        run: uv pip install pip-audit==2.7.3
-
       - name: Audit dependencies
         run: uv run pip-audit
