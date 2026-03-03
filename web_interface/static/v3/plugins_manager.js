@@ -4914,6 +4914,159 @@ window.executePluginAction = function(actionId, actionIndex, pluginIdParam = nul
     });
 }
 
+// Autocomplete handler for plugin actions with input_label + autocomplete: true in manifest
+window.handleActionAutocomplete = function(actionId, actionIndex, pluginId, query) {
+    const inputEl = document.getElementById(`action-input-${actionId}-${actionIndex}`);
+    const statusDiv = document.getElementById(`action-status-${actionId}-${actionIndex}`);
+    if (!statusDiv) return;
+
+    // Clear previous debounce timer
+    if (inputEl._acTimer) clearTimeout(inputEl._acTimer);
+
+    // Short query: clear and hide results
+    if (!query || query.trim().length < 2) {
+        statusDiv.classList.add('hidden');
+        statusDiv.textContent = '';
+        return;
+    }
+
+    // Helper: create a Font Awesome icon element
+    function faIcon(classes) {
+        const i = document.createElement('i');
+        i.className = classes;
+        return i;
+    }
+
+    // Debounce 300ms
+    inputEl._acTimer = setTimeout(() => {
+        statusDiv.classList.remove('hidden');
+        statusDiv.textContent = '';
+        const spinner = document.createElement('div');
+        spinner.className = 'text-gray-500 text-sm';
+        spinner.appendChild(faIcon('fas fa-spinner fa-spin mr-1'));
+        spinner.appendChild(document.createTextNode('Searching...'));
+        statusDiv.appendChild(spinner);
+
+        fetch('/api/v3/plugins/action', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                plugin_id: pluginId,
+                action_id: actionId,
+                params: {query: query.trim()}
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            statusDiv.textContent = '';
+
+            if (data.status !== 'success') {
+                const err = document.createElement('div');
+                err.className = 'text-red-600 text-sm';
+                err.textContent = data.message || 'Search failed';
+                statusDiv.appendChild(err);
+                return;
+            }
+
+            const results = Array.isArray(data.results) ? data.results : [];
+            if (results.length === 0) {
+                if (data.message) {
+                    const msg = document.createElement('div');
+                    msg.className = 'text-gray-500 text-sm';
+                    msg.textContent = data.message;
+                    statusDiv.appendChild(msg);
+                } else {
+                    statusDiv.classList.add('hidden');
+                }
+                return;
+            }
+
+            // Scrollable results list
+            const list = document.createElement('div');
+            list.className = 'border border-gray-200 rounded-md divide-y divide-gray-100 mt-1 max-h-60 overflow-y-auto';
+
+            results.forEach(s => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between py-2 px-3 hover:bg-gray-100 rounded cursor-pointer';
+
+                // Left: station name, routes, direction labels
+                const left = document.createElement('div');
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'font-medium text-sm text-gray-900 mr-1';
+                nameSpan.textContent = s.name || '';
+                left.appendChild(nameSpan);
+
+                if (s.routes) {
+                    const routeSpan = document.createElement('span');
+                    routeSpan.className = 'text-gray-500 text-sm';
+                    routeSpan.textContent = `(${s.routes})`;
+                    left.appendChild(routeSpan);
+                }
+
+                if (s.north_label && s.south_label) {
+                    const dirs = document.createElement('span');
+                    dirs.className = 'text-xs text-gray-400 ml-1';
+                    dirs.textContent = `${s.north_label} \u2194 ${s.south_label}`;
+                    left.appendChild(dirs);
+                }
+
+                // Right: GTFS ID badge + copy button + feedback
+                const right = document.createElement('div');
+                right.className = 'flex items-center gap-2 ml-3 shrink-0';
+
+                const badge = document.createElement('code');
+                badge.className = 'text-xs bg-gray-200 px-1.5 py-0.5 rounded';
+                badge.textContent = s.stop_id || '';
+                right.appendChild(badge);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'text-xs text-blue-600 hover:text-blue-800 whitespace-nowrap';
+                copyBtn.appendChild(faIcon('fas fa-copy mr-1'));
+                copyBtn.appendChild(document.createTextNode('Copy ID'));
+
+                const copiedMsg = document.createElement('span');
+                copiedMsg.className = 'hidden text-xs text-green-600';
+                copiedMsg.textContent = 'Copied!';
+
+                const doCopy = () => {
+                    navigator.clipboard.writeText(s.stop_id || '').then(() => {
+                        copiedMsg.classList.remove('hidden');
+                        setTimeout(() => copiedMsg.classList.add('hidden'), 1500);
+                    });
+                };
+
+                copyBtn.addEventListener('click', e => { e.stopPropagation(); doCopy(); });
+                right.appendChild(copyBtn);
+                right.appendChild(copiedMsg);
+
+                row.appendChild(left);
+                row.appendChild(right);
+                row.addEventListener('click', doCopy);
+
+                list.appendChild(row);
+            });
+
+            statusDiv.appendChild(list);
+
+            if (data.message) {
+                const footer = document.createElement('div');
+                footer.className = 'text-xs text-gray-400 mt-1';
+                footer.textContent = data.message;
+                statusDiv.appendChild(footer);
+            }
+        })
+        .catch(err => {
+            statusDiv.textContent = '';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'text-red-600 text-sm';
+            errDiv.textContent = `Error: ${err.message}`;
+            statusDiv.appendChild(errDiv);
+        });
+    }, 300);
+};
+
 // togglePlugin is already defined at the top of the script - no need to redefine
 
 // Only override updatePlugin if it doesn't already have improved error handling
