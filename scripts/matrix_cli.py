@@ -52,6 +52,15 @@ if not _venv_python.exists():
         )
         sys.exit(1)
 
+# After bootstrap (or if the venv already existed), ensure the Python binary exists and is executable.
+if (not _venv_python.exists()) or (not os.access(_venv_python, os.X_OK)):
+    console.print(
+        "[red]The virtualenv Python interpreter was not found or is not executable at:"
+        f" {_venv_python}[/red]\n"
+        "This can happen if the requested Python version is not available on this system.\n"
+        "Install the appropriate Python version and re-run: uv sync"
+    )
+    sys.exit(1)
 PYTHON = str(_venv_python)
 
 DEV_SETUP = LEDMATRIX_ROOT / "scripts" / "dev" / "dev_plugin_setup.sh"
