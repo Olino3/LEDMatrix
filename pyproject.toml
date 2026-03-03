@@ -67,8 +67,11 @@ emulator = [
     "RGBMatrixEmulator",
 ]
 hardware = [
-    # rpi-rgb-led-matrix is compiled from C source during first_time_install.sh
-    # and is not available on PyPI. Leave empty; FOUND-003 will handle this.
+    # rpi-rgb-led-matrix can be pip-installed from source:
+    #   pip install git+https://github.com/hzeller/rpi-rgb-led-matrix
+    # Requires C build tools on Raspberry Pi. Not added as a direct dependency
+    # because it would fail resolution on non-ARM platforms. Install manually
+    # on Pi hardware, or use: uv pip install git+https://github.com/hzeller/rpi-rgb-led-matrix
 ]
 dev = [
     "ruff>=0.4.0",

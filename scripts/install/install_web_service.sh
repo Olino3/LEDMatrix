@@ -20,8 +20,25 @@ USER_HOME=$(eval echo ~$ACTUAL_USER)
 # Determine the Project Root Directory (parent of scripts/install/)
 PROJECT_ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 
+VENV_PYTHON="${PROJECT_ROOT_DIR}/.venv/bin/python3"
+
 echo "Installing for user: $ACTUAL_USER"
 echo "Project root directory: $PROJECT_ROOT_DIR"
+
+# Bootstrap venv if it does not exist
+if [ ! -x "$VENV_PYTHON" ]; then
+    echo "No .venv found — bootstrapping with uv..."
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "ERROR: 'uv' is not installed. Run: curl -LsSf https://astral.sh/uv/install.sh | sh"
+        exit 1
+    fi
+    uv sync --project "$PROJECT_ROOT_DIR"
+    if [ ! -x "$VENV_PYTHON" ]; then
+        echo "ERROR: uv sync completed but $VENV_PYTHON not found."
+        exit 1
+    fi
+    echo "Venv bootstrapped successfully."
+fi
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
@@ -41,7 +58,7 @@ Type=simple
 User=${ACTUAL_USER}
 WorkingDirectory=${PROJECT_ROOT_DIR}
 Environment=USE_THREADING=1
-ExecStart=/usr/bin/python3 ${PROJECT_ROOT_DIR}/scripts/utils/start_web_conditionally.py
+ExecStart=${VENV_PYTHON} ${PROJECT_ROOT_DIR}/scripts/utils/start_web_conditionally.py
 Restart=on-failure
 RestartSec=10
 StandardOutput=syslog

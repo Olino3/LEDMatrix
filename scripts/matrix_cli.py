@@ -31,8 +31,28 @@ from rich.text import Text
 # symlink works from any directory.
 LEDMATRIX_ROOT = Path(__file__).resolve().parent.parent
 
+console = Console()
+
 _venv_python = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
-PYTHON = str(_venv_python) if _venv_python.exists() else sys.executable
+
+if not _venv_python.exists():
+    # Attempt to bootstrap automatically
+    _uv = shutil.which("uv")
+    if _uv:
+        console.print("[yellow]No .venv found — running uv sync to bootstrap...[/yellow]")
+        _result = subprocess.run([_uv, "sync", "--project", str(LEDMATRIX_ROOT)], check=False)
+        if _result.returncode != 0:
+            console.print("[red]uv sync failed. Run manually: uv sync[/red]")
+            sys.exit(1)
+    else:
+        console.print(
+            "[red]No .venv found and 'uv' is not installed.[/red]\n"
+            "Install uv:  curl -LsSf https://astral.sh/uv/install.sh | sh\n"
+            "Then run:    uv sync"
+        )
+        sys.exit(1)
+
+PYTHON = str(_venv_python)
 
 DEV_SETUP = LEDMATRIX_ROOT / "scripts" / "dev" / "dev_plugin_setup.sh"
 PLUGINS_DIR = LEDMATRIX_ROOT / "plugins"
@@ -42,10 +62,8 @@ API_BASE = "http://localhost:5000/api/v3"
 REGISTRY_URL = "https://raw.githubusercontent.com/ChuckBuilds/ledmatrix-plugins/main/plugins.json"
 
 # ---------------------------------------------------------------------------
-# Console + Banner
+# Banner
 # ---------------------------------------------------------------------------
-
-console = Console()
 
 
 def print_banner() -> None:
