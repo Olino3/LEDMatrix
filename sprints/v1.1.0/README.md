@@ -15,9 +15,10 @@
 | [FOUND-003](FOUND-003-matrix-cli-install-doctor.md) | `matrix` CLI — `install`, `setup`, and `doctor` commands | Open | FOUND-001, FOUND-002 |
 | [FOUND-004](FOUND-004-ci-pipeline.md) | GitHub Actions CI pipeline | Open | FOUND-001 |
 | [FOUND-005](FOUND-005-precommit-ruff.md) | Migrate pre-commit hooks to `ruff` | Open | FOUND-004 |
-| [FOUND-006](FOUND-006-plugin-quickfixes.md) | Plugin quick-fixes: `matrix.width` / `matrix.height` refs | Open | — |
+| [FOUND-006](FOUND-006-plugin-quickfixes.md) | Plugin quick-fixes: `matrix.width` / `matrix.height` refs | Done | — |
 | [SPIKE-001](SPIKE-001-update-diagnostic-scripts.md) | Update diagnostic scripts for `uv` migration | Open | FOUND-001 |
 | [SPIKE-002](SPIKE-002-update-docs-for-uv-migration.md) | Update documentation for `uv` migration | Open | FOUND-001 |
+| [SPIKE-003](SPIKE-003-monorepo-plugin-quickfixes-pr.md) | Open PR for monorepo `display_manager.matrix` fixes (20 plugins) | Open | FOUND-006 |
 
 ## Dependency Graph
 
@@ -28,7 +29,8 @@ FOUND-001 (pyproject.toml)
   └── FOUND-004 (CI pipeline)
         └── FOUND-005 (pre-commit ruff)
 
-FOUND-006 (plugin quick-fixes)   ← independent
+FOUND-006 (plugin quick-fixes)   ← Done (local fixes)
+  └── SPIKE-003 (monorepo PR — 20 plugins, external repo)
 ```
 
 ## Definition of Done (Phase 1)
@@ -40,4 +42,4 @@ FOUND-006 (plugin quick-fixes)   ← independent
 - [ ] Root-level `first_time_install.sh`, `start_display.sh`, `stop_display.sh`, `web_interface/run.sh` deprecated (warning added) or removed
 - [ ] GitHub Actions CI passes on Python 3.10, 3.11, and 3.12: lint, types, tests, audit
 - [ ] Pre-commit hooks use `ruff check` + `ruff format` (flake8 removed)
-- [ ] `football-scoreboard` and `hockey-scoreboard` plugin versions bumped, `plugins.json` regenerated
+- [x] `football-scoreboard` and `hockey-scoreboard` plugin versions bumped, `plugins.json` regenerated (FOUND-006 complete; 20 total plugins fixed — see SPIKE-003 for monorepo PR)
