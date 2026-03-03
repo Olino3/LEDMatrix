@@ -16,7 +16,7 @@ dependencies = [
     "numpy>=1.24.0",
 
     # Timezone handling
-    "pytz>=2024.2",
+    "pytz>=2024.2,<2025.0",
     "timezonefinder>=6.5.0,<7.0.0",
     "geopy>=2.4.1,<3.0.0",
 
