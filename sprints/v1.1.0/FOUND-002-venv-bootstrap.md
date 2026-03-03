@@ -170,6 +170,19 @@ print('OK: venv python exists at', venv_py)
 - On Raspberry Pi, `root` runs the display service; confirm `root` owns the `.venv/` or that permissions allow execution.
 - Do not remove `/usr/bin/python3` fallback in scripts that run _before_ the venv is created (e.g., the `uv` bootstrap step itself must use system Python or the `uv` binary directly).
 
+### Downstream Doc Impacts (from SPIKE-002 Review)
+
+SPIKE-002 updated the core docs (`HOW_TO_RUN_TESTS.md`, `EMULATOR_SETUP_GUIDE.md`, `TROUBLESHOOTING.md`, `DEVELOPER_QUICK_REFERENCE.md`, `web_interface/README.md`) to reference `uv sync` instead of `pip install -r requirements.txt`. However, the following docs will need **additional updates once FOUND-002 lands**, because they are tightly coupled to how the venv and plugin dependencies are installed:
+
+| File | What Changes After FOUND-002 |
+|------|------------------------------|
+| `docs/PLUGIN_DEPENDENCY_GUIDE.md` | References `sudo pip3 install --break-system-packages -r plugins/<id>/requirements.txt`. Once all Python runs from the venv, the `--break-system-packages` flag is unnecessary — plugins should install deps into the venv instead. |
+| `docs/PLUGIN_DEPENDENCY_TROUBLESHOOTING.md` | Same pattern — `--break-system-packages` and `/root/.local` troubleshooting become obsolete with venv-based installs. |
+| `docs/TROUBLESHOOTING.md` (lines 430-431) | References `pip3 install --break-system-packages -r plugins/<id>/requirements.txt` for manual plugin dep installation — should become `uv pip install -r plugins/<id>/requirements.txt` or similar venv-aware command. |
+| `docs/DEVELOPMENT.md` (lines 52, 102, 115) | CI/CD examples use bare `pip install .` for building the `rgbmatrix` submodule — deferred to FOUND-004. |
+
+These are **not blocking** FOUND-002 — they can be done as a follow-up doc pass after FOUND-002 merges, since the exact commands depend on the venv bootstrap approach chosen here.
+
 ### Impact from FOUND-001
 
 After FOUND-001 is merged, the following changes affect this ticket:

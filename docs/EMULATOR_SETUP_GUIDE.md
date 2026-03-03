@@ -17,14 +17,14 @@ The LEDMatrix emulator allows you to run and test LEDMatrix displays on your com
 ## Prerequisites
 
 ### System Requirements
-- Python 3.7 or higher
+- Python 3.10 or higher
 - Windows, macOS, or Linux
 - At least 2GB RAM (4GB recommended)
 - Internet connection for plugin downloads
 
 ### Required Software
-- Python 3.7+
-- pip (Python package manager)
+- Python 3.10+
+- [uv](https://docs.astral.sh/uv/) (package manager)
 - Git (for plugin management)
 
 ## Installation
@@ -36,23 +36,17 @@ git clone https://github.com/your-username/LEDMatrix.git
 cd LEDMatrix
 ```
 
-### 2. Install Emulator Dependencies
+### 2. Install Dependencies (Including Emulator)
 
-Install the emulator-specific requirements:
+Install all dependencies with the emulator extra:
 
 ```bash
-pip install -r requirements-emulator.txt
+uv sync --extra emulator
 ```
 
 This installs:
+- All core runtime dependencies (from `pyproject.toml`)
 - `RGBMatrixEmulator` - The core emulation library
-- Additional dependencies for display adapters
-
-### 3. Install Standard Dependencies
-
-```bash
-pip install -r requirements.txt
-```
 
 ## Configuration
 
@@ -215,7 +209,7 @@ The browser adapter runs a web server and displays the matrix in a web browser.
 
 **Solution:**
 ```bash
-pip install RGBMatrixEmulator
+uv sync --extra emulator
 ```
 
 #### 2. Pygame Window Not Opening
@@ -228,7 +222,7 @@ pip install RGBMatrixEmulator
 **Solutions:**
 ```bash
 # Install pygame
-pip install pygame
+uv pip install pygame
 
 # For Linux, ensure X11 is running
 echo $DISPLAY
