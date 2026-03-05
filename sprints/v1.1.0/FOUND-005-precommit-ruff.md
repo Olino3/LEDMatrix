@@ -2,7 +2,7 @@
 
 > **For Claude:** This is a configuration-only change. No application code changes. Read existing `.pre-commit-config.yaml` before editing.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** [FOUND-004](FOUND-004-ci-pipeline.md) — `ruff` config must be in `pyproject.toml` first; CI workflow validates that hooks match CI behavior
