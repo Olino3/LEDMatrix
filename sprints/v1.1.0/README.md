@@ -24,7 +24,8 @@
 | [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md) | Fix pre-existing ruff lint violations in `src/` | Done | FOUND-005 |
 | [SPIKE-007](SPIKE-007-bandit-config.md) | Create or remove `bandit.yaml` configuration | Open | FOUND-005 |
 | [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Open | FOUND-002 |
-| [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Open | FOUND-003, SPIKE-004 |
+| [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Done | FOUND-003, SPIKE-004 |
+| [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md) | Expand `matrix install` with Pi-specific setup steps | Open | SPIKE-009 |
 
 ## Dependency Graph
 
@@ -33,9 +34,10 @@ FOUND-001 (pyproject.toml + uv)
   ├── FOUND-002 (venv bootstrap)
   │     ├── FOUND-003 (matrix CLI install/doctor)
   │     │     ├── SPIKE-004 [Done] (remove deprecated scripts)
-  │     │     │     └── SPIKE-009 [Open] (retire first_time_install.sh)
+  │     │     │     └── SPIKE-009 [Done] (retire first_time_install.sh)
+  │     │     │           └── SPIKE-010 [Open] (expand matrix install with Pi setup)
   │     │     ├── SPIKE-005 [Open] (doctor rgbmatrix import check)
-  │     │     └── SPIKE-009 [Open] (retire first_time_install.sh) ← also depends on SPIKE-004
+  │     │     └── SPIKE-009 [Done] (retire first_time_install.sh) ← also depends on SPIKE-004
   │     └── SPIKE-008 [Open] (plugin deps venv migration)
   ├── FOUND-004 (CI pipeline)
   │     └── FOUND-005 (pre-commit ruff)
@@ -55,16 +57,17 @@ FOUND-006 (plugin quick-fixes) [Done]
 - [ ] All systemd service files boot from `.venv/bin/python3` (templates use placeholder; needs Pi deployment verification)
 - [x] `matrix install`, `matrix setup`, `matrix doctor` commands functional
 - [x] Root-level `start_display.sh`, `stop_display.sh`, `web_interface/run.sh` removed (SPIKE-004)
+- [x] `first_time_install.sh` replaced with deprecation wrapper pointing to `matrix install` (SPIKE-009)
 - [x] GitHub Actions CI passes on Python 3.10, 3.11, and 3.12: lint, types, tests, audit
 - [x] Pre-commit hooks use `ruff check` + `ruff format` (flake8 removed)
 - [x] `football-scoreboard` and `hockey-scoreboard` plugin versions bumped, `plugins.json` regenerated (FOUND-006 complete; 20 total plugins fixed -- see SPIKE-003 for monorepo PR)
 
 ## Remaining Work
 
-4 tickets are still Open. All are spikes/cleanup discovered during implementation of the core FOUND tickets:
+5 tickets are still Open. All are spikes/cleanup discovered during implementation of the core FOUND tickets:
 
 - **SPIKE-003** -- Monorepo PR for 20 plugins (requires push access to external repo)
 - **SPIKE-005** -- Enhance `matrix doctor` with rgbmatrix import check
 - **SPIKE-007** -- Decide on bandit.yaml configuration
 - **SPIKE-008** -- Migrate plugin dependency installation to venv-aware commands
-- **SPIKE-009** -- Fully retire `first_time_install.sh`
+- **SPIKE-010** -- Expand `matrix install` with Pi-specific setup steps (apt, rgbmatrix, permissions, WiFi, sound, perf)
