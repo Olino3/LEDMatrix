@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** _(none — start here)_
-**Blocks:** [FOUND-002](FOUND-002-venv-bootstrap.md), [FOUND-003](FOUND-003-matrix-cli-install-doctor.md), [FOUND-004](FOUND-004-ci-pipeline.md)
+**Blocks:** [FOUND-002](FOUND-002-venv-bootstrap.md), [FOUND-003](FOUND-003-matrix-cli-install-doctor.md), [FOUND-004](FOUND-004-ci-pipeline.md), [SPIKE-001](SPIKE-001-update-diagnostic-scripts.md), [SPIKE-002](SPIKE-002-update-docs-for-uv-migration.md)
 
 ---
 

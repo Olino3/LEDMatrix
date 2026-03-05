@@ -1,4 +1,4 @@
-# SPIKE-006 — Retire `first_time_install.sh` in Favor of `matrix install`
+# SPIKE-009 — Retire `first_time_install.sh` in Favor of `matrix install`
 
 **Status:** Open
 **Phase:** v1.1.0 — Foundation

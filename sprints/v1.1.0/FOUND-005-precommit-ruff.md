@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** [FOUND-004](FOUND-004-ci-pipeline.md) — `ruff` config must be in `pyproject.toml` first; CI workflow validates that hooks match CI behavior
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md), [SPIKE-007](SPIKE-007-bandit-config.md)
 
 ---
 

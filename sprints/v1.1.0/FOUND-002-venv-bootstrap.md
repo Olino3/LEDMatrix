@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md) — `pyproject.toml` and `uv.lock` must exist first
-**Blocks:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md)
+**Blocks:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md), [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md)
 
 ---
 

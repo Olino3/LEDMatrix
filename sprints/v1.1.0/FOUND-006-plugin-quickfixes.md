@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Fix
 **Depends on:** _(none — fully independent, can be done in parallel with FOUND-001 through FOUND-005)_
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-003](SPIKE-003-monorepo-plugin-quickfixes-pr.md)
 
 ---
 

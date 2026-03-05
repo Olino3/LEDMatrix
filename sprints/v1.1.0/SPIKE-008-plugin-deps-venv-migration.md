@@ -1,9 +1,10 @@
-# SPIKE-003 — Plugin Dependency Installation: Migrate to Venv
+# SPIKE-008 — Plugin Dependency Installation: Migrate to Venv
 
 **Status:** Open
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** [FOUND-002](FOUND-002-venv-bootstrap.md)
+**Blocks:** _(none)_
 
 ---
 

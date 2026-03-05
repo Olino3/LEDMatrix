@@ -4,7 +4,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike / Cleanup
 **Depends on:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
 
 ---
 

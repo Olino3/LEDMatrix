@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Feature
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md), [FOUND-002](FOUND-002-venv-bootstrap.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md), [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md), [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
 
 ---
 
