@@ -52,7 +52,7 @@ cd bindings/python
 python3 -m pip install --break-system-packages .
 ```
 
-**Note:** The `first_time_install.sh` script automates this process during installation.
+**Note:** The `matrix install` command does **not** build or install the `rgbmatrix` Python bindings from `rpi-rgb-led-matrix-master`. You must run the above commands manually (until this step is automated in SPIKE-010); `matrix install` only syncs the virtual environment, creates configuration, and installs systemd services.
 
 #### Troubleshooting
 

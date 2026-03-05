@@ -213,7 +213,7 @@ else
     echo ""
     echo "Some checks failed. Please review the output above."
     echo "Common fixes:"
-    echo "- Re-run first_time_install.sh if services are missing"
+    echo "- Re-run 'matrix install' if services are missing"
     echo "- Check service logs: journalctl -u <service-name> -f"
     echo "- Ensure you're logged in after group changes: newgrp systemd-journal"
     exit 1

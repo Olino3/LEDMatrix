@@ -154,7 +154,7 @@ def main():
                 print("Warning: rgbmatrix source not found (this is normal if Step 6 hasn't run yet)")
         except subprocess.CalledProcessError as e:
             # Don't fail the whole installation - rgbmatrix is optional for web interface
-            # and should be installed in Step 6 of first_time_install.sh
+            # and should be built from the rpi-rgb-led-matrix submodule
             print(f"Warning: Failed to install rgbmatrix module: {e}")
             print("  This is normal if rgbmatrix hasn't been built yet (Step 6).")
             print("  The web interface will work without it.")

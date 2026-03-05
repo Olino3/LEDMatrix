@@ -306,7 +306,7 @@ This one-shot installer will automatically:
 - Check system prerequisites (network, disk space, sudo access)
 - Install required system packages (git, python3, build tools, etc.)
 - Clone or update the LEDMatrix repository
-- Run the complete first-time installation script
+- Run `matrix install` to set up the project
 
 The installation process typically takes 10-30 minutes depending on your internet connection and Pi model. All errors are reported explicitly with actionable fixes.
 
@@ -337,13 +337,17 @@ git clone https://github.com/ChuckBuilds/LEDMatrix.git
 cd LEDMatrix
 ```
 
-4. Run the first-time installation script:
+4. Install using the `matrix` CLI:
 ```bash
-chmod +x first_time_install.sh
-sudo bash ./first_time_install.sh
-```
+# Install uv (Python package manager) if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-This single script installs services, dependencies, configures permissions and sudoers, and validates the setup.
+# Run the installer (syncs venv, creates config, installs services)
+python3 scripts/matrix_cli.py install
+
+# Verify the installation
+python3 scripts/matrix_cli.py doctor
+```
 
 </details>
 

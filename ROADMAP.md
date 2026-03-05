@@ -24,8 +24,8 @@ Current version: **v1.0.0**
 - Update systemd service files to activate the venv before launching
 
 ### `matrix` CLI Consolidation
-- Absorb `first_time_install.sh` logic into `matrix install` / `matrix setup` subcommands
-- Deprecate and remove standalone shell scripts (`first_time_install.sh`, `start_display.sh`, `stop_display.sh`, `run.sh`)
+- ~~Absorb `first_time_install.sh` logic into `matrix install` / `matrix setup` subcommands~~ ✓ `first_time_install.sh` replaced with deprecation wrapper (SPIKE-009); Pi-specific steps pending (SPIKE-010)
+- ~~Deprecate and remove standalone shell scripts (`first_time_install.sh`, `start_display.sh`, `stop_display.sh`, `run.sh`)~~ ✓ All deprecated scripts removed or replaced with wrappers
 - `matrix` CLI becomes the single entry point for install, run, logs, and service management
 - Add `matrix doctor` command: checks venv, dependencies, hardware, and service health
 

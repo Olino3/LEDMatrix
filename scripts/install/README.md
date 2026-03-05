@@ -22,7 +22,7 @@ sudo make remove-matrix    # remove the matrix CLI
 
 ## Usage
 
-These scripts are typically called by `matrix install` (or the legacy `first_time_install.sh`), but can also be run individually if needed.
+These scripts are typically called by `matrix install`, but can also be run individually if needed.
 
 **Note:** Most installation scripts require `sudo` privileges to install systemd services and configure system settings.
 

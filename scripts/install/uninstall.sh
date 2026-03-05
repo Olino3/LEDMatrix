@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # LED Matrix Uninstall Script
-# Reverses everything done by first_time_install.sh and the individual install scripts.
+# Reverses everything done by `matrix install` and the individual install scripts.
 # Safe to run multiple times — skips steps that are already undone.
 
 set -euo pipefail

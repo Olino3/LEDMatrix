@@ -1,8 +1,12 @@
 #!/bin/bash
-# Quick diagnostic script to check why first_time_install.sh is failing
-# Run this on the Pi: bash debug_install.sh
+# Quick diagnostic script to check installation state
+# Run this on the Pi: bash scripts/install/debug_install.sh
+#
+# NOTE: For comprehensive health checks, prefer: matrix doctor
 
-echo "=== Diagnostic Script for Installation Failure ==="
+echo "=== Diagnostic Script for Installation ==="
+echo ""
+echo "NOTE: For a full health check, run: matrix doctor"
 echo ""
 
 echo "1. Checking if running as root:"
@@ -13,52 +17,39 @@ else
 fi
 echo ""
 
-echo "2. Checking if first_time_install.sh exists:"
-if [ -f "./first_time_install.sh" ]; then
-    echo "   ✓ Found ./first_time_install.sh"
-    echo "   Checking if executable:"
-    if [ -x "./first_time_install.sh" ]; then
-        echo "     ✓ Is executable"
-    else
-        echo "     ✗ NOT executable (fix with: chmod +x first_time_install.sh)"
-    fi
+echo "2. Checking for matrix CLI:"
+if [ -f "./scripts/matrix_cli.py" ]; then
+    echo "   ✓ Found ./scripts/matrix_cli.py"
 else
-    echo "   ✗ NOT found in current directory"
+    echo "   ✗ NOT found — ensure you are in the LEDMatrix project root"
     echo "   Current directory: $(pwd)"
 fi
 echo ""
 
-echo "3. Testing argument passing with -y flag:"
-echo "   Running: bash ./first_time_install.sh -y --help 2>&1 | head -20"
-if [ -f "./first_time_install.sh" ]; then
-    bash ./first_time_install.sh -y --help 2>&1 | head -20 || echo "   ✗ Script failed or not found"
+echo "3. Checking uv installation:"
+if command -v uv >/dev/null 2>&1; then
+    echo "   ✓ uv is installed: $(which uv)"
 else
-    echo "   ✗ first_time_install.sh not found"
+    echo "   ✗ uv not found — install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
 fi
 echo ""
 
-echo "4. Checking environment variable:"
-echo "   LEDMATRIX_ASSUME_YES=${LEDMATRIX_ASSUME_YES:-not set}"
-echo "   Testing with env: env LEDMATRIX_ASSUME_YES=1 bash -c 'echo ASSUME_YES would be set'"
-env LEDMATRIX_ASSUME_YES=1 bash -c 'echo "   ASSUME_YES would be: ${LEDMATRIX_ASSUME_YES:-not set}"'
-echo ""
-
-echo "5. Testing sudo with arguments:"
-echo "   Command: sudo -E env LEDMATRIX_ASSUME_YES=1 bash ./first_time_install.sh -y --help 2>&1 | head -20"
-if [ -f "./first_time_install.sh" ]; then
-    sudo -E env LEDMATRIX_ASSUME_YES=1 bash ./first_time_install.sh -y --help 2>&1 | head -20 || echo "   ✗ Sudo command failed"
+echo "4. Checking .venv:"
+if [ -f ".venv/bin/python3" ]; then
+    echo "   ✓ .venv exists"
+    .venv/bin/python3 --version 2>/dev/null || echo "   ✗ Python in venv not working"
 else
-    echo "   ✗ first_time_install.sh not found"
+    echo "   ✗ .venv not found — run: matrix setup"
 fi
 echo ""
 
-echo "6. Checking /tmp permissions:"
+echo "5. Checking /tmp permissions:"
 echo "   /tmp is writable: $([ -w /tmp ] && echo 'YES' || echo 'NO')"
 echo "   /tmp permissions: $(stat -c '%a' /tmp 2>/dev/null || echo 'unknown')"
 echo "   TMPDIR: ${TMPDIR:-not set}"
 echo ""
 
-echo "7. Checking stdin/TTY:"
+echo "6. Checking stdin/TTY:"
 if [ -t 0 ]; then
     echo "   ✓ stdin is a TTY (interactive)"
 else
@@ -67,19 +58,5 @@ else
 fi
 echo ""
 
-echo "8. Latest installation log:"
-# Determine project root directory (parent of scripts/install/)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-LOG_DIR="$PROJECT_ROOT_DIR/logs"
-LOG_FILE=$(ls -t "$LOG_DIR"/first_time_install_*.log 2>/dev/null | head -1)
-if [ -n "$LOG_FILE" ]; then
-    echo "   Found: $LOG_FILE"
-    echo "   Last 30 lines:"
-    tail -30 "$LOG_FILE" | sed 's/^/   /'
-else
-    echo "   No log files found in $LOG_DIR/"
-fi
-echo ""
-
 echo "=== Diagnostic Complete ==="
+echo "For full health check, run: matrix doctor"

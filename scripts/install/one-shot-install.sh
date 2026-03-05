@@ -89,28 +89,28 @@ retry() {
 check_network() {
     CURRENT_STEP="Network connectivity check"
     print_step "Checking network connectivity..."
-    
+
     if command -v ping >/dev/null 2>&1; then
         if ping -c 1 -W 3 8.8.8.8 >/dev/null 2>&1; then
             print_success "Internet connectivity confirmed (ping test)"
             return 0
         fi
     fi
-    
+
     if command -v curl >/dev/null 2>&1; then
         if curl -Is --max-time 5 http://deb.debian.org >/dev/null 2>&1; then
             print_success "Internet connectivity confirmed (curl test)"
             return 0
         fi
     fi
-    
+
     if command -v wget >/dev/null 2>&1; then
         if wget --spider --timeout=5 http://deb.debian.org >/dev/null 2>&1; then
             print_success "Internet connectivity confirmed (wget test)"
             return 0
         fi
     fi
-    
+
     print_error "No internet connectivity detected"
     echo ""
     echo "Please ensure your Raspberry Pi is connected to the internet and try again."
@@ -124,12 +124,12 @@ check_disk_space() {
         print_warning "df command not available, skipping disk space check"
         return 0
     fi
-    
+
     # Check available space in MB
     AVAILABLE_SPACE=$(df -m / | awk 'NR==2{print $4}' || echo "0")
     # Ensure AVAILABLE_SPACE has a default value if empty (handles unexpected df output)
     AVAILABLE_SPACE=${AVAILABLE_SPACE:-0}
-    
+
     if [ "$AVAILABLE_SPACE" -lt 500 ]; then
         print_error "Insufficient disk space: ${AVAILABLE_SPACE}MB available (need at least 500MB)"
         echo ""
@@ -149,13 +149,13 @@ check_disk_space() {
 check_sudo() {
     CURRENT_STEP="Sudo access check"
     print_step "Checking sudo access..."
-    
+
     # Check if running as root
     if [ "$EUID" -eq 0 ]; then
         print_success "Running as root"
         return 0
     fi
-    
+
     # Check if sudo is available
     if ! command -v sudo >/dev/null 2>&1; then
         print_error "sudo is not available and script is not running as root"
@@ -165,7 +165,7 @@ check_sudo() {
         echo "  2. Or install sudo first"
         exit 1
     fi
-    
+
     # Test sudo access
     if ! sudo -n true 2>/dev/null; then
         print_warning "Need sudo password - you may be prompted"
@@ -174,67 +174,90 @@ check_sudo() {
             exit 1
         fi
     fi
-    
+
     print_success "Sudo access confirmed"
 }
 
-# Fix /tmp permissions if needed (common issue when running via curl | bash)
-# Note: /tmp permission fixing is now done inline before running first_time_install.sh
-# This function is kept for backward compatibility but not actively used
-fix_tmp_permissions() {
-    CURRENT_STEP="TMP directory check"
-    # Only fix if /tmp is actually not writable (don't preemptively fix)
-    if [ ! -w /tmp ]; then
-        print_warning "/tmp is not writable, attempting to fix..."
+# Install uv (Python package manager)
+install_uv() {
+    CURRENT_STEP="Installing uv"
+    if command -v uv >/dev/null 2>&1; then
+        print_success "uv already installed"
+        return 0
+    fi
+
+    print_warning "uv not found, installing..."
+
+    # Prefer system package (available on Debian Bookworm+) — avoids curl|sh
+    if apt-cache show python3-uv >/dev/null 2>&1; then
         if [ "$EUID" -eq 0 ]; then
-            chmod 1777 /tmp 2>/dev/null || true
+            retry apt-get install -y python3-uv
         else
-            sudo chmod 1777 /tmp 2>/dev/null || true
+            retry sudo apt-get install -y python3-uv
+        fi
+    else
+        # Fall back to pip (no curl|sh, uses PyPI package integrity checks)
+        if ! command -v pip3 >/dev/null 2>&1; then
+            if [ "$EUID" -eq 0 ]; then
+                retry apt-get install -y python3-pip
+            else
+                retry sudo apt-get install -y python3-pip
+            fi
+        fi
+        # Try standard install first; use --break-system-packages on externally-managed envs
+        if ! pip3 install uv 2>/dev/null; then
+            print_warning "Standard pip install failed (externally-managed env), retrying with --break-system-packages..."
+            if ! pip3 install --break-system-packages uv; then
+                print_error "Failed to install uv via pip"
+                exit 1
+            fi
         fi
     fi
-    
-    # Ensure TMPDIR is set correctly
-    if [ -z "${TMPDIR:-}" ] || [ ! -w "${TMPDIR:-/tmp}" ]; then
-        export TMPDIR=/tmp
+
+    # Ensure the user-local bin directory is on PATH
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v uv >/dev/null 2>&1; then
+        print_success "uv installed successfully"
+    else
+        print_error "uv installed but not found on PATH"
+        exit 1
     fi
 }
 
 # Main installation function
 main() {
     print_step "LED Matrix One-Shot Installation"
-    
+
     echo "This script will:"
     echo "  1. Check prerequisites (network, disk space, sudo)"
-    echo "  2. Install system dependencies (git, python3, build tools)"
+    echo "  2. Install system dependencies (git, python3, uv)"
     echo "  3. Clone the LEDMatrix repository"
-    echo "  4. Run the first-time installation script"
+    echo "  4. Run 'matrix install' to set up the project"
     echo ""
-    
+
     # Check prerequisites
     check_network
     check_disk_space
     check_sudo
-    # Note: /tmp permissions are checked and fixed inline before running first_time_install.sh
-    # (only if actually wrong, not preemptively)
-    
+
     # Install basic system dependencies needed for cloning
     CURRENT_STEP="Installing system dependencies"
     print_step "Installing system dependencies..."
-    
+
     # Validate HOME variable
     if [ -z "${HOME:-}" ]; then
         print_error "HOME environment variable is not set"
         echo "Please set HOME or run: export HOME=\$(eval echo ~\$(whoami))"
         exit 1
     fi
-    
+
     # Update package list first
     if [ "$EUID" -eq 0 ]; then
         retry apt-get update -qq
     else
         retry sudo apt-get update -qq
     fi
-    
+
     # Install git and curl (needed for cloning and the script itself)
     if ! command -v git >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
         print_warning "git or curl not found, installing..."
@@ -247,14 +270,17 @@ main() {
     else
         print_success "git and curl already installed"
     fi
-    
+
+    # Install uv (needed by matrix install)
+    install_uv
+
     # Determine repository location
     REPO_DIR="${HOME}/LEDMatrix"
     REPO_URL="https://github.com/ChuckBuilds/LEDMatrix.git"
-    
+
     CURRENT_STEP="Repository setup"
     print_step "Setting up repository..."
-    
+
     # Check if directory exists and handle accordingly
     if [ -d "$REPO_DIR" ]; then
         if [ -d "$REPO_DIR/.git" ]; then
@@ -264,13 +290,13 @@ main() {
                 print_error "Failed to change to directory: $REPO_DIR"
                 exit 1
             fi
-            
+
             # Detect current branch or try main/master
             CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
             if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
                 CURRENT_BRANCH="main"
             fi
-            
+
             # Try to safely update current branch first (fast-forward only to avoid unintended merges)
             PULL_SUCCESS=false
             if git pull --ff-only origin "$CURRENT_BRANCH" >/dev/null 2>&1; then
@@ -289,7 +315,7 @@ main() {
                     fi
                 done
             fi
-            
+
             if [ "$PULL_SUCCESS" = false ]; then
                 print_warning "Git pull failed, but continuing with existing repository"
                 print_warning "You may have local changes or the repository may be on a different branch"
@@ -309,42 +335,25 @@ main() {
         print_success "Cloning repository to $REPO_DIR..."
         retry git clone "$REPO_URL" "$REPO_DIR"
     fi
-    
+
     # Verify repository is accessible
-    if [ ! -d "$REPO_DIR" ] || [ ! -f "$REPO_DIR/first_time_install.sh" ]; then
-        print_error "Repository setup failed: $REPO_DIR/first_time_install.sh not found"
+    if [ ! -d "$REPO_DIR" ] || [ ! -f "$REPO_DIR/scripts/matrix_cli.py" ]; then
+        print_error "Repository setup failed: $REPO_DIR/scripts/matrix_cli.py not found"
         exit 1
     fi
-    
+
     print_success "Repository ready at $REPO_DIR"
-    
-    # Execute main installation script
-    CURRENT_STEP="Main installation"
-    print_step "Running main installation script..."
-    
+
+    # Run matrix install
+    CURRENT_STEP="Main installation (matrix install)"
+    print_step "Running 'matrix install'..."
+
     if ! cd "$REPO_DIR"; then
         print_error "Failed to change to repository directory: $REPO_DIR"
         exit 1
     fi
-    
-    # Make sure the script is executable
-    chmod +x first_time_install.sh
-    
-    # Check if script exists
-    if [ ! -f "first_time_install.sh" ]; then
-        print_error "first_time_install.sh not found in $REPO_DIR"
-        exit 1
-    fi
-    
-    print_success "Starting main installation (this may take 10-30 minutes)..."
-    echo ""
-    
-    # Execute with proper error handling and non-interactive mode
-    # Temporarily disable errexit to capture exit code instead of exiting immediately
-    set +e
-    
+
     # Check /tmp permissions - only fix if actually wrong (common in automated scenarios)
-    # When running manually, /tmp usually has correct permissions (1777)
     TMP_PERMS=$(stat -c '%a' /tmp 2>/dev/null || echo "unknown")
     if [ "$TMP_PERMS" != "1777" ] && [ "$TMP_PERMS" != "unknown" ]; then
         CURRENT_STEP="Fixing /tmp permissions"
@@ -355,23 +364,19 @@ main() {
             sudo chmod 1777 /tmp 2>/dev/null || print_warning "Failed to fix /tmp permissions, continuing anyway..."
         fi
     fi
-    
-    # Execute main installation script with non-interactive mode
-    CURRENT_STEP="Main installation"
+
+    # Execute matrix install
+    CURRENT_STEP="Main installation (matrix install)"
     export TMPDIR=/tmp
+    set +e
     if [ "$EUID" -eq 0 ]; then
-        # Run in non-interactive mode with ASSUME_YES (both -y flag and env var for safety)
-        export LEDMATRIX_ASSUME_YES=1
-        bash ./first_time_install.sh -y
+        python3 "$REPO_DIR/scripts/matrix_cli.py" install
     else
-        # Pass both -y flag AND environment variable for non-interactive mode
-        # This ensures it works even if the script re-executes itself with sudo
-        # Also ensure stdin is properly handled for non-interactive mode
-        sudo -E env TMPDIR=/tmp LEDMATRIX_ASSUME_YES=1 bash ./first_time_install.sh -y </dev/null
+        sudo -E env TMPDIR=/tmp PATH="$PATH" python3 "$REPO_DIR/scripts/matrix_cli.py" install
     fi
     INSTALL_EXIT_CODE=$?
     set -e  # Re-enable errexit
-    
+
     if [ $INSTALL_EXIT_CODE -eq 0 ]; then
         echo ""
         print_step "Installation Complete!"
@@ -385,10 +390,8 @@ main() {
             if [ -n "$IP_ADDRESS" ]; then
                 # Check if IPv6 address (contains colons but no periods)
                 if [[ "$IP_ADDRESS" =~ .*:.* ]] && [[ ! "$IP_ADDRESS" =~ .*\..* ]]; then
-                    # IPv6 addresses need brackets in URLs
                     echo "  2. Or use the web interface: http://[$IP_ADDRESS]:5000"
                 else
-                    # IPv4 address
                     echo "  2. Or use the web interface: http://$IP_ADDRESS:5000"
                 fi
             else
@@ -398,14 +401,15 @@ main() {
             echo "  2. Or use the web interface: http://<your-pi-ip>:5000"
         fi
         echo "  3. Start the service: sudo systemctl start ledmatrix.service"
+        echo "  4. Verify health:     matrix doctor"
         echo ""
     else
-        print_error "Main installation script exited with code $INSTALL_EXIT_CODE"
+        print_error "'matrix install' exited with code $INSTALL_EXIT_CODE"
         echo ""
         echo "The installation may have partially completed."
         echo "You can:"
         echo "  1. Re-run this script to continue (it's safe to run multiple times)"
-        echo "  2. Check logs in $REPO_DIR/logs/"
+        echo "  2. Run 'matrix doctor' to check what's missing"
         echo "  3. Review the error messages above"
         exit $INSTALL_EXIT_CODE
     fi
