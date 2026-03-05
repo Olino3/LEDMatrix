@@ -16,6 +16,6 @@ from src.vegas_mode.config import VegasModeConfig
 from src.vegas_mode.coordinator import VegasModeCoordinator
 
 __all__ = [
-    'VegasModeConfig',
-    'VegasModeCoordinator',
+    "VegasModeConfig",
+    "VegasModeCoordinator",
 ]

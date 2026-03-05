@@ -1,34 +1,34 @@
-import os
-import logging
-import freetype
-import json
 import hashlib
+import json
+import logging
+import os
+import tempfile
+import time
 import urllib.request
 import zipfile
-import tempfile
-import shutil
-import time
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import freetype
 from PIL import ImageFont
-from typing import Dict, Tuple, Optional, Union, Any, List
-from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
+
 class FontManager:
     """
-    Comprehensive font management supporting TTF and BDF fonts with caching, 
+    Comprehensive font management supporting TTF and BDF fonts with caching,
     measurement, plugin support, and manager font registration.
-    
+
     This FontManager serves dual purposes:
     1. Utility functions for font loading, caching, and measurement
     2. Dynamic detection and override of fonts used by managers/plugins
     """
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.fonts_config = config.get("fonts", {})
-        
+
         # Font discovery and catalog
         self.font_catalog: Dict[str, str] = {}  # family_name -> file_path
         self.font_cache: Dict[str, Union[ImageFont.FreeTypeFont, freetype.Face]] = {}  # (family, size) -> font
@@ -42,7 +42,9 @@ class FontManager:
 
         # Manager font registration - NEW for manager-centric model
         self.manager_fonts: Dict[str, Dict[str, Any]] = {}  # manager_id -> {element_key: {family, size_px, color}}
-        self.detected_fonts: Dict[str, Dict[str, Any]] = {}  # element_key -> {family, size_px, color, manager_id, usage_count}
+        self.detected_fonts: Dict[
+            str, Dict[str, Any]
+        ] = {}  # element_key -> {family, size_px, color, manager_id, usage_count}
 
         # Dynamic font loading
         self.temp_font_dir = Path(tempfile.gettempdir()) / "ledmatrix_fonts"
@@ -56,30 +58,28 @@ class FontManager:
             "render_times": {},
             "total_renders": 0,
             "failed_loads": 0,
-            "start_time": time.time()
+            "start_time": time.time(),
         }
-        
+
         # Common font paths for convenience
         self.common_fonts = {
             "press_start": "assets/fonts/PressStart2P-Regular.ttf",
             "four_by_six": "assets/fonts/4x6-font.ttf",
-            "five_by_seven": "assets/fonts/5x7.bdf"
+            "five_by_seven": "assets/fonts/5x7.bdf",
             # Note: cozette_bdf removed - font file not available
             # To re-enable: download cozette.bdf from https://github.com/the-moonwitch/Cozette
             # and add: "cozette_bdf": "assets/fonts/cozette.bdf"
         }
-        
+
         # Size tokens for convenience
-        self.size_tokens = {
-            "xs": 6, "sm": 8, "md": 10, "lg": 12, "xl": 14, "xxl": 16
-        }
-        
+        self.size_tokens = {"xs": 6, "sm": 8, "md": 10, "lg": 12, "xl": 14, "xxl": 16}
+
         # Font overrides storage (for manual overrides)
         self.font_overrides_file = "config/font_overrides.json"
         self.font_overrides: Dict[str, Dict[str, Any]] = {}
-        
+
         self._initialize_fonts()
-    
+
     def reload_config(self, new_config: Dict[str, Any]):
         """Reload configuration and refresh font catalog."""
         self.config = new_config
@@ -92,12 +92,13 @@ class FontManager:
     # ==================== Manager Font Registration ====================
     # NEW: Support for managers to register their font choices dynamically
 
-    def register_manager_font(self, manager_id: str, element_key: str, 
-                             family: str, size_px: int, color: Optional[Tuple[int, int, int]] = None):
+    def register_manager_font(
+        self, manager_id: str, element_key: str, family: str, size_px: int, color: Optional[Tuple[int, int, int]] = None
+    ):
         """
         Register a font choice made by a manager for a specific element.
         This allows us to detect and track which fonts managers are using.
-        
+
         Args:
             manager_id: Identifier for the manager (e.g., 'nfl_live', 'nba_recent')
             element_key: Element key (e.g., 'nfl.live.score')
@@ -107,33 +108,29 @@ class FontManager:
         """
         if manager_id not in self.manager_fonts:
             self.manager_fonts[manager_id] = {}
-        
-        font_spec = {
-            "family": family,
-            "size_px": size_px,
-            "manager_id": manager_id
-        }
+
+        font_spec = {"family": family, "size_px": size_px, "manager_id": manager_id}
         if color:
             font_spec["color"] = color
-        
+
         self.manager_fonts[manager_id][element_key] = font_spec
-        
+
         # Track usage in detected_fonts
         if element_key not in self.detected_fonts:
             self.detected_fonts[element_key] = font_spec.copy()
             self.detected_fonts[element_key]["usage_count"] = 1
         else:
             self.detected_fonts[element_key]["usage_count"] += 1
-        
+
         logger.debug(f"Registered font for {manager_id}.{element_key}: {family}@{size_px}px")
 
     def get_manager_fonts(self, manager_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get registered fonts for a specific manager or all managers.
-        
+
         Args:
             manager_id: Optional manager ID, if None returns all
-            
+
         Returns:
             Dictionary of registered fonts
         """
@@ -255,7 +252,7 @@ class FontManager:
         """Download a font from a URL."""
         try:
             family = font_def["family"]
-            
+
             # Generate cache filename based on URL hash
             url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
             extension = self._get_font_extension(url)
@@ -272,16 +269,16 @@ class FontManager:
             urllib.request.urlretrieve(url, cache_path)
 
             # Handle zip files
-            if url.endswith('.zip'):
+            if url.endswith(".zip"):
                 extract_dir = self.temp_font_dir / f"{family}_{url_hash}"
                 extract_dir.mkdir(exist_ok=True)
-                
-                with zipfile.ZipFile(cache_path, 'r') as zip_ref:
+
+                with zipfile.ZipFile(cache_path, "r") as zip_ref:
                     zip_ref.extractall(extract_dir)
-                
+
                 # Find the actual font file
                 for file in extract_dir.iterdir():
-                    if file.suffix.lower() in ['.ttf', '.otf', '.bdf']:
+                    if file.suffix.lower() in [".ttf", ".otf", ".bdf"]:
                         return str(file)
 
             return str(cache_path)
@@ -292,15 +289,15 @@ class FontManager:
 
     def _get_font_extension(self, url: str) -> str:
         """Extract font file extension from URL."""
-        if '.ttf' in url.lower():
-            return '.ttf'
-        elif '.otf' in url.lower():
-            return '.otf'
-        elif '.bdf' in url.lower():
-            return '.bdf'
-        elif '.zip' in url.lower():
-            return '.zip'
-        return '.ttf'  # default
+        if ".ttf" in url.lower():
+            return ".ttf"
+        elif ".otf" in url.lower():
+            return ".otf"
+        elif ".bdf" in url.lower():
+            return ".bdf"
+        elif ".zip" in url.lower():
+            return ".zip"
+        return ".ttf"  # default
 
     def _resolve_plugin_font_path(self, plugin_id: str, relative_path: str) -> Optional[str]:
         """Resolve a plugin-relative font path."""
@@ -326,7 +323,7 @@ class FontManager:
                             del self.font_catalog[namespaced_family]
                         if namespaced_family in self.font_metadata:
                             del self.font_metadata[namespaced_family]
-                    
+
                     del self.plugin_font_catalogs[plugin_id]
 
                 # Remove plugin manifest
@@ -358,25 +355,26 @@ class FontManager:
 
     # ==================== Font Resolution ====================
 
-    def resolve_font(self, element_key: str, family: str, size_px: int, 
-                    plugin_id: Optional[str] = None) -> Union[ImageFont.FreeTypeFont, freetype.Face]:
+    def resolve_font(
+        self, element_key: str, family: str, size_px: int, plugin_id: Optional[str] = None
+    ) -> Union[ImageFont.FreeTypeFont, freetype.Face]:
         """
         Resolve font for an element, checking for overrides.
-        
+
         This is the main method managers should call to get fonts.
         It checks for manual overrides first, then uses the manager's choice.
-        
+
         Args:
             element_key: Element key (e.g., 'nfl.live.score')
             family: Font family name (manager's choice)
             size_px: Font size in pixels (manager's choice)
             plugin_id: Optional plugin context for namespaced fonts
-            
+
         Returns:
             Resolved font object
         """
         start_time = time.time()
-        
+
         try:
             # Check for manual overrides first
             if element_key in self.font_overrides:
@@ -395,11 +393,11 @@ class FontManager:
 
             # Get the font
             font = self.get_font(family, size_px)
-            
+
             # Record performance
             duration = time.time() - start_time
             self._record_performance_metric("resolve", f"{family}_{size_px}", duration)
-            
+
             return font
 
         except Exception as e:
@@ -409,11 +407,11 @@ class FontManager:
     def get_font(self, family: str, size_px: int) -> Union[ImageFont.FreeTypeFont, freetype.Face]:
         """
         Get a font object for the specified family and size.
-        
+
         Args:
             family: Font family name (can include plugin namespace like "plugin_id::family")
             size_px: Font size in pixels
-            
+
         Returns:
             Font object (PIL Font for TTF, freetype.Face for BDF)
         """
@@ -434,7 +432,7 @@ class FontManager:
             font = ImageFont.load_default()
         else:
             try:
-                if font_path.endswith('.bdf'):
+                if font_path.endswith(".bdf"):
                     font = self._load_bdf_font(font_path, size_px)
                 else:
                     font = ImageFont.truetype(font_path, size_px)
@@ -447,7 +445,7 @@ class FontManager:
         self.font_cache[cache_key] = font
         duration = time.time() - start_time
         self.performance_stats["font_load_times"][cache_key] = duration
-        
+
         return font
 
     def _load_bdf_font(self, font_path: str, size_px: int) -> freetype.Face:
@@ -470,11 +468,11 @@ class FontManager:
     def measure_text(self, text: str, font: Union[ImageFont.FreeTypeFont, freetype.Face]) -> Tuple[int, int, int]:
         """
         Measure text dimensions and baseline.
-        
+
         Args:
             text: Text to measure
             font: Font to use for measurement
-            
+
         Returns:
             Tuple of (width, height, baseline_offset)
         """
@@ -583,10 +581,10 @@ class FontManager:
             return
 
         for filename in os.listdir(fonts_dir):
-            if filename.endswith(('.ttf', '.bdf')):
+            if filename.endswith((".ttf", ".bdf")):
                 filepath = os.path.join(fonts_dir, filename)
                 # Generate family name from filename (without extension)
-                family_name = filename.rsplit('.', 1)[0].lower()
+                family_name = filename.rsplit(".", 1)[0].lower()
                 self.font_catalog[family_name] = filepath
                 logger.debug(f"Found font: {family_name} -> {filepath}")
 
@@ -605,7 +603,7 @@ class FontManager:
         """Load font overrides from configuration."""
         try:
             if os.path.exists(self.font_overrides_file):
-                with open(self.font_overrides_file, 'r') as f:
+                with open(self.font_overrides_file, "r") as f:
                     self.font_overrides = json.load(f)
                     logger.info(f"Loaded {len(self.font_overrides)} font overrides")
             else:
@@ -618,13 +616,12 @@ class FontManager:
         """Save current font overrides to file."""
         try:
             from pathlib import Path
-            from src.common.permission_utils import (
-                ensure_directory_permissions,
-                get_config_dir_mode
-            )
+
+            from src.common.permission_utils import ensure_directory_permissions, get_config_dir_mode
+
             font_overrides_path = Path(self.font_overrides_file)
             ensure_directory_permissions(font_overrides_path.parent, get_config_dir_mode())
-            with open(self.font_overrides_file, 'w') as f:
+            with open(self.font_overrides_file, "w") as f:
                 json.dump(self.font_overrides, f, indent=2)
             logger.info(f"Saved {len(self.font_overrides)} font overrides")
         except Exception as e:
@@ -660,9 +657,10 @@ class FontManager:
             "cache_hits": self.performance_stats["cache_hits"],
             "cache_misses": self.performance_stats["cache_misses"],
             "cache_hit_rate": (
-                self.performance_stats["cache_hits"] / 
-                (self.performance_stats["cache_hits"] + self.performance_stats["cache_misses"])
-                if (self.performance_stats["cache_hits"] + self.performance_stats["cache_misses"]) > 0 else 0
+                self.performance_stats["cache_hits"]
+                / (self.performance_stats["cache_hits"] + self.performance_stats["cache_misses"])
+                if (self.performance_stats["cache_hits"] + self.performance_stats["cache_misses"]) > 0
+                else 0
             ),
             "total_fonts_cached": len(self.font_cache),
             "total_metrics_cached": len(self.metrics_cache),
@@ -670,7 +668,7 @@ class FontManager:
             "total_fonts_available": len(self.font_catalog),
             "plugin_fonts": len(self.plugin_fonts),
             "manager_fonts": len(self.manager_fonts),
-            "detected_fonts": len(self.detected_fonts)
+            "detected_fonts": len(self.detected_fonts),
         }
 
     def get_font_catalog(self) -> Dict[str, str]:
@@ -692,10 +690,9 @@ class FontManager:
 
             # Copy font to assets/fonts directory
             from pathlib import Path
-            from src.common.permission_utils import (
-                ensure_directory_permissions,
-                get_assets_dir_mode
-            )
+
+            from src.common.permission_utils import ensure_directory_permissions, get_assets_dir_mode
+
             fonts_dir = Path("assets/fonts")
             ensure_directory_permissions(fonts_dir, get_assets_dir_mode())
 
@@ -744,11 +741,11 @@ class FontManager:
             if not os.path.exists(font_path):
                 return {"valid": False, "error": "Font file not found"}
 
-            if font_path.endswith('.bdf'):
+            if font_path.endswith(".bdf"):
                 # Try to load BDF font
                 face = freetype.Face(font_path)
                 return {"valid": True, "type": "bdf", "family": "unknown"}
-            elif font_path.endswith('.ttf'):
+            elif font_path.endswith(".ttf"):
                 # Try to load TTF font
                 font = ImageFont.truetype(font_path, 12)
                 return {"valid": True, "type": "ttf", "family": "unknown"}

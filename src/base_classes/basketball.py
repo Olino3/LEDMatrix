@@ -1,6 +1,4 @@
 import logging
-import time
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from PIL import Image, ImageDraw, ImageFont
@@ -29,9 +27,7 @@ class Basketball(SportsCore):
     def _extract_game_details(self, game_event: Dict) -> Optional[Dict]:
         """Extract relevant game details from ESPN NCAA FB API response."""
         # --- THIS METHOD MAY NEED ADJUSTMENTS FOR NCAA FB API DIFFERENCES ---
-        details, home_team, away_team, status, situation = (
-            self._extract_game_details_common(game_event)
-        )
+        details, home_team, away_team, status, situation = self._extract_game_details_common(game_event)
         if details is None or home_team is None or away_team is None or status is None:
             return
         try:
@@ -40,30 +36,34 @@ class Basketball(SportsCore):
             period_text = ""
             if status["type"]["state"] == "in":
                 if period == 0:
-                    period_text = "Start" # Before kickoff
+                    period_text = "Start"  # Before kickoff
                 elif period >= 1 and period <= 4:
-                    period_text = f"Q{period}" # OT starts after Q4
+                    period_text = f"Q{period}"  # OT starts after Q4
                 elif period > 4:
-                    period_text = f"OT{period - 4}" # OT starts after Q4
-            elif status["type"]["state"] == "halftime" or status["type"]["name"] == "STATUS_HALFTIME": # Check explicit halftime state
+                    period_text = f"OT{period - 4}"  # OT starts after Q4
+            elif (
+                status["type"]["state"] == "halftime" or status["type"]["name"] == "STATUS_HALFTIME"
+            ):  # Check explicit halftime state
                 period_text = "HALF"
             elif status["type"]["state"] == "post":
-                 if period > 4 : period_text = "Final/OT"
-                 else: period_text = "Final"
+                if period > 4:
+                    period_text = "Final/OT"
+                else:
+                    period_text = "Final"
             elif status["type"]["state"] == "pre":
-                period_text = details.get("game_time", "") # Show time for upcoming
+                period_text = details.get("game_time", "")  # Show time for upcoming
 
-            details.update({
-                "period": period,
-                "period_text": period_text, # Formatted quarter/status
-                "clock": status.get("displayClock", "0:00"),
-            })
+            details.update(
+                {
+                    "period": period,
+                    "period_text": period_text,  # Formatted quarter/status
+                    "clock": status.get("displayClock", "0:00"),
+                }
+            )
 
             # Basic validation (can be expanded)
             if not details["home_abbr"] or not details["away_abbr"]:
-                self.logger.warning(
-                    f"Missing team abbreviation in event: {details['id']}"
-                )
+                self.logger.warning(f"Missing team abbreviation in event: {details['id']}")
                 return None
 
             self.logger.debug(
@@ -112,15 +112,9 @@ class BasketballLive(Basketball, SportsLive):
     def _draw_scorebug_layout(self, game: Dict, force_clear: bool = False) -> None:
         """Draw the detailed scorebug layout for a live Basketball game."""  # Updated docstring
         try:
-            main_img = Image.new(
-                "RGBA", (self.display_width, self.display_height), (0, 0, 0, 255)
-            )
-            overlay = Image.new(
-                "RGBA", (self.display_width, self.display_height), (0, 0, 0, 0)
-            )
-            draw_overlay = ImageDraw.Draw(
-                overlay
-            )  # Draw text elements on overlay first
+            main_img = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 255))
+            overlay = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 0))
+            draw_overlay = ImageDraw.Draw(overlay)  # Draw text elements on overlay first
             home_logo = self._load_and_resize_logo(
                 game["home_id"],
                 game["home_abbr"],
@@ -135,14 +129,10 @@ class BasketballLive(Basketball, SportsLive):
             )
 
             if not home_logo or not away_logo:
-                self.logger.error(
-                    f"Failed to load logos for live game: {game.get('id')}"
-                )  # Changed log prefix
+                self.logger.error(f"Failed to load logos for live game: {game.get('id')}")  # Changed log prefix
                 # Draw placeholder text if logos fail
                 draw_final = ImageDraw.Draw(main_img.convert("RGB"))
-                self._draw_text_with_outline(
-                    draw_final, "Logo Error", (5, 5), self.fonts["status"]
-                )
+                self._draw_text_with_outline(draw_final, "Logo Error", (5, 5), self.fonts["status"])
                 self.display_manager.image.paste(main_img.convert("RGB"), (0, 0))
                 self.display_manager.update_display()
                 return
@@ -150,9 +140,7 @@ class BasketballLive(Basketball, SportsLive):
             center_y = self.display_height // 2
 
             # Draw logos (shifted slightly more inward than NHL perhaps)
-            home_x = (
-                self.display_width - home_logo.width + 10
-            )  # adjusted from 18 # Adjust position as needed
+            home_x = self.display_width - home_logo.width + 10  # adjusted from 18 # Adjust position as needed
             home_y = center_y - (home_logo.height // 2)
             main_img.paste(home_logo, (home_x, home_y), home_logo)
 
@@ -164,13 +152,9 @@ class BasketballLive(Basketball, SportsLive):
             # Note: Rankings are now handled in the records/rankings section below
 
             # Period/Quarter and Clock (Top center)
-            period_clock_text = (
-                f"{game.get('period_text', '')} {game.get('clock', '')}".strip()
-            )
+            period_clock_text = f"{game.get('period_text', '')} {game.get('clock', '')}".strip()
 
-            status_width = draw_overlay.textlength(
-                period_clock_text, font=self.fonts["time"]
-            )
+            status_width = draw_overlay.textlength(period_clock_text, font=self.fonts["time"])
             status_x = (self.display_width - status_width) // 2
             status_y = 1  # Position at top
             self._draw_text_with_outline(
@@ -191,26 +175,20 @@ class BasketballLive(Basketball, SportsLive):
                 score_y = self.display_height - score_font_h - 2
             else:
                 score_y = (self.display_height // 2) - 3
-            self._draw_text_with_outline(
-                draw_overlay, score_text, (score_x, score_y), self.fonts["score"]
-            )
+            self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts["score"])
 
             # Draw odds if available
             if "odds" in game and game["odds"]:
-                self._draw_dynamic_odds(
-                    draw_overlay, game["odds"], self.display_width, self.display_height
-                )
+                self._draw_dynamic_odds(draw_overlay, game["odds"], self.display_width, self.display_height)
 
             # Draw records or rankings if enabled (skip on short displays to avoid overlap)
             if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
-                    self.logger.debug(f"Loaded 6px record font successfully")
+                    self.logger.debug("Loaded 6px record font successfully")
                 except IOError:
                     record_font = ImageFont.load_default()
-                    self.logger.warning(
-                        f"Failed to load 6px font, using default font (size: {record_font.size})"
-                    )
+                    self.logger.warning(f"Failed to load 6px font, using default font (size: {record_font.size})")
 
                 # Get team abbreviations
                 away_abbr = game.get("away_abbr", "")
@@ -282,9 +260,7 @@ class BasketballLive(Basketball, SportsLive):
                         home_text = ""
 
                     if home_text:
-                        home_record_bbox = draw_overlay.textbbox(
-                            (0, 0), home_text, font=record_font
-                        )
+                        home_record_bbox = draw_overlay.textbbox((0, 0), home_text, font=record_font)
                         home_record_width = home_record_bbox[2] - home_record_bbox[0]
                         home_record_x = self.display_width - home_record_width - 3
                         self.logger.debug(
@@ -306,6 +282,4 @@ class BasketballLive(Basketball, SportsLive):
             self.display_manager.update_display()  # Update display here for live
 
         except Exception as e:
-            self.logger.error(
-                f"Error displaying live Hockey game: {e}", exc_info=True
-            )  # Changed log prefix
+            self.logger.error(f"Error displaying live Hockey game: {e}", exc_info=True)  # Changed log prefix

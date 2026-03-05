@@ -8,60 +8,87 @@ import json
 import logging
 import sys
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+# Standard LogRecord attributes populated by Python's logging framework.
+# Keys set via logger.*(extra={...}) are attached directly on the record and
+# must be collected by excluding these built-in names.
+_LOG_RECORD_BUILT_IN_ATTRS = frozenset(
+    {
+        "args",
+        "asctime",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "message",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+        "taskName",
+    }
+)
 
 
 class StructuredFormatter(logging.Formatter):
     """
     JSON formatter for structured logging.
-    
+
     Formats log records as JSON for easy parsing and analysis.
     """
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON."""
         log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'level': record.levelname,
-            'logger': record.name,
-            'message': record.getMessage(),
-            'module': record.module,
-            'function': record.funcName,
-            'line': record.lineno
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
         }
-        
+
         # Add exception info if present
         if record.exc_info:
-            log_data['exception'] = self.formatException(record.exc_info)
-        
-        # Add extra fields from record
-        if hasattr(record, 'extra'):
-            log_data.update(record.extra)
-        
-        # Add context from record
-        if hasattr(record, 'context'):
-            log_data['context'] = record.context
-        
+            log_data["exception"] = self.formatException(record.exc_info)
+
+        # Add extra fields: when logger.*(extra={...}) is called, Python logging
+        # attaches each key directly as an attribute on the LogRecord (not under
+        # record.extra), so we collect any non-standard, non-private attributes.
+        for key, value in record.__dict__.items():
+            if key not in _LOG_RECORD_BUILT_IN_ATTRS and not key.startswith("_"):
+                log_data.setdefault(key, value)
+
         return json.dumps(log_data)
-    
+
     def formatException(self, exc_info) -> Dict[str, Any]:
         """Format exception as structured data."""
         import traceback
+
         return {
-            'type': exc_info[0].__name__ if exc_info[0] else None,
-            'message': str(exc_info[1]) if exc_info[1] else None,
-            'traceback': traceback.format_exception(*exc_info)
+            "type": exc_info[0].__name__ if exc_info[0] else None,
+            "message": str(exc_info[1]) if exc_info[1] else None,
+            "traceback": traceback.format_exception(*exc_info),
         }
 
 
-def setup_structured_logging(
-    level: int = logging.INFO,
-    use_json: bool = False,
-    output_stream = sys.stdout
-) -> None:
+def setup_structured_logging(level: int = logging.INFO, use_json: bool = False, output_stream=sys.stdout) -> None:
     """
     Set up structured logging for web interface.
-    
+
     Args:
         level: Logging level
         use_json: Whether to use JSON formatting
@@ -69,37 +96,31 @@ def setup_structured_logging(
     """
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
-    
+
     # Remove existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     # Create handler
     handler = logging.StreamHandler(output_stream)
     handler.setLevel(level)
-    
+
     # Set formatter
     if use_json:
         formatter = StructuredFormatter()
     else:
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-    
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
     handler.setFormatter(formatter)
     root_logger.addHandler(handler)
 
 
 def log_plugin_operation(
-    logger: logging.Logger,
-    operation: str,
-    plugin_id: str,
-    status: str,
-    context: Optional[Dict[str, Any]] = None
+    logger: logging.Logger, operation: str, plugin_id: str, status: str, context: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Log a plugin operation with structured data.
-    
+
     Args:
         logger: Logger instance
         operation: Operation name (install, update, uninstall, etc.)
@@ -107,19 +128,12 @@ def log_plugin_operation(
         status: Operation status (success, failed, etc.)
         context: Optional additional context
     """
-    extra = {
-        'operation': operation,
-        'plugin_id': plugin_id,
-        'status': status
-    }
-    
+    extra = {"operation": operation, "plugin_id": plugin_id, "status": status}
+
     if context:
-        extra['context'] = context
-    
-    logger.info(
-        f"Plugin operation: {operation} for {plugin_id} - {status}",
-        extra=extra
-    )
+        extra["context"] = context
+
+    logger.info(f"Plugin operation: {operation} for {plugin_id} - {status}", extra=extra)
 
 
 def log_config_change(
@@ -128,11 +142,11 @@ def log_config_change(
     action: str,
     before: Optional[Dict[str, Any]] = None,
     after: Optional[Dict[str, Any]] = None,
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
     Log a configuration change with before/after values.
-    
+
     Args:
         logger: Logger instance
         config_key: Configuration key that changed
@@ -141,20 +155,13 @@ def log_config_change(
         after: Configuration after change
         context: Optional additional context
     """
-    extra = {
-        'config_key': config_key,
-        'action': action
-    }
-    
-    if before:
-        extra['before'] = before
-    if after:
-        extra['after'] = after
-    if context:
-        extra['context'] = context
-    
-    logger.info(
-        f"Config change: {action} on {config_key}",
-        extra=extra
-    )
+    extra = {"config_key": config_key, "action": action}
 
+    if before:
+        extra["before"] = before
+    if after:
+        extra["after"] = after
+    if context:
+        extra["context"] = context
+
+    logger.info(f"Config change: {action} on {config_key}", extra=extra)

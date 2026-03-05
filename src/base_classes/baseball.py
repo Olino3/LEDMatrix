@@ -125,9 +125,7 @@ class Baseball(SportsCore):
 
     def _extract_game_details(self, game_event: Dict) -> Optional[Dict]:
         """Extract relevant game details from ESPN NCAA FB API response."""
-        details, home_team, away_team, status, situation = (
-            self._extract_game_details_common(game_event)
-        )
+        details, home_team, away_team, status, situation = self._extract_game_details_common(game_event)
         if details is None or home_team is None or away_team is None or status is None:
             return
         try:
@@ -140,23 +138,17 @@ class Baseball(SportsCore):
             away_abbr = away_team["team"]["abbreviation"]
 
             # Check if this is a favorite team game
-            is_favorite_game = (
-                home_abbr in self.favorite_teams or away_abbr in self.favorite_teams
-            )
+            is_favorite_game = home_abbr in self.favorite_teams or away_abbr in self.favorite_teams
 
             # Log all teams found for debugging
-            self.logger.debug(
-                f"Found game: {away_abbr} @ {home_abbr} (Status: {game_status}, State: {status_state})"
-            )
+            self.logger.debug(f"Found game: {away_abbr} @ {home_abbr} (Status: {game_status}, State: {status_state})")
 
             # Only log detailed information for favorite teams
             if is_favorite_game:
                 self.logger.debug(f"Full status data: {game_event['status']}")
                 self.logger.debug(f"Status type: {game_status}, State: {status_state}")
                 self.logger.debug(f"Status detail: {status['type'].get('detail', '')}")
-                self.logger.debug(
-                    f"Status shortDetail: {status['type'].get('shortDetail', '')}"
-                )
+                self.logger.debug(f"Status shortDetail: {status['type'].get('shortDetail', '')}")
             series = game_event["competitions"][0].get("series", None)
             series_summary = ""
             if series:
@@ -164,21 +156,15 @@ class Baseball(SportsCore):
             # Get game state information
             if status_state == "in":
                 # For live games, get detailed state
-                inning = game_event["status"].get(
-                    "period", 1
-                )  # Get inning from status period
+                inning = game_event["status"].get("period", 1)  # Get inning from status period
 
                 # Get inning information from status
                 status_detail = status["type"].get("detail", "").lower()
                 status_short = status["type"].get("shortDetail", "").lower()
 
                 if is_favorite_game:
-                    self.logger.debug(
-                        f"Raw status detail: {status['type'].get('detail')}"
-                    )
-                    self.logger.debug(
-                        f"Raw status short: {status['type'].get('shortDetail')}"
-                    )
+                    self.logger.debug(f"Raw status detail: {status['type'].get('detail')}")
+                    self.logger.debug(f"Raw status short: {status['type'].get('shortDetail')}")
 
                 # Determine inning half from status information
                 inning_half = "top"  # Default
@@ -186,20 +172,14 @@ class Baseball(SportsCore):
                 # Handle end of inning: next inning is top
                 if "end" in status_detail or "end" in status_short:
                     inning_half = "top"
-                    inning = (
-                        game_event["status"].get("period", 1) + 1
-                    )  # Use period and increment for next inning
+                    inning = game_event["status"].get("period", 1) + 1  # Use period and increment for next inning
                     if is_favorite_game:
-                        self.logger.debug(
-                            f"Detected end of inning. Setting to Top {inning}"
-                        )
+                        self.logger.debug(f"Detected end of inning. Setting to Top {inning}")
                 # Handle middle of inning: next is bottom of current inning
                 elif "mid" in status_detail or "mid" in status_short:
                     inning_half = "bottom"
                     if is_favorite_game:
-                        self.logger.debug(
-                            f"Detected middle of inning. Setting to Bottom {inning}"
-                        )
+                        self.logger.debug(f"Detected middle of inning. Setting to Bottom {inning}")
                 # Handle bottom of inning
                 elif (
                     "bottom" in status_detail
@@ -237,9 +217,7 @@ class Baseball(SportsCore):
                 if is_favorite_game:
                     self.logger.debug(f"Full situation data: {situation}")
                     self.logger.debug(f"Count object: {count}")
-                    self.logger.debug(
-                        f"Raw count values - balls: {balls}, strikes: {strikes}"
-                    )
+                    self.logger.debug(f"Raw count values - balls: {balls}, strikes: {strikes}")
                     self.logger.debug(f"Raw outs value: {outs}")
 
                 # Try alternative locations for count data
@@ -250,9 +228,7 @@ class Baseball(SportsCore):
                             count_summary = situation["summary"]
                             balls, strikes = map(int, count_summary.split("-"))
                             if is_favorite_game:
-                                self.logger.debug(
-                                    f"Using summary count: {count_summary}"
-                                )
+                                self.logger.debug(f"Using summary count: {count_summary}")
                         except (ValueError, AttributeError):
                             if is_favorite_game:
                                 self.logger.debug("Could not parse summary count")
@@ -261,12 +237,8 @@ class Baseball(SportsCore):
                         balls = situation.get("balls", 0)
                         strikes = situation.get("strikes", 0)
                         if is_favorite_game:
-                            self.logger.debug(
-                                f"Using direct situation count: balls={balls}, strikes={strikes}"
-                            )
-                            self.logger.debug(
-                                f"Full situation keys: {list(situation.keys())}"
-                            )
+                            self.logger.debug(f"Using direct situation count: balls={balls}, strikes={strikes}")
+                            self.logger.debug(f"Full situation keys: {list(situation.keys())}")
 
                 if is_favorite_game:
                     self.logger.debug(f"Final count: balls={balls}, strikes={strikes}")
@@ -306,9 +278,7 @@ class Baseball(SportsCore):
 
             # Basic validation (can be expanded)
             if not details["home_abbr"] or not details["away_abbr"]:
-                self.logger.warning(
-                    f"Missing team abbreviation in event: {details['id']}"
-                )
+                self.logger.warning(f"Missing team abbreviation in event: {details['id']}")
                 return None
 
             self.logger.debug(
@@ -327,17 +297,16 @@ class Baseball(SportsCore):
     def display_series_summary(self, game: dict, draw_overlay: ImageDraw.ImageDraw):
         if not self.show_series_summary:
             return
-        
+
         series_summary = game.get("series_summary", "")
         font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
-        bbox = draw_overlay.textbbox((0, 0), series_summary, font=self.fonts['time'])
+        bbox = draw_overlay.textbbox((0, 0), series_summary, font=self.fonts["time"])
         height = bbox[3] - bbox[1]
         shots_y = (self.display_height - height) // 2
-        shots_width = draw_overlay.textlength(series_summary, font=self.fonts['time'])
+        shots_width = draw_overlay.textlength(series_summary, font=self.fonts["time"])
         shots_x = (self.display_width - shots_width) // 2
-        self._draw_text_with_outline(
-            draw_overlay, series_summary, (shots_x, shots_y), self.fonts['time']
-        )
+        self._draw_text_with_outline(draw_overlay, series_summary, (shots_x, shots_y), self.fonts["time"])
+
 
 class BaseballRecent(Baseball, SportsRecent):
     """Base class for recent baseball games."""
@@ -351,7 +320,6 @@ class BaseballRecent(Baseball, SportsRecent):
         sport_key: str,
     ):
         super().__init__(config, display_manager, cache_manager, logger, sport_key)
-
 
     def _custom_scorebug_layout(self, game: dict, draw_overlay: ImageDraw.ImageDraw):
         self.display_series_summary(game, draw_overlay)
@@ -386,30 +354,18 @@ class BaseballLive(Baseball, SportsLive):
             self.current_game["balls"] = (self.current_game["balls"] + 1) % 4
             self.current_game["strikes"] = (self.current_game["strikes"] + 1) % 3
             self.current_game["outs"] = (self.current_game["outs"] + 1) % 3
-            self.current_game["bases_occupied"] = [
-                not b for b in self.current_game["bases_occupied"]
-            ]
+            self.current_game["bases_occupied"] = [not b for b in self.current_game["bases_occupied"]]
             if self.current_game["inning"] % 2 == 0:
-                self.current_game["home_score"] = str(
-                    int(self.current_game["home_score"]) + 1
-                )
+                self.current_game["home_score"] = str(int(self.current_game["home_score"]) + 1)
             else:
-                self.current_game["away_score"] = str(
-                    int(self.current_game["away_score"]) + 1
-                )
+                self.current_game["away_score"] = str(int(self.current_game["away_score"]) + 1)
 
     def _draw_scorebug_layout(self, game: Dict, force_clear: bool = False) -> None:
         """Draw the detailed scorebug layout for a live NCAA FB game."""  # Updated docstring
         try:
-            main_img = Image.new(
-                "RGBA", (self.display_width, self.display_height), (0, 0, 0, 255)
-            )
-            overlay = Image.new(
-                "RGBA", (self.display_width, self.display_height), (0, 0, 0, 0)
-            )
-            draw_overlay = ImageDraw.Draw(
-                overlay
-            )  # Draw text elements on overlay first
+            main_img = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 255))
+            overlay = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 0))
+            draw_overlay = ImageDraw.Draw(overlay)  # Draw text elements on overlay first
 
             home_logo = self._load_and_resize_logo(
                 game["home_id"],
@@ -425,14 +381,10 @@ class BaseballLive(Baseball, SportsLive):
             )
 
             if not home_logo or not away_logo:
-                self.logger.error(
-                    f"Failed to load logos for live game: {game.get('id')}"
-                )  # Changed log prefix
+                self.logger.error(f"Failed to load logos for live game: {game.get('id')}")  # Changed log prefix
                 # Draw placeholder text if logos fail
                 draw_final = ImageDraw.Draw(main_img.convert("RGB"))
-                self._draw_text_with_outline(
-                    draw_final, "Logo Error", (5, 5), self.fonts["status"]
-                )
+                self._draw_text_with_outline(draw_final, "Logo Error", (5, 5), self.fonts["status"])
                 self.display_manager.image.paste(main_img.convert("RGB"), (0, 0))
                 self.display_manager.update_display()
                 return
@@ -440,9 +392,7 @@ class BaseballLive(Baseball, SportsLive):
             center_y = self.display_height // 2
 
             # Draw logos (shifted slightly more inward than NHL perhaps)
-            home_x = (
-                self.display_width - home_logo.width + 10
-            )  # adjusted from 18 # Adjust position as needed
+            home_x = self.display_width - home_logo.width + 10  # adjusted from 18 # Adjust position as needed
             home_y = center_y - (home_logo.height // 2)
             main_img.paste(home_logo, (home_x, home_y), home_logo)
 
@@ -461,15 +411,11 @@ class BaseballLive(Baseball, SportsLive):
             if game["is_final"]:
                 inning_text = "FINAL"
             else:
-                inning_half_indicator = (
-                    "▲" if game["inning_half"].lower() == "top" else "▼"
-                )
+                inning_half_indicator = "▲" if game["inning_half"].lower() == "top" else "▼"
                 inning_num = game["inning"]
                 inning_text = f"{inning_half_indicator}{inning_num}"
 
-            inning_bbox = draw_overlay.textbbox(
-                (0, 0), inning_text, font=self.display_manager.font
-            )
+            inning_bbox = draw_overlay.textbbox((0, 0), inning_text, font=self.display_manager.font)
             inning_width = inning_bbox[2] - inning_bbox[0]
             inning_x = (self.display_width - inning_width) // 2
             inning_y = 1  # Position near top center
@@ -490,44 +436,30 @@ class BaseballLive(Baseball, SportsLive):
             base_diamond_size = 7
             out_circle_diameter = 3
             out_vertical_spacing = 2  # Space between out circles
-            spacing_between_bases_outs = (
-                3  # Horizontal space between base cluster and out column
-            )
+            spacing_between_bases_outs = 3  # Horizontal space between base cluster and out column
             base_vert_spacing = 1  # Internal vertical space in base cluster
             base_horiz_spacing = 1  # Internal horizontal space in base cluster
 
             # Calculate cluster dimensions
-            base_cluster_height = (
-                base_diamond_size + base_vert_spacing + base_diamond_size
-            )
-            base_cluster_width = (
-                base_diamond_size + base_horiz_spacing + base_diamond_size
-            )
+            base_cluster_height = base_diamond_size + base_vert_spacing + base_diamond_size
+            base_cluster_width = base_diamond_size + base_horiz_spacing + base_diamond_size
             out_cluster_height = 3 * out_circle_diameter + 2 * out_vertical_spacing
             out_cluster_width = out_circle_diameter
 
             # Calculate overall start positions
-            overall_start_y = (
-                inning_bbox[3] + 0
-            )  # Start immediately below inning text (moved up 3 pixels)
+            overall_start_y = inning_bbox[3] + 0  # Start immediately below inning text (moved up 3 pixels)
 
             # Center the BASE cluster horizontally
             bases_origin_x = (self.display_width - base_cluster_width) // 2
 
             # Determine relative positions for outs based on inning half
             if inning_half == "top":  # Away batting, outs on left
-                outs_column_x = (
-                    bases_origin_x - spacing_between_bases_outs - out_cluster_width
-                )
+                outs_column_x = bases_origin_x - spacing_between_bases_outs - out_cluster_width
             else:  # Home batting, outs on right
-                outs_column_x = (
-                    bases_origin_x + base_cluster_width + spacing_between_bases_outs
-                )
+                outs_column_x = bases_origin_x + base_cluster_width + spacing_between_bases_outs
 
             # Calculate vertical alignment offset for outs column (center align with bases cluster)
-            outs_column_start_y = (
-                overall_start_y + (base_cluster_height // 2) - (out_cluster_height // 2)
-            )
+            outs_column_start_y = overall_start_y + (base_cluster_height // 2) - (out_cluster_height // 2)
 
             # --- Draw Bases (Diamonds) ---
             base_color_occupied = (255, 255, 255)
@@ -584,9 +516,7 @@ class BaseballLive(Baseball, SportsLive):
 
             for i in range(3):
                 cx = outs_column_x
-                cy = outs_column_start_y + i * (
-                    out_circle_diameter + out_vertical_spacing
-                )
+                cy = outs_column_start_y + i * (out_circle_diameter + out_vertical_spacing)
                 coords = [cx, cy, cx + out_circle_diameter, cy + out_circle_diameter]
                 if i < outs:
                     draw_overlay.ellipse(coords, fill=circle_color_out)
@@ -600,13 +530,10 @@ class BaseballLive(Baseball, SportsLive):
             # Add debug logging for count with cooldown
             current_time = time.time()
             if (
-                game["home_abbr"] in self.favorite_teams
-                or game["away_abbr"] in self.favorite_teams
+                game["home_abbr"] in self.favorite_teams or game["away_abbr"] in self.favorite_teams
             ) and current_time - self.last_count_log_time >= self.count_log_interval:
                 self.logger.debug(f"Displaying count: {balls}-{strikes}")
-                self.logger.debug(
-                    f"Raw count data: balls={game.get('balls')}, strikes={game.get('strikes')}"
-                )
+                self.logger.debug(f"Raw count data: balls={game.get('balls')}, strikes={game.get('strikes')}")
                 self.last_count_log_time = current_time
 
             count_text = f"{balls}-{strikes}"
@@ -615,9 +542,7 @@ class BaseballLive(Baseball, SportsLive):
             count_text_width = self.display_manager.get_text_width(count_text, bdf_font)
 
             # Position below the base/out cluster
-            cluster_bottom_y = (
-                overall_start_y + base_cluster_height
-            )  # Find the bottom of the taller part (bases)
+            cluster_bottom_y = overall_start_y + base_cluster_height  # Find the bottom of the taller part (bases)
             count_y = cluster_bottom_y + 2  # Start 2 pixels below cluster
 
             # Center horizontally within the BASE cluster width
@@ -653,9 +578,7 @@ class BaseballLive(Baseball, SportsLive):
                 )
 
             # Draw main text
-            self.display_manager._draw_bdf_text(
-                count_text, count_x, count_y, color=text_color, font=bdf_font
-            )
+            self.display_manager._draw_bdf_text(count_text, count_x, count_y, color=text_color, font=bdf_font)
 
             # Draw Team:Score at the bottom (matching main branch format)
             score_font = self.display_manager.font  # Use PressStart2P
@@ -691,9 +614,7 @@ class BaseballLive(Baseball, SportsLive):
                 font_height = score_font.getbbox("A")[3] - score_font.getbbox("A")[1]
             except AttributeError:
                 font_height = 8  # Fallback for default font
-            score_y = (
-                self.display_height - font_height - 2
-            )  # 2 pixels padding from bottom
+            score_y = self.display_height - font_height - 2  # 2 pixels padding from bottom
 
             # Away Team:Score (Bottom Left)
             away_score_x = 2  # 2 pixels padding from left
@@ -702,16 +623,12 @@ class BaseballLive(Baseball, SportsLive):
             # Home Team:Score (Bottom Right)
             home_text_bbox = draw_overlay.textbbox((0, 0), home_text, font=score_font)
             home_text_width = home_text_bbox[2] - home_text_bbox[0]
-            home_score_x = (
-                self.display_width - home_text_width - 2
-            )  # 2 pixels padding from right
+            home_score_x = self.display_width - home_text_width - 2  # 2 pixels padding from right
             draw_bottom_outlined_text(home_score_x, score_y, home_text)
 
             # Draw gambling odds if available
             if "odds" in game and game["odds"]:
-                self._draw_dynamic_odds(
-                    draw_overlay, game["odds"], self.display_width, self.display_height
-                )
+                self._draw_dynamic_odds(draw_overlay, game["odds"], self.display_width, self.display_height)
 
             # Composite the text overlay onto the main image
             main_img = Image.alpha_composite(main_img, overlay)
@@ -722,6 +639,4 @@ class BaseballLive(Baseball, SportsLive):
             self.display_manager.update_display()  # Update display here for live
 
         except Exception as e:
-            self.logger.error(
-                f"Error displaying live Baseball game: {e}", exc_info=True
-            )  # Changed log prefix
+            self.logger.error(f"Error displaying live Baseball game: {e}", exc_info=True)  # Changed log prefix
