@@ -797,8 +797,8 @@ class MarchMadnessPlugin(BasePlugin):
 
             self.dynamic_duration = self.scroll_helper.get_dynamic_duration()
 
-            matrix_w = self.display_manager.matrix.width
-            matrix_h = self.display_manager.matrix.height
+            matrix_w = self.display_manager.width
+            matrix_h = self.display_manager.height
             if not hasattr(self.display_manager, "image") or self.display_manager.image is None:
                 self.display_manager.image = Image.new("RGB", (matrix_w, matrix_h), COLOR_BLACK)
             self.display_manager.image.paste(visible, (0, 0))
@@ -810,8 +810,8 @@ class MarchMadnessPlugin(BasePlugin):
             self._display_fallback()
 
     def _display_fallback(self) -> None:
-        w = self.display_manager.matrix.width
-        h = self.display_manager.matrix.height
+        w = self.display_manager.width
+        h = self.display_manager.height
         img = Image.new("RGB", (w, h), COLOR_BLACK)
         draw = ImageDraw.Draw(img)
 

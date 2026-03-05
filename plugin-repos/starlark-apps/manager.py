@@ -228,7 +228,7 @@ class StarlarkAppsPlugin(BasePlugin):
         # Calculate optimal magnification based on display size
         self.calculated_magnify = self._calculate_optimal_magnify()
         if self.calculated_magnify > 1:
-            self.logger.info(f"Display size: {self.display_manager.matrix.width}x{self.display_manager.matrix.height}, "
+            self.logger.info(f"Display size: {self.display_manager.width}x{self.display_manager.height}, "
                            f"recommended magnify: {self.calculated_magnify}")
 
         # Load installed apps
@@ -800,8 +800,8 @@ class StarlarkAppsPlugin(BasePlugin):
 
             # Scale frames if needed
             if self.config.get("scale_output", True):
-                width = self.display_manager.matrix.width
-                height = self.display_manager.matrix.height
+                width = self.display_manager.width
+                height = self.display_manager.height
 
                 # Get scaling method from config
                 scale_method_str = self.config.get("scale_method", "nearest")

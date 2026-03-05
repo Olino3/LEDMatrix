@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for new logic added to the CLI.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Feature
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md), [FOUND-002](FOUND-002-venv-bootstrap.md)
@@ -312,3 +312,21 @@ matrix plugin --help
 - `matrix doctor` should be readable without a terminal (no spinners that need clearing) — use a plain `Table` so it works in CI logs.
 - The rgbmatrix C-extension build (from `rpi-rgb-led-matrix-master/`) is intentionally excluded from `matrix install` in this phase — it requires OS-level `apt` packages and compilation that is risky to automate blindly. Add a `warn()` check in `matrix doctor` if the `rgbmatrix` module cannot be imported and `EMULATOR` is not set.
 - Keep `_require_web()` guard for API-dependent plugin commands — do not remove.
+
+### Downstream Notes from FOUND-002
+
+The following changes from FOUND-002 impact this ticket:
+
+1. **Venv bootstrap already exists in `matrix_cli.py`:** The active venv guard (lines 34-50) runs `uv sync --project` automatically if `.venv/` is missing. `matrix setup` can reuse this pattern or delegate to it — no need to reimplement the bootstrap logic.
+
+2. **`install_service.sh` auto-bootstraps venv:** The install script now creates `.venv/` via `uv sync` before installing services. `matrix install` calling this script will get venv creation for free.
+
+3. **`install_web_service.sh` also updated:** This separate script now uses `$VENV_PYTHON` in its generated service file and includes the same bootstrap block. Ensure `matrix install` invokes both scripts or uses the combined `install_service.sh` which handles both services.
+
+4. **`start_web_conditionally.py` simplified:** The `install_dependencies()` / `dependencies_installed()` functions and `DEPS_MARKER` (`.web_deps_installed`) have been removed. `matrix doctor` should **not** check for the `.web_deps_installed` marker file — it no longer exists.
+
+5. **Plugin dependency installation uses system pip:** `scripts/install_plugin_dependencies.sh` and `src/plugin_system/plugin_loader.py` still use `pip install --break-system-packages`. This is tracked in [SPIKE-003](SPIKE-003-plugin-deps-venv-migration.md) and is not blocking for FOUND-003.
+
+6. **`first_time_install.sh` dead code:** Lines 634-729 and 768-778 check for `requirements.txt` / `web_interface/requirements.txt` which no longer exist. The `[ -f ... ]` guards cause them to skip gracefully. Consider cleaning these up as part of `matrix install` implementation or deferring to a follow-up.
+
+7. **`pyproject.toml` hardware extras:** The comment now documents that `rpi-rgb-led-matrix` can be pip-installed from `git+https://github.com/hzeller/rpi-rgb-led-matrix`. `matrix install` could offer this as an option for Pi hardware users, or `matrix doctor` could suggest it when `rgbmatrix` import fails.

@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching plugin files. Read the `ledmatrix-plugins` monorepo structure first. This work happens in the `ledmatrix-plugins` repo, not in the LEDMatrix core repo.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Fix
 **Depends on:** _(none — fully independent, can be done in parallel with FOUND-001 through FOUND-005)_

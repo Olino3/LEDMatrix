@@ -39,8 +39,8 @@ class BasketballPluginManager(BasePlugin):
         super().__init__(plugin_id, config, display_manager, cache_manager, plugin_manager)
         
         # Get display dimensions
-        self.display_width = display_manager.matrix.width
-        self.display_height = display_manager.matrix.height
+        self.display_width = display_manager.width
+        self.display_height = display_manager.height
         
         # Initialize common helpers
         self._init_helpers()
