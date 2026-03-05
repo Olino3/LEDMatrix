@@ -7,7 +7,6 @@ Verifies that the script has been replaced with a thin wrapper that:
 3. Does NOT contain the original ~700-line installation logic
 """
 
-import subprocess
 from pathlib import Path
 
 import pytest
