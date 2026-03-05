@@ -1,6 +1,6 @@
 # SPIKE-004 — Remove Deprecated Legacy Shell Scripts
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike / Cleanup
 **Depends on:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md)
@@ -18,12 +18,12 @@ Additionally, `first_time_install.sh` contains dead code (lines 634-729 and 768-
 
 ## Acceptance Criteria
 
-- [ ] `start_display.sh` removed from repo root
-- [ ] `stop_display.sh` removed from repo root
-- [ ] `web_interface/run.sh` removed
-- [ ] `first_time_install.sh` dead code cleaned up (or entire script replaced by `matrix install` documentation)
-- [ ] Any references to removed scripts in docs are updated
-- [ ] `CLAUDE.md` updated if it references these scripts
+- [x] `start_display.sh` removed from repo root
+- [x] `stop_display.sh` removed from repo root
+- [x] `web_interface/run.sh` removed
+- [x] `first_time_install.sh` dead code cleaned up (replaced requirements.txt pip install with `uv sync` / `pip install -e .` fallback)
+- [x] Any references to removed scripts in docs are updated
+- [x] `CLAUDE.md` updated if it references these scripts (verified — no references found)
 
 ---
 
