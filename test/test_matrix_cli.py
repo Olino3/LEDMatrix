@@ -6,6 +6,7 @@ without touching the real filesystem, network, or subprocesses.
 """
 
 import json
+import os
 import sys
 import pytest
 from pathlib import Path
@@ -1127,6 +1128,81 @@ class TestDoctorCommand:
         version_call = calls[1][0][0]  # second call args
         assert 'python' in version_call[0].lower()
         assert 'python_version' in ' '.join(version_call)
+
+    @staticmethod
+    def _make_path_exists_with_dev_mem(original_exists):
+        """Return a patched Path.exists that pretends /dev/mem exists."""
+        def _patched_exists(path_self):
+            if str(path_self) == '/dev/mem':
+                return True
+            return original_exists(path_self)
+        return _patched_exists
+
+    def test_doctor_rgbmatrix_warn_on_pi_hardware(self, tmp_path):
+        """On Pi hardware (/dev/mem exists, EMULATOR not set), missing rgbmatrix
+        should produce a WARN row in doctor output."""
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        rgbmatrix_fail = MagicMock(returncode=1, stdout='', stderr='ModuleNotFoundError')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        original_exists = Path.exists
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, rgbmatrix_fail, py_ver_ok]), \
+             patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch.object(Path, 'exists', autospec=True,
+                          side_effect=self._make_path_exists_with_dev_mem(original_exists)), \
+             patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert 'WARN' in result.output
+        assert 'rgbmatrix' in result.output.lower()
+
+    def test_doctor_rgbmatrix_pass_on_pi_hardware(self, tmp_path):
+        """On Pi hardware, if rgbmatrix imports successfully, doctor should PASS."""
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        rgbmatrix_ok = MagicMock(returncode=0, stdout='rgbmatrix ok')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        original_exists = Path.exists
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, rgbmatrix_ok, py_ver_ok]), \
+             patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch.object(Path, 'exists', autospec=True,
+                          side_effect=self._make_path_exists_with_dev_mem(original_exists)), \
+             patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert 'rgbmatrix' in result.output.lower()
+        # Should not have a WARN for rgbmatrix (it passed)
+        lines = result.output.split('\n')
+        rgbmatrix_lines = [line for line in lines if 'rgbmatrix' in line.lower()]
+        assert any('PASS' in line for line in rgbmatrix_lines)
+
+    def test_doctor_rgbmatrix_skipped_in_emulator_mode(self, tmp_path):
+        """When EMULATOR=true, rgbmatrix check should be skipped entirely."""
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
+             patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch.dict(os.environ, {'EMULATOR': 'true'}, clear=False):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        # rgbmatrix should NOT appear in the output at all
+        assert 'rgbmatrix' not in result.output.lower()
+
+    def test_doctor_rgbmatrix_skipped_no_dev_mem(self, tmp_path):
+        """When /dev/mem doesn't exist (non-Pi dev machine), rgbmatrix check
+        should be skipped even if EMULATOR is not set."""
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
+             patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
+            # /dev/mem won't exist in tmp_path, and we're not on a Pi
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        # Should not check rgbmatrix on dev machines without /dev/mem
+        assert 'rgbmatrix' not in result.output.lower()
 
     def test_doctor_old_python_version_reports_fail(self, tmp_path):
         root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
