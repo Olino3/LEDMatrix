@@ -14,7 +14,7 @@
 | [FOUND-002](FOUND-002-venv-bootstrap.md) | Virtual environment bootstrap everywhere | Done | FOUND-001 |
 | [FOUND-003](FOUND-003-matrix-cli-install-doctor.md) | `matrix` CLI — `install`, `setup`, and `doctor` commands | Done | FOUND-001, FOUND-002 |
 | [FOUND-004](FOUND-004-ci-pipeline.md) | GitHub Actions CI pipeline | Done | FOUND-001 |
-| [FOUND-005](FOUND-005-precommit-ruff.md) | Migrate pre-commit hooks to `ruff` | Open | FOUND-004 |
+| [FOUND-005](FOUND-005-precommit-ruff.md) | Migrate pre-commit hooks to `ruff` | Done | FOUND-004 |
 | [FOUND-006](FOUND-006-plugin-quickfixes.md) | Plugin quick-fixes: `matrix.width` / `matrix.height` refs | Done | — |
 | [SPIKE-001](SPIKE-001-update-diagnostic-scripts.md) | Update diagnostic scripts for `uv` migration | Done | FOUND-001 |
 | [SPIKE-002](SPIKE-002-update-docs-for-uv-migration.md) | Update documentation for `uv` migration | Done | FOUND-001 |
@@ -22,6 +22,8 @@
 | [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md) | Remove deprecated legacy shell scripts and clean up dead code | Done | FOUND-003 |
 | [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md) | Add `rgbmatrix` import check to `matrix doctor` | Open | FOUND-003 |
 | [SPIKE-006](SPIKE-006-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Open | FOUND-003, SPIKE-004 |
+| [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md) | Fix pre-existing ruff lint violations in `src/` | Open | FOUND-005 |
+| [SPIKE-007](SPIKE-007-bandit-config.md) | Create or remove `bandit.yaml` configuration | Open | FOUND-005 |
 
 ## Dependency Graph
 
@@ -44,5 +46,5 @@ FOUND-006 (plugin quick-fixes)   ← Done (local fixes)
 - [x] `matrix install`, `matrix setup`, `matrix doctor` commands functional
 - [x] Root-level `first_time_install.sh`, `start_display.sh`, `stop_display.sh`, `web_interface/run.sh` deprecated (warning added) or removed
 - [x] GitHub Actions CI passes on Python 3.10, 3.11, and 3.12: lint, types, tests, audit
-- [ ] Pre-commit hooks use `ruff check` + `ruff format` (flake8 removed)
+- [x] Pre-commit hooks use `ruff check` + `ruff format` (flake8 removed)
 - [x] `football-scoreboard` and `hockey-scoreboard` plugin versions bumped, `plugins.json` regenerated (FOUND-006 complete; 20 total plugins fixed — see SPIKE-003 for monorepo PR)

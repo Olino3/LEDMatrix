@@ -9,15 +9,15 @@ This is a local-only implementation with no external dependencies.
 Errors are stored in memory with optional JSON export.
 """
 
+import json
+import logging
 import threading
 import traceback
-import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
-import logging
+from typing import Any, Callable, Dict, List, Optional
 
 from src.exceptions import LEDMatrixError
 
@@ -25,6 +25,7 @@ from src.exceptions import LEDMatrixError
 @dataclass
 class ErrorRecord:
     """Record of a single error occurrence."""
+
     error_type: str
     message: str
     timestamp: datetime
@@ -42,13 +43,14 @@ class ErrorRecord:
             "context": self.context,
             "plugin_id": self.plugin_id,
             "operation": self.operation,
-            "stack_trace": self.stack_trace
+            "stack_trace": self.stack_trace,
         }
 
 
 @dataclass
 class ErrorPattern:
     """Detected error pattern for automatic detection."""
+
     error_type: str
     count: int
     first_seen: datetime
@@ -66,7 +68,7 @@ class ErrorPattern:
             "last_seen": self.last_seen.isoformat(),
             "affected_plugins": list(set(self.affected_plugins)),
             "sample_messages": self.sample_messages[:3],  # Keep only 3 samples
-            "severity": self.severity
+            "severity": self.severity,
         }
 
 
@@ -88,7 +90,7 @@ class ErrorAggregator:
         max_records: int = 1000,
         pattern_threshold: int = 5,
         pattern_window_minutes: int = 60,
-        export_path: Optional[Path] = None
+        export_path: Optional[Path] = None,
     ):
         """
         Initialize the error aggregator.
@@ -120,7 +122,7 @@ class ErrorAggregator:
         error: Exception,
         context: Optional[Dict[str, Any]] = None,
         plugin_id: Optional[str] = None,
-        operation: Optional[str] = None
+        operation: Optional[str] = None,
     ) -> ErrorRecord:
         """
         Record an error occurrence.
@@ -149,7 +151,7 @@ class ErrorAggregator:
                 context=error_context,
                 plugin_id=plugin_id,
                 operation=operation,
-                stack_trace=traceback.format_exc()
+                stack_trace=traceback.format_exc(),
             )
 
             # Add record (with size limit)
@@ -168,7 +170,7 @@ class ErrorAggregator:
             # Log the error
             self.logger.debug(
                 f"Error recorded: {error_type} - {str(error)[:100]}",
-                extra={"plugin_id": plugin_id, "operation": operation}
+                extra={"plugin_id": plugin_id, "operation": operation},
             )
 
             return record
@@ -176,10 +178,7 @@ class ErrorAggregator:
     def _detect_pattern(self, record: ErrorRecord) -> None:
         """Detect recurring error patterns."""
         cutoff = datetime.now() - self.pattern_window
-        recent_same_type = [
-            r for r in self._records
-            if r.error_type == record.error_type and r.timestamp > cutoff
-        ]
+        recent_same_type = [r for r in self._records if r.error_type == record.error_type and r.timestamp > cutoff]
 
         if len(recent_same_type) >= self.pattern_threshold:
             pattern_key = record.error_type
@@ -208,7 +207,7 @@ class ErrorAggregator:
                     last_seen=record.timestamp,
                     affected_plugins=affected_plugins,
                     sample_messages=sample_messages,
-                    severity=severity
+                    severity=severity,
                 )
                 self._patterns[pattern_key] = pattern
 
@@ -261,15 +260,9 @@ class ErrorAggregator:
                 "total_errors": len(self._records),
                 "error_rate_per_hour": round(error_rate, 2),
                 "error_counts_by_type": dict(self._error_counts),
-                "plugin_error_counts": {
-                    k: dict(v) for k, v in self._plugin_error_counts.items()
-                },
-                "active_patterns": {
-                    k: v.to_dict() for k, v in self._patterns.items()
-                },
-                "recent_errors": [
-                    r.to_dict() for r in self._records[-20:]
-                ]
+                "plugin_error_counts": {k: dict(v) for k, v in self._plugin_error_counts.items()},
+                "active_patterns": {k: v.to_dict() for k, v in self._patterns.items()},
+                "recent_errors": [r.to_dict() for r in self._records[-20:]],
             }
 
     def get_plugin_health(self, plugin_id: str) -> Dict[str, Any]:
@@ -284,10 +277,7 @@ class ErrorAggregator:
         """
         with self._lock:
             plugin_errors = self._plugin_error_counts.get(plugin_id, {})
-            recent_plugin_errors = [
-                r for r in self._records[-100:]
-                if r.plugin_id == plugin_id
-            ]
+            recent_plugin_errors = [r for r in self._records[-100:] if r.plugin_id == plugin_id]
 
             # Determine health status
             recent_count = len(recent_plugin_errors)
@@ -304,7 +294,7 @@ class ErrorAggregator:
                 "total_errors": sum(plugin_errors.values()),
                 "error_types": dict(plugin_errors),
                 "recent_error_count": recent_count,
-                "last_error": recent_plugin_errors[-1].to_dict() if recent_plugin_errors else None
+                "last_error": recent_plugin_errors[-1].to_dict() if recent_plugin_errors else None,
             }
 
     def clear_old_records(self, max_age_hours: int = 24) -> int:
@@ -339,7 +329,7 @@ class ErrorAggregator:
             data = {
                 "exported_at": datetime.now().isoformat(),
                 "summary": self.get_error_summary(),
-                "all_records": [r.to_dict() for r in self._records]
+                "all_records": [r.to_dict() for r in self._records],
             }
             filepath.parent.mkdir(parents=True, exist_ok=True)
             filepath.write_text(json.dumps(data, indent=2))
@@ -365,7 +355,7 @@ def get_error_aggregator(
     max_records: int = 1000,
     pattern_threshold: int = 5,
     pattern_window_minutes: int = 60,
-    export_path: Optional[Path] = None
+    export_path: Optional[Path] = None,
 ) -> ErrorAggregator:
     """
     Get or create the global error aggregator instance.
@@ -387,7 +377,7 @@ def get_error_aggregator(
                 max_records=max_records,
                 pattern_threshold=pattern_threshold,
                 pattern_window_minutes=pattern_window_minutes,
-                export_path=export_path
+                export_path=export_path,
             )
         return _error_aggregator
 
@@ -396,7 +386,7 @@ def record_error(
     error: Exception,
     context: Optional[Dict[str, Any]] = None,
     plugin_id: Optional[str] = None,
-    operation: Optional[str] = None
+    operation: Optional[str] = None,
 ) -> ErrorRecord:
     """
     Convenience function to record an error to the global aggregator.
@@ -410,9 +400,4 @@ def record_error(
     Returns:
         The created ErrorRecord
     """
-    return get_error_aggregator().record_error(
-        error=error,
-        context=context,
-        plugin_id=plugin_id,
-        operation=operation
-    )
+    return get_error_aggregator().record_error(error=error, context=context, plugin_id=plugin_id, operation=operation)
