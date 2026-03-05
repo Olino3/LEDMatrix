@@ -629,153 +629,28 @@ CURRENT_STEP="Install project Python dependencies"
 echo "Step 5: Installing Python project dependencies..."
 echo "-----------------------------------------------"
 
-# Install main project Python dependencies (numpy will be installed via pip from requirements.txt)
 cd "$PROJECT_ROOT_DIR"
-if [ -f "$PROJECT_ROOT_DIR/requirements.txt" ]; then
-    echo "Reading requirements from: $PROJECT_ROOT_DIR/requirements.txt"
-    
-    # Check pip version (apt-installed pip is sufficient, no upgrade needed)
-    echo "Checking pip version..."
-    python3 -m pip --version
 
-    # Count total packages for progress
-    TOTAL_PACKAGES=$(grep -v '^#' "$PROJECT_ROOT_DIR/requirements.txt" | grep -v '^$' | wc -l)
-    echo "Found $TOTAL_PACKAGES package(s) to install"
-    echo ""
-    
-    # Install packages one at a time for better diagnostics
-    INSTALLED=0
-    FAILED=0
-    PACKAGE_NUM=0
-    
-    while IFS= read -r line || [ -n "$line" ]; do
-        # Remove inline comments (everything after #) but preserve comment-only lines
-        # First check if line starts with # (comment-only line)
-        if [[ "$line" =~ ^[[:space:]]*# ]]; then
-            continue
-        fi
-        
-        # Remove inline comments and trim whitespace
-        line=$(echo "$line" | sed 's/[[:space:]]*#.*$//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        
-        # Skip empty lines
-        if [[ -z "$line" ]]; then
-            continue
-        fi
-        
-        PACKAGE_NUM=$((PACKAGE_NUM + 1))
-        echo "[$PACKAGE_NUM/$TOTAL_PACKAGES] Installing: $line"
-        
-        # Check if package is already installed (basic check - may not catch all cases)
-        PACKAGE_NAME=$(echo "$line" | sed -E 's/[<>=!].*$//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        
-        # Try installing with verbose output and timeout (if available)
-        # Use --no-cache-dir to avoid cache issues, --verbose for diagnostics
-        INSTALL_OUTPUT=$(mktemp)
-        INSTALL_SUCCESS=false
-        
-        if command -v timeout >/dev/null 2>&1; then
-            # Use timeout if available (10 minutes = 600 seconds)
-            if timeout 600 python3 -m pip install --break-system-packages --no-cache-dir --prefer-binary --verbose "$line" > "$INSTALL_OUTPUT" 2>&1; then
-                INSTALL_SUCCESS=true
-            else
-                EXIT_CODE=$?
-                if [ "$EXIT_CODE" -eq 124 ]; then
-                    echo "✗ Timeout (10 minutes) installing: $line"
-                    echo "  This package may require building from source, which can be slow on Raspberry Pi."
-                    echo "  You can try installing it manually later with:"
-                    echo "    python3 -m pip install --break-system-packages --no-cache-dir --prefer-binary --verbose '$line'"
-                else
-                    echo "✗ Failed to install: $line (exit code: $EXIT_CODE)"
-                fi
-            fi
-        else
-            # No timeout command available, install without timeout
-            echo "  Note: timeout command not available, installation may take a while..."
-            if python3 -m pip install --break-system-packages --no-cache-dir --prefer-binary --verbose "$line" > "$INSTALL_OUTPUT" 2>&1; then
-                INSTALL_SUCCESS=true
-            else
-                EXIT_CODE=$?
-                echo "✗ Failed to install: $line (exit code: $EXIT_CODE)"
-            fi
-        fi
-        
-        # Show relevant output (filtered for readability)
-        if [ -f "$INSTALL_OUTPUT" ]; then
-            echo "  Output:"
-            grep -E "(Collecting|Installing|Successfully|Preparing metadata|Building|ERROR|WARNING|Using cached|Downloading)" "$INSTALL_OUTPUT" | head -15 | sed 's/^/    /' || true
-            # Log full output to log file
-            cat "$INSTALL_OUTPUT" >> "$LOG_FILE"
-            rm -f "$INSTALL_OUTPUT"
-        fi
-        
-        if [ "$INSTALL_SUCCESS" = true ]; then
-            INSTALLED=$((INSTALLED + 1))
-            echo "✓ Successfully installed: $line"
-        else
-            FAILED=$((FAILED + 1))
-            
-            # Ask if user wants to continue (unless in non-interactive mode)
-            if [ "$ASSUME_YES" != "1" ]; then
-                read -p "  Continue with remaining packages? (Y/n): " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Nn]$ ]]; then
-                    echo "Installation cancelled by user"
-                    exit 1
-                fi
-            fi
-        fi
-        echo ""
-    done < "$PROJECT_ROOT_DIR/requirements.txt"
-    
-    echo "-----------------------------------------------"
-    echo "Installation summary:"
-    echo "  Installed: $INSTALLED"
-    echo "  Failed: $FAILED"
-    echo "  Total: $TOTAL_PACKAGES"
-    echo ""
-    
-    if [ "$FAILED" -gt 0 ]; then
-        echo "⚠ Some packages failed to install. The installation will continue, but"
-        echo "  you may need to install them manually later. Check the log for details:"
-        echo "  $LOG_FILE"
-        echo ""
-        echo "Common fixes for 'Preparing metadata' issues:"
-        echo "  1. Ensure you have enough disk space: df -h"
-        echo "  2. Check available memory: free -h"
-        echo "  3. Try installing failed packages individually with verbose output:"
-        echo "     python3 -m pip install --break-system-packages --no-cache-dir --prefer-binary --verbose <package>"
-        echo "  4. For packages that build from source (like numpy), consider:"
-        echo "     - Installing pre-built wheels: python3 -m pip install --only-binary :all: <package>"
-        echo "     - Or installing via apt if available: sudo apt install python3-<package>"
-        echo ""
-    fi
-    
-    if [ "$INSTALLED" -gt 0 ]; then
-        echo "✓ Project Python dependencies installed ($INSTALLED/$TOTAL_PACKAGES successful)"
+# Dependencies are managed via pyproject.toml / uv.lock.
+# If uv is available, use `uv sync`; otherwise fall back to pip with pyproject.toml.
+if command -v uv >/dev/null 2>&1; then
+    echo "Installing dependencies with uv..."
+    if uv sync 2>&1 | tee -a "$LOG_FILE"; then
+        echo "✓ Project dependencies installed via uv sync"
     else
-        echo "✗ No packages were successfully installed"
-        echo "  Check the log file for details: $LOG_FILE"
+        echo "✗ uv sync failed — check the log for details: $LOG_FILE"
+        exit 1
+    fi
+elif [ -f "$PROJECT_ROOT_DIR/pyproject.toml" ]; then
+    echo "uv not found; falling back to pip install from pyproject.toml..."
+    if python3 -m pip install --break-system-packages -e "." 2>&1 | tee -a "$LOG_FILE"; then
+        echo "✓ Project dependencies installed via pip"
+    else
+        echo "✗ pip install failed — check the log for details: $LOG_FILE"
         exit 1
     fi
 else
-    echo "⚠ requirements.txt not found; skipping main dependency install"
-fi
-echo ""
-
-# Install web interface dependencies
-echo "Installing web interface dependencies..."
-if [ -f "$PROJECT_ROOT_DIR/web_interface/requirements.txt" ]; then
-    if python3 -m pip install --break-system-packages --prefer-binary -r "$PROJECT_ROOT_DIR/web_interface/requirements.txt"; then
-        echo "✓ Web interface dependencies installed"
-        # Create marker file to indicate dependencies are installed
-        touch "$PROJECT_ROOT_DIR/.web_deps_installed"
-    else
-        echo "⚠ Warning: Some web interface dependencies failed to install"
-        echo "  The web interface may not work correctly until dependencies are installed"
-    fi
-else
-    echo "⚠ web_interface/requirements.txt not found; skipping"
+    echo "⚠ No pyproject.toml found; skipping dependency install"
 fi
 echo ""
 

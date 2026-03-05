@@ -704,22 +704,17 @@ sudo python3 display_controller.py
 
 This will start the display cycle but only stays active as long as your ssh session is active.
 
-### Convenience Scripts
+### Service Management
 
-Two convenience scripts are provided for easy service management:
+Use the `matrix` CLI or `systemctl` directly to manage the display service:
 
-- `start_display.sh` - Starts the LED matrix display service
-- `stop_display.sh` - Stops the LED matrix display service
-
-Make them executable with:
 ```bash
-chmod +x start_display.sh stop_display.sh
-```
+matrix service start    # start the LED matrix display service
+matrix service stop     # stop the LED matrix display service
 
-Then use them to control the service:
-```bash
-sudo ./start_display.sh
-sudo ./stop_display.sh
+# Or directly via systemctl:
+sudo systemctl start ledmatrix.service
+sudo systemctl stop ledmatrix.service
 ```
 
 </details>
@@ -730,7 +725,7 @@ sudo ./stop_display.sh
 The first time install will handle this:
 The LEDMatrix can be installed as a systemd service to run automatically at boot and be managed easily. The service runs as root to ensure proper hardware timing access for the LED matrix.
 
-### Installing the Service (this is included in the first_time_install.sh)
+### Installing the Service
 
 1. Make the install script executable:
 ```bash

@@ -68,8 +68,8 @@ The v3 web interface is a complete rewrite of the LED Matrix control panel using
 1. **Start the v3 interface**:
    ```bash
    python3 web_interface/start.py
-   # Or use the shell script:
-   ./web_interface/run.sh
+   # Or use the matrix CLI:
+   matrix web
    ```
 
 2. **Access the interface**:

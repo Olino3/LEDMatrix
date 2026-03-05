@@ -229,7 +229,7 @@ Features:
 
 - Service configs: `ledmatrix.service`, `ledmatrix-web.service`
 - Plugin manager: `src/plugin_system/plugin_manager.py`
-- Installation script: `first_time_install.sh`
+- Installation: `matrix install` (or legacy `first_time_install.sh`)
 - Dependency installer: `scripts/install_plugin_dependencies.sh`
 - Troubleshooting guide: `PLUGIN_DEPENDENCY_TROUBLESHOOTING.md`
 

@@ -43,9 +43,9 @@ From the project root:
 python3 web_interface/start.py
 ```
 
-Or using the shell script:
+Or using the `matrix` CLI:
 ```bash
-./web_interface/run.sh
+matrix web
 ```
 
 ### As a Service (Production)
