@@ -450,6 +450,17 @@ def doctor() -> None:
     else:
         warn("Hardware", "/dev/mem not found and EMULATOR not set \u2014 set EMULATOR=true for dev")
 
+    # --- rgbmatrix (Pi hardware only) ---
+    if dev_mem.exists() and not emulator_env and venv_py.exists():
+        result = subprocess.run(
+            [str(venv_py), "-c", "import rgbmatrix; print('ok')"],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            ok("rgbmatrix", "C extension importable")
+        else:
+            warn("rgbmatrix", "Not installed \u2014 display will fail without EMULATOR=true")
+
     # --- Python version ---
     if venv_py.exists():
         ver_result = subprocess.run(
@@ -997,7 +1008,8 @@ def plugin_store(query: Optional[str]) -> None:
         ]
 
     if not plugins:
-        console.print(f"  [dim]No plugins found{f' matching \"{query}\"' if query else ''}.[/dim]")
+        match_msg = f' matching "{query}"' if query else ''
+        console.print(f"  [dim]No plugins found{match_msg}.[/dim]")
         return
 
     # Mark locally installed plugins
