@@ -23,7 +23,7 @@ def get_store_manager():
         return PluginStoreManager
     except ImportError as e:
         raise ImportError(
-            "PluginStoreManager requires additional dependencies. Install requests: pip install requests"
+            "PluginStoreManager requires additional dependencies. Install the 'requests' dependency (for example via 'uv add requests' or 'pip install requests')."
         ) from e
 
 
