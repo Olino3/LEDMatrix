@@ -266,7 +266,7 @@ class FontManager:
 
             # Download font
             logger.info(f"Downloading font from {url}")
-            urllib.request.urlretrieve(url, cache_path)
+            urllib.request.urlretrieve(url, cache_path)  # nosec B310 — URL comes from user config, not untrusted input
 
             # Handle zip files
             if url.endswith(".zip"):

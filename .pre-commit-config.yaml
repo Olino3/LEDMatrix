@@ -45,6 +45,8 @@ repos:
     hooks:
       - id: bandit
         args:
+          - '-c'
+          - 'bandit.yaml'
           - '-r'
           - '-ll'
           - '-x'
