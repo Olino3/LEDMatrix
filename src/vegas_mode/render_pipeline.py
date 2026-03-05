@@ -6,16 +6,16 @@ Uses the existing ScrollHelper for numpy-optimized scroll operations.
 """
 
 import logging
-import time
 import threading
+import time
 from collections import deque
-from typing import Optional, List, Any, Dict, Deque, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Deque, Dict, List, Optional
+
 from PIL import Image
-import numpy as np
 
 from src.common.scroll_helper import ScrollHelper
 from src.vegas_mode.config import VegasModeConfig
-from src.vegas_mode.stream_manager import StreamManager, ContentSegment
+from src.vegas_mode.stream_manager import StreamManager
 
 if TYPE_CHECKING:
     pass
@@ -35,12 +35,7 @@ class RenderPipeline:
     - Track scroll cycle completion
     """
 
-    def __init__(
-        self,
-        config: VegasModeConfig,
-        display_manager: Any,
-        stream_manager: StreamManager
-    ):
+    def __init__(self, config: VegasModeConfig, display_manager: Any, stream_manager: StreamManager):
         """
         Initialize the render pipeline.
 
@@ -54,21 +49,11 @@ class RenderPipeline:
         self.stream_manager = stream_manager
 
         # Display dimensions (handle both property and method access patterns)
-        self.display_width = (
-            display_manager.width() if callable(display_manager.width)
-            else display_manager.width
-        )
-        self.display_height = (
-            display_manager.height() if callable(display_manager.height)
-            else display_manager.height
-        )
+        self.display_width = display_manager.width() if callable(display_manager.width) else display_manager.width
+        self.display_height = display_manager.height() if callable(display_manager.height) else display_manager.height
 
         # ScrollHelper for optimized scrolling
-        self.scroll_helper = ScrollHelper(
-            self.display_width,
-            self.display_height,
-            logger
-        )
+        self.scroll_helper = ScrollHelper(self.display_width, self.display_height, logger)
 
         # Configure scroll helper
         self._configure_scroll_helper()
@@ -90,17 +75,16 @@ class RenderPipeline:
 
         # Statistics
         self.stats = {
-            'frames_rendered': 0,
-            'scroll_cycles': 0,
-            'composition_count': 0,
-            'hot_swaps': 0,
-            'avg_frame_time_ms': 0.0,
+            "frames_rendered": 0,
+            "scroll_cycles": 0,
+            "composition_count": 0,
+            "hot_swaps": 0,
+            "avg_frame_time_ms": 0.0,
         }
         self._frame_times: Deque[float] = deque(maxlen=100)  # Efficient fixed-size buffer
 
         logger.info(
-            "RenderPipeline initialized: %dx%d @ %d FPS",
-            self.display_width, self.display_height, config.target_fps
+            "RenderPipeline initialized: %dx%d @ %d FPS", self.display_width, self.display_height, config.target_fps
         )
 
     def _configure_scroll_helper(self) -> None:
@@ -123,7 +107,7 @@ class RenderPipeline:
             enabled=self.config.dynamic_duration_enabled,
             min_duration=self.config.min_cycle_duration,
             max_duration=self.config.max_cycle_duration,
-            buffer=0.1  # 10% buffer
+            buffer=0.1,  # 10% buffer
         )
 
     def compose_scroll_content(self) -> bool:
@@ -148,9 +132,7 @@ class RenderPipeline:
 
             # Create scrolling image via ScrollHelper
             self.scroll_helper.create_scrolling_image(
-                content_items=content_with_gaps,
-                item_gap=self.config.separator_width,
-                element_gap=0
+                content_items=content_with_gaps, item_gap=self.config.separator_width, element_gap=0
             )
 
             # Verify scroll image was created successfully
@@ -165,7 +147,7 @@ class RenderPipeline:
             # Track which plugins are in this scroll (get safely via buffer status)
             self._segments_in_scroll = self.stream_manager.get_active_plugin_ids()
 
-            self.stats['composition_count'] += 1
+            self.stats["composition_count"] += 1
             self._cycle_start_time = time.time()
             self._cycle_complete = False
 
@@ -174,7 +156,7 @@ class RenderPipeline:
                 self.scroll_helper.cached_image.width if self.scroll_helper.cached_image else 0,
                 self.display_height,
                 len(self._segments_in_scroll),
-                len(images)
+                len(images),
             )
 
             return True
@@ -206,11 +188,8 @@ class RenderPipeline:
             if self.scroll_helper.is_scroll_complete():
                 if not self._cycle_complete:
                     self._cycle_complete = True
-                    self.stats['scroll_cycles'] += 1
-                    logger.info(
-                        "Scroll cycle complete after %.1fs",
-                        time.time() - self._cycle_start_time
-                    )
+                    self.stats["scroll_cycles"] += 1
+                    logger.info("Scroll cycle complete after %.1fs", time.time() - self._cycle_start_time)
 
             # Get visible portion
             visible_frame = self.scroll_helper.get_visible_portion()
@@ -225,7 +204,7 @@ class RenderPipeline:
             self.display_manager.set_scrolling_state(True)
 
             # Track statistics
-            self.stats['frames_rendered'] += 1
+            self.stats["frames_rendered"] += 1
             frame_time = time.time() - frame_start
             self._track_frame_time(frame_time)
 
@@ -241,9 +220,7 @@ class RenderPipeline:
         self._frame_times.append(frame_time)  # deque with maxlen auto-removes old entries
 
         if self._frame_times:
-            self.stats['avg_frame_time_ms'] = (
-                sum(self._frame_times) / len(self._frame_times) * 1000
-            )
+            self.stats["avg_frame_time_ms"] = sum(self._frame_times) / len(self._frame_times) * 1000
 
     def is_cycle_complete(self) -> bool:
         """Check if current scroll cycle is complete."""
@@ -262,7 +239,7 @@ class RenderPipeline:
 
         # Check if we need more content in the buffer
         buffer_status = self.stream_manager.get_buffer_status()
-        if buffer_status['staging_count'] > 0:
+        if buffer_status["staging_count"] > 0:
             return True
 
         return False
@@ -284,7 +261,7 @@ class RenderPipeline:
 
             # Recompose with updated content
             if self.compose_scroll_content():
-                self.stats['hot_swaps'] += 1
+                self.stats["hot_swaps"] += 1
                 logger.debug("Hot-swap completed")
                 return True
 
@@ -327,9 +304,9 @@ class RenderPipeline:
         scroll_info = self.scroll_helper.get_scroll_info()
         return {
             **scroll_info,
-            'cycle_complete': self._cycle_complete,
-            'plugins_in_scroll': self._segments_in_scroll,
-            'stats': self.stats.copy(),
+            "cycle_complete": self._cycle_complete,
+            "plugins_in_scroll": self._segments_in_scroll,
+            "stats": self.stats.copy(),
         }
 
     def get_scroll_position(self) -> int:
