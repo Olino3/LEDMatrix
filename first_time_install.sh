@@ -741,39 +741,8 @@ PY
 fi
 echo ""
 
-CURRENT_STEP="Install web interface dependencies"
-echo "Step 7: Installing web interface dependencies..."
-echo "------------------------------------------------"
-
-# Check if web dependencies were already installed (marker created in Step 5)
-if [ -f "$PROJECT_ROOT_DIR/.web_deps_installed" ]; then
-    echo "✓ Web interface dependencies already installed (marker file found)"
-else
-    # Install web interface dependencies
-    echo "Installing Python dependencies for web interface..."
-    cd "$PROJECT_ROOT_DIR"
-
-    # Try to install dependencies using the smart installer if available
-    if [ -f "$PROJECT_ROOT_DIR/scripts/install_dependencies_apt.py" ]; then
-        echo "Using smart dependency installer..."
-        python3 "$PROJECT_ROOT_DIR/scripts/install_dependencies_apt.py"
-    else
-        echo "Using pip to install dependencies..."
-        if [ -f "$PROJECT_ROOT_DIR/requirements_web_v2.txt" ]; then
-            python3 -m pip install --break-system-packages --prefer-binary -r requirements_web_v2.txt
-        else
-            echo "⚠ requirements_web_v2.txt not found; skipping web dependency install"
-        fi
-    fi
-
-    # Create marker file to indicate dependencies are installed
-    touch "$PROJECT_ROOT_DIR/.web_deps_installed"
-    echo "✓ Web interface dependencies installed"
-fi
-echo ""
-
 CURRENT_STEP="Install main LED Matrix service"
-echo "Step 7.5: Installing main LED Matrix service..."
+echo "Step 7: Installing main LED Matrix service..."
 echo "------------------------------------------------"
 
 # Run the main service installation (idempotent)
@@ -973,8 +942,6 @@ $ACTUAL_USER ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable ledmatrix.service
 $ACTUAL_USER ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable ledmatrix.service
 $ACTUAL_USER ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH status ledmatrix.service
 $ACTUAL_USER ALL=(ALL) NOPASSWD: $PYTHON_PATH $PROJECT_ROOT_DIR/display_controller.py
-$ACTUAL_USER ALL=(ALL) NOPASSWD: $BASH_PATH $PROJECT_ROOT_DIR/start_display.sh
-$ACTUAL_USER ALL=(ALL) NOPASSWD: $BASH_PATH $PROJECT_ROOT_DIR/stop_display.sh
 EOF
 
 if [ -f "$SUDOERS_FILE" ] && cmp -s /tmp/ledmatrix_web_sudoers "$SUDOERS_FILE"; then
@@ -1134,7 +1101,6 @@ find "$PROJECT_ROOT_DIR" \
 find "$PROJECT_ROOT_DIR" -path "*/.git*" -prune -o -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
 
 # Explicitly ensure common helper scripts are executable (in case paths change)
-chmod 755 "$PROJECT_ROOT_DIR/start_display.sh" "$PROJECT_ROOT_DIR/stop_display.sh" 2>/dev/null || true
 chmod 755 "$PROJECT_ROOT_DIR/scripts/fix_perms/fix_cache_permissions.sh" "$PROJECT_ROOT_DIR/scripts/fix_perms/fix_web_permissions.sh" "$PROJECT_ROOT_DIR/scripts/fix_perms/fix_assets_permissions.sh" "$PROJECT_ROOT_DIR/scripts/fix_perms/fix_plugin_permissions.sh" 2>/dev/null || true
 chmod 755 "$PROJECT_ROOT_DIR/scripts/install/install_service.sh" "$PROJECT_ROOT_DIR/scripts/install/install_web_service.sh" 2>/dev/null || true
 
