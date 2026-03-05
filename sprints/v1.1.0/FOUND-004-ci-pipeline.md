@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before authoring workflow files. No application code changes; only `.github/workflows/` files.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore / Infrastructure
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md) — `pyproject.toml` and `uv.lock` must exist so CI can install deps with `uv`

@@ -6,8 +6,10 @@ matrix — LEDMatrix developer CLI.
  and I show you how deep the rabbit hole goes."
 """
 
+import importlib.util
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -280,6 +282,193 @@ def web() -> None:
     console.print(Rule("[green]web interface[/green]"))
     console.print("  [dim]http://localhost:5000[/dim]")
     sys.exit(_run([PYTHON, str(LEDMATRIX_ROOT / "web_interface" / "start.py")]))
+
+
+# ---------------------------------------------------------------------------
+# matrix setup
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.option("--extras", multiple=True, default=("emulator",),
+              show_default=True, help="uv extras to install (repeatable).")
+def setup(extras: tuple) -> None:
+    """Create or sync the .venv using uv. Run this after cloning or pulling."""
+    uv = shutil.which("uv")
+    if not uv:
+        console.print("[red]'uv' not found. Install it:[/red]")
+        console.print("  curl -LsSf https://astral.sh/uv/install.sh | sh")
+        sys.exit(1)
+
+    extras_flags = []
+    for extra in extras:
+        extras_flags += ["--extra", extra]
+
+    console.print(Rule("[green]setup[/green]"))
+    console.print(f"  Syncing deps with extras: {', '.join(extras) or 'none'}")
+    rc = _run([uv, "sync", *extras_flags], cwd=str(LEDMATRIX_ROOT))
+    if rc == 0:
+        console.print("[green]\u2713 .venv is ready[/green]")
+    sys.exit(rc)
+
+
+# ---------------------------------------------------------------------------
+# matrix install
+# ---------------------------------------------------------------------------
+
+@cli.command()
+@click.option("--no-services", is_flag=True, help="Skip systemd service installation.")
+@click.option("--emulator", is_flag=True, help="Install emulator extras instead of hardware.")
+def install(no_services: bool, emulator: bool) -> None:
+    """Full installation: sync deps and optionally install systemd services."""
+    console.print(Rule("[green]install[/green]"))
+
+    # Step 1: Setup venv
+    extras = ("emulator",) if emulator else ()
+    ctx = click.get_current_context()
+    ctx.invoke(setup, extras=extras)
+
+    # Step 2: Ensure config.json exists
+    config_template = LEDMATRIX_ROOT / "config" / "config.template.json"
+    config_file = LEDMATRIX_ROOT / "config" / "config.json"
+    if not config_file.exists() and config_template.exists():
+        import shutil as _shutil
+        _shutil.copy(config_template, config_file)
+        console.print("[green]\u2713 Created config/config.json from template[/green]")
+    elif config_file.exists():
+        console.print("[dim]config/config.json already exists \u2014 skipping[/dim]")
+    else:
+        console.print("[yellow]\u26a0 No config template found \u2014 create config/config.json manually[/yellow]")
+
+    # Step 3: Install systemd services (requires sudo)
+    if no_services:
+        console.print("[dim]Skipping service installation (--no-services)[/dim]")
+    else:
+        install_script = LEDMATRIX_ROOT / "scripts" / "install" / "install_service.sh"
+        if not install_script.exists():
+            console.print(f"[red]install_service.sh not found at {install_script}[/red]")
+            sys.exit(1)
+        console.print("  Installing systemd services (may prompt for sudo)...")
+        rc = _run(["sudo", "bash", str(install_script)])
+        if rc != 0:
+            console.print("[red]Service installation failed[/red]")
+            sys.exit(rc)
+        console.print("[green]\u2713 Services installed[/green]")
+
+    console.print(Panel("[green]Installation complete![/green]\n\nRun [bold]matrix doctor[/bold] to verify.", border_style="green"))
+
+
+# ---------------------------------------------------------------------------
+# matrix doctor
+# ---------------------------------------------------------------------------
+
+@cli.command()
+def doctor() -> None:
+    """Check system health: venv, config, services, hardware."""
+    console.print(Rule("[green]doctor[/green]"))
+    rows: list[tuple[str, str, str]] = []  # (check_name, status_icon, detail)
+    any_fail = False
+
+    def ok(name: str, detail: str = "") -> None:
+        rows.append((name, "[green]\u2713 PASS[/green]", detail))
+
+    def warn(name: str, detail: str = "") -> None:
+        rows.append((name, "[yellow]\u26a0 WARN[/yellow]", detail))
+
+    def fail(name: str, detail: str = "") -> None:
+        nonlocal any_fail
+        any_fail = True
+        rows.append((name, "[red]\u2717 FAIL[/red]", detail))
+
+    # --- uv ---
+    uv_path = shutil.which("uv")
+    if uv_path:
+        ok("uv installed", uv_path)
+    else:
+        fail("uv installed", "Not found \u2014 run: curl -LsSf https://astral.sh/uv/install.sh | sh")
+
+    # --- venv ---
+    venv_py = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
+    if venv_py.exists():
+        result = subprocess.run([str(venv_py), "-c", "import PIL; print(PIL.__version__)"],
+                                capture_output=True, text=True)
+        if result.returncode == 0:
+            ok(".venv / Pillow", f"Pillow {result.stdout.strip()}")
+        else:
+            fail(".venv / Pillow", "Pillow import failed \u2014 run: matrix setup")
+    else:
+        fail(".venv", f"Not found at {venv_py} \u2014 run: matrix setup")
+
+    # --- config.json ---
+    cfg = LEDMATRIX_ROOT / "config" / "config.json"
+    if cfg.exists():
+        ok("config/config.json", str(cfg))
+    else:
+        fail("config/config.json", "Missing \u2014 run: matrix install  (or copy from config.template.json)")
+
+    # --- config_secrets.json ---
+    secrets = LEDMATRIX_ROOT / "config" / "config_secrets.json"
+    if secrets.exists():
+        ok("config/config_secrets.json", str(secrets))
+    else:
+        warn("config/config_secrets.json", "Missing \u2014 plugins needing API keys will error")
+
+    # --- plugins dir ---
+    plugins_dir = LEDMATRIX_ROOT / "plugins"
+    plugin_count = len(list(plugins_dir.glob("*/manifest.json"))) if plugins_dir.exists() else 0
+    if plugin_count > 0:
+        ok("plugins/", f"{plugin_count} plugin(s) found")
+    elif plugins_dir.exists():
+        warn("plugins/", "Directory exists but no plugins installed")
+    else:
+        fail("plugins/", "plugins/ directory missing")
+
+    # --- systemd services ---
+    for unit in ("ledmatrix", "ledmatrix-web"):
+        unit_file = Path(f"/etc/systemd/system/{unit}.service")
+        if not unit_file.exists():
+            warn(f"{unit}.service", "Not installed (OK on dev machine, required on Pi)")
+            continue
+        result = subprocess.run(["systemctl", "is-active", unit],
+                                capture_output=True, text=True)
+        status = result.stdout.strip()
+        if status == "active":
+            ok(f"{unit}.service", "active")
+        else:
+            warn(f"{unit}.service", f"status: {status}")
+
+    # --- hardware / emulator ---
+    dev_mem = Path("/dev/mem")
+    emulator_env = os.environ.get("EMULATOR", "").lower() in ("1", "true", "yes")
+    if dev_mem.exists():
+        ok("Hardware (/dev/mem)", "Pi hardware detected")
+    elif emulator_env:
+        ok("Emulator mode", "EMULATOR=true set")
+    else:
+        warn("Hardware", "/dev/mem not found and EMULATOR not set \u2014 set EMULATOR=true for dev")
+
+    # --- Python version ---
+    py_ver = platform.python_version()
+    major, minor, _ = py_ver.split(".")
+    if (int(major), int(minor)) >= (3, 10):
+        ok(f"Python {py_ver}", str(venv_py))
+    else:
+        fail(f"Python {py_ver}", "Requires Python 3.10+")
+
+    # Render table
+    table = Table(title="LEDMatrix Health Check", show_header=True, header_style="bold")
+    table.add_column("Check", style="bold")
+    table.add_column("Status", justify="center")
+    table.add_column("Detail", style="dim")
+    for name, status, detail in rows:
+        table.add_row(name, status, detail)
+    console.print(table)
+
+    if any_fail:
+        console.print("\n[red]One or more checks failed. Fix the issues above and re-run:[/red]")
+        console.print("  [bold]matrix doctor[/bold]")
+        sys.exit(1)
+    else:
+        console.print("\n[green]All checks passed![/green]")
 
 
 # ---------------------------------------------------------------------------

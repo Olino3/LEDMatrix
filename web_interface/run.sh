@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "⚠  DEPRECATED: web_interface/run.sh is deprecated. Use: matrix web" >&2
+echo "   This script will be removed in a future release." >&2
 
 # LED Matrix Web Interface V3 Runner
 # This script runs the web interface using system Python

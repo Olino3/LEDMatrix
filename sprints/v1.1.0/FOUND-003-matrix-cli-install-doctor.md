@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for new logic added to the CLI.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Feature
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md), [FOUND-002](FOUND-002-venv-bootstrap.md)

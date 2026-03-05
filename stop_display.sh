@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "⚠  DEPRECATED: stop_display.sh is deprecated. Use: matrix service stop" >&2
+echo "   This script will be removed in a future release." >&2
 
 # Get the current user
 CURRENT_USER=$(whoami)
