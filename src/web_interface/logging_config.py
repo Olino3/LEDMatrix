@@ -10,6 +10,37 @@ import sys
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+# Standard LogRecord attributes populated by Python's logging framework.
+# Keys set via logger.*(extra={...}) are attached directly on the record and
+# must be collected by excluding these built-in names.
+_LOG_RECORD_BUILT_IN_ATTRS = frozenset(
+    {
+        "args",
+        "asctime",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "message",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+        "taskName",
+    }
+)
+
 
 class StructuredFormatter(logging.Formatter):
     """
@@ -34,13 +65,12 @@ class StructuredFormatter(logging.Formatter):
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
 
-        # Add extra fields from record
-        if hasattr(record, "extra"):
-            log_data.update(record.extra)
-
-        # Add context from record
-        if hasattr(record, "context"):
-            log_data["context"] = record.context
+        # Add extra fields: when logger.*(extra={...}) is called, Python logging
+        # attaches each key directly as an attribute on the LogRecord (not under
+        # record.extra), so we collect any non-standard, non-private attributes.
+        for key, value in record.__dict__.items():
+            if key not in _LOG_RECORD_BUILT_IN_ATTRS and not key.startswith("_"):
+                log_data.setdefault(key, value)
 
         return json.dumps(log_data)
 
