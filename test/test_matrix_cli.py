@@ -1173,8 +1173,8 @@ class TestDoctorCommand:
         assert 'rgbmatrix' in result.output.lower()
         # Should not have a WARN for rgbmatrix (it passed)
         lines = result.output.split('\n')
-        rgbmatrix_lines = [l for l in lines if 'rgbmatrix' in l.lower()]
-        assert any('PASS' in l for l in rgbmatrix_lines)
+        rgbmatrix_lines = [line for line in lines if 'rgbmatrix' in line.lower()]
+        assert any('PASS' in line for line in rgbmatrix_lines)
 
     def test_doctor_rgbmatrix_skipped_in_emulator_mode(self, tmp_path):
         """When EMULATOR=true, rgbmatrix check should be skipped entirely."""
@@ -1198,7 +1198,7 @@ class TestDoctorCommand:
         with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
              patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
              patch('shutil.which', return_value='/usr/bin/uv'), \
-             patch.dict(os.environ, {}, clear=False):
+             patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
             # /dev/mem won't exist in tmp_path, and we're not on a Pi
             result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
         # Should not check rgbmatrix on dev machines without /dev/mem

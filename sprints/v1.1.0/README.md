@@ -63,7 +63,7 @@ FOUND-006 (plugin quick-fixes) [Done]
 
 ## Remaining Work
 
-4 tickets are still Open. All are spikes/cleanup discovered during implementation of the core FOUND tickets:
+5 tickets are still Open. All are spikes/cleanup discovered during implementation of the core FOUND tickets:
 
 - **SPIKE-003** -- Monorepo PR for 20 plugins (requires push access to external repo)
 - **SPIKE-007** -- Decide on bandit.yaml configuration
