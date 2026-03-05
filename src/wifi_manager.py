@@ -1104,7 +1104,7 @@ class WiFiManager:
                     verification_delay = 2
                     connected = False
 
-                    for attempt in range(max_verification_attempts):
+                    for _attempt in range(max_verification_attempts):
                         time.sleep(verification_delay)
                         status = self.get_wifi_status()
                         if status.connected and status.ssid == ssid:
@@ -1142,7 +1142,7 @@ class WiFiManager:
                 verification_delay = 2
                 connected = False
 
-                for attempt in range(max_verification_attempts):
+                for _attempt in range(max_verification_attempts):
                     time.sleep(verification_delay)
                     status = self.get_wifi_status()
                     if status.connected:

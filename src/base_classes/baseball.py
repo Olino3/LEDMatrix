@@ -9,7 +9,7 @@ import logging
 import time
 from typing import Any, Dict, Optional
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from src.base_classes.data_sources import ESPNDataSource
 from src.base_classes.sports import SportsCore, SportsLive, SportsRecent
@@ -299,7 +299,6 @@ class Baseball(SportsCore):
             return
 
         series_summary = game.get("series_summary", "")
-        font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
         bbox = draw_overlay.textbbox((0, 0), series_summary, font=self.fonts["time"])
         height = bbox[3] - bbox[1]
         shots_y = (self.display_height - height) // 2

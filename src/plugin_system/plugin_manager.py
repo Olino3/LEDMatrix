@@ -673,8 +673,8 @@ class PluginManager:
                     success = False
                     if self.resource_monitor:
                         # If resource monitor exists, wrap the call
-                        def monitored_update():
-                            self.resource_monitor.monitor_call(plugin_id, plugin_instance.update)
+                        def monitored_update(_pid=plugin_id, _inst=plugin_instance):
+                            self.resource_monitor.monitor_call(_pid, _inst.update)
 
                         success = self.plugin_executor.execute_update(
                             type("obj", (object,), {"update": monitored_update})(), plugin_id
