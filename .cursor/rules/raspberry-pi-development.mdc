@@ -24,7 +24,7 @@ alwaysApply: true
 
 ## Deployment Considerations
 - **Service files**: [ledmatrix.service](mdc:ledmatrix.service), [ledmatrix-web.service](mdc:ledmatrix-web.service)
-- **Installation scripts**: [first_time_install.sh](mdc:first_time_install.sh), [install_service.sh](mdc:install_service.sh)
+- **Installation**: `matrix install` (CLI), [install_service.sh](mdc:install_service.sh)
 - **Dependencies**: [requirements.txt](mdc:requirements.txt) for Pi environment
 - **Permissions**: Handle file permissions for Pi user
 

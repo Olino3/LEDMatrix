@@ -52,7 +52,7 @@ cd bindings/python
 python3 -m pip install --break-system-packages .
 ```
 
-**Note:** The `first_time_install.sh` script automates this process during installation.
+**Note:** The `matrix install` command handles dependency setup during installation.
 
 #### Troubleshooting
 
