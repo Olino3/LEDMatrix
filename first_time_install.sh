@@ -30,6 +30,9 @@ echo "  matrix install            # full install (venv + config + services)"
 echo "  matrix install --emulator # emulator/dev install"
 echo "  matrix doctor             # verify installation health"
 echo ""
+echo "NOTE: Flags from the old script (-y, --force-rebuild, --skip-sound, etc.)"
+echo "are not supported by 'matrix install' and will be ignored."
+echo ""
 echo "For more information, see the README:"
 echo "  https://github.com/ChuckBuilds/LEDMatrix#system-setup--installation"
 echo ""
@@ -39,5 +42,6 @@ echo ""
 # Resolve project root (where this script lives)
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-# Forward to matrix install
-exec python3 "$PROJECT_ROOT/scripts/matrix_cli.py" install "$@"
+# Forward to matrix install (old flags are not forwarded — they are not recognized
+# by the matrix CLI; users should use 'matrix install' directly instead)
+exec python3 "$PROJECT_ROOT/scripts/matrix_cli.py" install

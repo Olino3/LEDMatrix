@@ -187,17 +187,39 @@ install_uv() {
     fi
 
     print_warning "uv not found, installing..."
-    if curl -LsSf https://astral.sh/uv/install.sh | sh; then
-        # Source the env so uv is on PATH for the rest of the script
-        export PATH="$HOME/.local/bin:$PATH"
-        if command -v uv >/dev/null 2>&1; then
-            print_success "uv installed successfully"
+
+    # Prefer system package (available on Debian Bookworm+) — avoids curl|sh
+    if apt-cache show python3-uv >/dev/null 2>&1; then
+        if [ "$EUID" -eq 0 ]; then
+            retry apt-get install -y python3-uv
         else
-            print_error "uv installed but not found on PATH"
-            exit 1
+            retry sudo apt-get install -y python3-uv
         fi
     else
-        print_error "Failed to install uv"
+        # Fall back to pip (no curl|sh, uses PyPI package integrity checks)
+        if ! command -v pip3 >/dev/null 2>&1; then
+            if [ "$EUID" -eq 0 ]; then
+                retry apt-get install -y python3-pip
+            else
+                retry sudo apt-get install -y python3-pip
+            fi
+        fi
+        # Try standard install first; use --break-system-packages on externally-managed envs
+        if ! pip3 install uv 2>/dev/null; then
+            print_warning "Standard pip install failed (externally-managed env), retrying with --break-system-packages..."
+            if ! pip3 install --break-system-packages uv; then
+                print_error "Failed to install uv via pip"
+                exit 1
+            fi
+        fi
+    fi
+
+    # Ensure the user-local bin directory is on PATH
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v uv >/dev/null 2>&1; then
+        print_success "uv installed successfully"
+    else
+        print_error "uv installed but not found on PATH"
         exit 1
     fi
 }
