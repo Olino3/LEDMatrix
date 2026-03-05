@@ -102,8 +102,6 @@ TEMP_SUDOERS="/tmp/ledmatrix_web_sudoers_$$"
 
     # Required: python3, bash
     echo "$WEB_USER ALL=(ALL) NOPASSWD: $PYTHON_PATH $PROJECT_DIR/display_controller.py"
-    echo "$WEB_USER ALL=(ALL) NOPASSWD: $BASH_PATH $PROJECT_DIR/start_display.sh"
-    echo "$WEB_USER ALL=(ALL) NOPASSWD: $BASH_PATH $PROJECT_DIR/stop_display.sh"
     echo ""
     echo "# Allow web user to remove plugin directories via vetted helper script"
     echo "# The helper validates that the target path resolves inside plugin-repos/ or plugins/"
@@ -123,7 +121,6 @@ echo "- Enable/disable the ledmatrix service"
 echo "- Check service status"
 echo "- View system logs via journalctl"
 echo "- Run display_controller.py directly"
-echo "- Execute start_display.sh and stop_display.sh"
 echo "- Reboot and shutdown the system"
 echo "- Remove plugin directories (for update/uninstall when root-owned files block deletion)"
 echo ""
@@ -158,12 +155,6 @@ if sudo cp "$TEMP_SUDOERS" /etc/sudoers.d/ledmatrix_web; then
         echo "✓ systemctl status ledmatrix.service - OK"
     else
         echo "✗ systemctl status ledmatrix.service - Failed"
-    fi
-    
-    if sudo -n test -f "$PROJECT_DIR/start_display.sh"; then
-        echo "✓ File access test - OK"
-    else
-        echo "✗ File access test - Failed"
     fi
     
     echo ""
