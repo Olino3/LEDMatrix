@@ -44,3 +44,15 @@ Applies to: `src/**/*`
 - **Phase 7 (v6.0.0):** Core architecture refactor — God class decomposition, state machines.
 
 See `.claude/rules/roadmap.md` for the full phase plan.
+
+## Violation Baselines (do not increase)
+
+Before committing changes to `src/`, verify these counts have not increased:
+
+| Violation | Baseline | Check command |
+|---|---|---|
+| `logging.getLogger` usage | 36 files | `grep -rl "logging\.getLogger" src/ \| wc -l` |
+| `.matrix.width` / `.matrix.height` | 0 in src/ | `grep -rn "\.matrix\.\(width\|height\)" src/` |
+| New `DisplayManager()` instantiation | 0 | `grep -rn "DisplayManager()" src/ \| grep -v "# singleton"` |
+
+New code MUST use `get_logger()` and `display_manager.width`/`.height`. Do not add to existing violations.
