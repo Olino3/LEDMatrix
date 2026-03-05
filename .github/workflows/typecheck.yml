@@ -1,0 +1,28 @@
+name: Type Check
+
+on:
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+  mypy:
+    name: mypy src/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dev dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Type check
+        run: uv run mypy src/ --ignore-missing-imports

@@ -22,13 +22,13 @@ All workflows use `uv` for dependency installation (fast, reproducible via `uv.l
 
 ## Acceptance Criteria
 
-- [ ] `.github/workflows/lint.yml` — runs `ruff check` and `ruff format --check` on every push and PR to `main` and `develop`
-- [ ] `.github/workflows/typecheck.yml` — runs `mypy src/` on every PR to `main` and `develop`
-- [ ] `.github/workflows/tests.yml` — runs `pytest` with coverage on Python 3.10, 3.11, 3.12; uploads coverage report as artifact; fails if coverage < 30%
-- [ ] `.github/workflows/audit.yml` — runs `uv pip audit` to flag known CVEs; runs on every push to `main` and weekly schedule
-- [ ] All four workflows use `uv` to install dependencies from `uv.lock`
+- [x] `.github/workflows/lint.yml` — runs `ruff check` and `ruff format --check` on every push and PR to `master` and `develop`
+- [x] `.github/workflows/typecheck.yml` — runs `mypy src/` on every PR to `master` and `develop`
+- [x] `.github/workflows/tests.yml` — runs `pytest` with coverage on Python 3.10, 3.11, 3.12; uploads coverage report as artifact; fails if coverage < 30%
+- [x] `.github/workflows/audit.yml` — runs `pip-audit` to flag known CVEs; runs on every push to `master` and weekly schedule
+- [x] All four workflows use `uv` to install dependencies from `uv.lock`
 - [ ] Workflows pass on the current codebase (existing test failures are acceptable as long as coverage ≥ 30%)
-- [ ] Workflows are named clearly and appear in the GitHub Actions tab with human-readable job names
+- [x] Workflows are named clearly and appear in the GitHub Actions tab with human-readable job names
 
 ---
 
@@ -72,7 +72,7 @@ jobs:
         run: uv run ruff format --check src/
 ```
 
-- [ ] Create file at `.github/workflows/lint.yml`
+- [x] Create file at `.github/workflows/lint.yml`
 
 ### 2. Create `.github/workflows/typecheck.yml`
 
@@ -107,7 +107,7 @@ jobs:
         run: uv run mypy src/ --ignore-missing-imports
 ```
 
-- [ ] Create file at `.github/workflows/typecheck.yml`
+- [x] Create file at `.github/workflows/typecheck.yml`
 
 ### 3. Create `.github/workflows/tests.yml`
 
@@ -165,8 +165,8 @@ jobs:
           path: coverage.xml
 ```
 
-- [ ] Create file at `.github/workflows/tests.yml`
-- [ ] Note: `--ignore=test/plugins` mirrors the existing local test invocation pattern
+- [x] Create file at `.github/workflows/tests.yml`
+- [x] Note: `--ignore=test/plugins` mirrors the existing local test invocation pattern
 
 ### 4. Create `.github/workflows/audit.yml`
 
@@ -204,7 +204,7 @@ jobs:
         run: uv pip audit
 ```
 
-- [ ] Create file at `.github/workflows/audit.yml`
+- [x] Create file at `.github/workflows/audit.yml`
 
 ### 5. Validate locally with `act` (optional but recommended)
 
@@ -266,3 +266,12 @@ In the GitHub Actions UI:
 - `uv pip audit` requires `pip-audit` to be installed by `uv`. If it errors, run `uv add --dev pip-audit` and regenerate `uv.lock`.
 - The coverage threshold is set to 30% to match the existing `pytest.ini` floor. FOUND-008 (Phase 8) will raise it to 70%.
 - The `typecheck` workflow only runs on PRs (not push to `main`) to avoid blocking hotfixes; adjust as needed.
+
+---
+
+## Implementation Notes (2026-03-03)
+
+### Adaptations from ticket spec:
+1. **Branch names:** All workflows use `master` and `develop` instead of `main` and `develop` — the repo's default branch is `master`, not `main`.
+2. **Audit workflow:** `uv pip audit` does not exist as a subcommand. Instead, `pip-audit==2.7.3` is declared as a `dev` optional dependency in `pyproject.toml` and locked in `uv.lock` (with hash verification). The audit workflow installs it via `uv sync --frozen --extra dev`, which resolves the pinned version and verifies hashes from the lockfile before running `uv run pip-audit`.
+3. **Workflow pass validation** (acceptance criteria item 6) is left unchecked — requires pushing to a branch with a PR to validate in GitHub Actions. The YAML is syntactically valid and the commands match the local tooling.
