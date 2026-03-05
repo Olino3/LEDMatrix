@@ -1,7 +1,7 @@
-# SPIKE-010 — `matrix install --hardware` for rgbmatrix C-extension Build
+# SPIKE-011 -- `matrix install --hardware` for rgbmatrix C-extension Build
 
 **Status:** Open
-**Phase:** v1.1.0 — Foundation
+**Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md), [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
 **Blocks:** _(none)_
@@ -28,6 +28,7 @@ This work was identified during SPIKE-005 evaluation and overlaps with SPIKE-009
 
 ## Notes
 
+- Previously tracked as SPIKE-010 (duplicate ID). Renumbered to SPIKE-011 during sprint cleanup.
 - The `--hardware` flag already exists conceptually in `pyproject.toml`'s `[project.optional-dependencies] hardware` group (currently empty/commented).
 - Consider a guided wizard approach that checks prerequisites before attempting the build, rather than failing mid-compilation.
-- Coordinate with SPIKE-009 to avoid duplicating hardware setup logic.
+- Coordinate with SPIKE-010 (expand matrix install) to avoid duplicating hardware setup logic.
