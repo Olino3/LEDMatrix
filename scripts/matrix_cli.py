@@ -6,7 +6,6 @@ matrix — LEDMatrix developer CLI.
  and I show you how deep the rabbit hole goes."
 """
 
-import importlib.util
 import json
 import os
 import platform
@@ -288,27 +287,32 @@ def web() -> None:
 # matrix setup
 # ---------------------------------------------------------------------------
 
-@cli.command()
-@click.option("--extras", multiple=True, default=("emulator",),
-              show_default=True, help="uv extras to install (repeatable).")
-def setup(extras: tuple) -> None:
-    """Create or sync the .venv using uv. Run this after cloning or pulling."""
+def _sync_venv(extras: tuple) -> int:
+    """Sync the .venv using uv. Returns the return code (0 = success)."""
     uv = shutil.which("uv")
     if not uv:
         console.print("[red]'uv' not found. Install it:[/red]")
         console.print("  curl -LsSf https://astral.sh/uv/install.sh | sh")
-        sys.exit(1)
+        return 1
 
     extras_flags = []
     for extra in extras:
         extras_flags += ["--extra", extra]
 
-    console.print(Rule("[green]setup[/green]"))
     console.print(f"  Syncing deps with extras: {', '.join(extras) or 'none'}")
     rc = _run([uv, "sync", *extras_flags], cwd=str(LEDMATRIX_ROOT))
     if rc == 0:
         console.print("[green]\u2713 .venv is ready[/green]")
-    sys.exit(rc)
+    return rc
+
+
+@cli.command()
+@click.option("--extras", multiple=True, default=("emulator",),
+              show_default=True, help="uv extras to install (repeatable).")
+def setup(extras: tuple) -> None:
+    """Create or sync the .venv using uv. Run this after cloning or pulling."""
+    console.print(Rule("[green]setup[/green]"))
+    sys.exit(_sync_venv(extras))
 
 
 # ---------------------------------------------------------------------------
@@ -324,15 +328,15 @@ def install(no_services: bool, emulator: bool) -> None:
 
     # Step 1: Setup venv
     extras = ("emulator",) if emulator else ()
-    ctx = click.get_current_context()
-    ctx.invoke(setup, extras=extras)
+    rc = _sync_venv(extras)
+    if rc != 0:
+        sys.exit(rc)
 
     # Step 2: Ensure config.json exists
     config_template = LEDMATRIX_ROOT / "config" / "config.template.json"
     config_file = LEDMATRIX_ROOT / "config" / "config.json"
     if not config_file.exists() and config_template.exists():
-        import shutil as _shutil
-        _shutil.copy(config_template, config_file)
+        shutil.copy(config_template, config_file)
         console.print("[green]\u2713 Created config/config.json from template[/green]")
     elif config_file.exists():
         console.print("[dim]config/config.json already exists \u2014 skipping[/dim]")
@@ -447,7 +451,14 @@ def doctor() -> None:
         warn("Hardware", "/dev/mem not found and EMULATOR not set \u2014 set EMULATOR=true for dev")
 
     # --- Python version ---
-    py_ver = platform.python_version()
+    if venv_py.exists():
+        ver_result = subprocess.run(
+            [str(venv_py), "-c", "import platform; print(platform.python_version())"],
+            capture_output=True, text=True,
+        )
+        py_ver = ver_result.stdout.strip() if ver_result.returncode == 0 else platform.python_version()
+    else:
+        py_ver = platform.python_version()
     major, minor, _ = py_ver.split(".")
     if (int(major), int(minor)) >= (3, 10):
         ok(f"Python {py_ver}", str(venv_py))

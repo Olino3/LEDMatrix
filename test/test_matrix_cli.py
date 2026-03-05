@@ -918,3 +918,223 @@ class TestPluginStore:
             r.get.return_value = resp
             result = CliRunner().invoke(matrix_cli.cli, ['plugin', 'store', 'clock'])
         assert 'Clock Simple' in result.output
+
+
+# ---------------------------------------------------------------------------
+# Task N — setup, install, and doctor commands
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+class TestSetupCommand:
+    """matrix setup — venv sync via uv."""
+
+    def test_setup_success(self):
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc):
+            result = CliRunner().invoke(matrix_cli.cli, ['setup'])
+        assert result.exit_code == 0
+
+    def test_setup_uv_not_found_exits_1(self):
+        with patch('shutil.which', return_value=None):
+            result = CliRunner().invoke(matrix_cli.cli, ['setup'])
+        assert result.exit_code == 1
+        assert 'uv' in result.output
+
+    def test_setup_uv_sync_failure_propagates_exit_code(self):
+        mock_proc = MagicMock(returncode=2)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc):
+            result = CliRunner().invoke(matrix_cli.cli, ['setup'])
+        assert result.exit_code == 2
+
+    def test_setup_passes_extra_flags_to_uv(self):
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc) as mock_sub:
+            CliRunner().invoke(matrix_cli.cli, ['setup', '--extras', 'dev'])
+        cmd = mock_sub.call_args[0][0]
+        assert '--extra' in cmd
+        assert 'dev' in cmd
+
+    def test_setup_default_extras_includes_emulator(self):
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc) as mock_sub:
+            CliRunner().invoke(matrix_cli.cli, ['setup'])
+        cmd = mock_sub.call_args[0][0]
+        assert 'emulator' in cmd
+
+
+@pytest.mark.unit
+class TestInstallCommand:
+    """matrix install — full install: venv + config + services."""
+
+    def _mock_install_script(self, tmp_path):
+        """Create a fake install_service.sh and patch LEDMATRIX_ROOT."""
+        scripts_install = tmp_path / 'scripts' / 'install'
+        scripts_install.mkdir(parents=True)
+        (scripts_install / 'install_service.sh').write_text('#!/bin/bash\nexit 0\n')
+        return tmp_path
+
+    def test_install_no_services_success(self, tmp_path):
+        """With --no-services, only venv sync and config copy run."""
+        (tmp_path / 'config').mkdir()
+        (tmp_path / 'config' / 'config.template.json').write_text('{}')
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc), \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', tmp_path):
+            result = CliRunner().invoke(matrix_cli.cli, ['install', '--no-services'])
+        assert result.exit_code == 0
+        assert (tmp_path / 'config' / 'config.json').exists()
+
+    def test_install_skips_config_copy_when_already_exists(self, tmp_path):
+        (tmp_path / 'config').mkdir()
+        (tmp_path / 'config' / 'config.json').write_text('{"existing": true}')
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc), \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', tmp_path):
+            result = CliRunner().invoke(matrix_cli.cli, ['install', '--no-services'])
+        assert result.exit_code == 0
+        assert 'already exists' in result.output
+
+    def test_install_exits_early_when_venv_sync_fails(self, tmp_path):
+        """If venv sync fails, install must not proceed to config or services."""
+        mock_proc = MagicMock(returncode=1)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc), \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', tmp_path):
+            result = CliRunner().invoke(matrix_cli.cli, ['install', '--no-services'])
+        assert result.exit_code == 1
+        assert not (tmp_path / 'config' / 'config.json').exists()
+
+    def test_install_uv_not_found_exits_1(self):
+        with patch('shutil.which', return_value=None):
+            result = CliRunner().invoke(matrix_cli.cli, ['install', '--no-services'])
+        assert result.exit_code == 1
+
+    def test_install_service_script_not_found_exits_1(self, tmp_path):
+        """If install_service.sh is missing and --no-services not set, exit 1."""
+        (tmp_path / 'config').mkdir()
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc), \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', tmp_path):
+            result = CliRunner().invoke(matrix_cli.cli, ['install'])
+        assert result.exit_code == 1
+
+    def test_install_service_install_failure_exits(self, tmp_path):
+        """If systemd service install fails, exit with non-zero."""
+        root = self._mock_install_script(tmp_path)
+        (root / 'config').mkdir(exist_ok=True)
+        # First subprocess.run call is uv sync (success), second is sudo bash (fail)
+        mock_ok = MagicMock(returncode=0)
+        mock_fail = MagicMock(returncode=1)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', side_effect=[mock_ok, mock_fail]), \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', root):
+            result = CliRunner().invoke(matrix_cli.cli, ['install'])
+        assert result.exit_code == 1
+
+    def test_install_emulator_flag_passes_extra_to_uv(self, tmp_path):
+        (tmp_path / 'config').mkdir()
+        mock_proc = MagicMock(returncode=0)
+        with patch('shutil.which', return_value='/usr/bin/uv'), \
+             patch('subprocess.run', return_value=mock_proc) as mock_sub, \
+             patch.object(matrix_cli, 'LEDMATRIX_ROOT', tmp_path):
+            CliRunner().invoke(matrix_cli.cli, ['install', '--no-services', '--emulator'])
+        cmd = mock_sub.call_args[0][0]
+        assert 'emulator' in cmd
+
+
+@pytest.mark.unit
+class TestDoctorCommand:
+    """matrix doctor — system health check."""
+
+    def _base_patches(self, tmp_path, venv_exists=True, config_exists=True,
+                      secrets_exists=False, plugins_count=1):
+        """Return a dict of patch contexts for a typical doctor run."""
+        venv_py = tmp_path / '.venv' / 'bin' / 'python3'
+        if venv_exists:
+            venv_py.parent.mkdir(parents=True)
+            venv_py.touch()
+        config_dir = tmp_path / 'config'
+        config_dir.mkdir(exist_ok=True)
+        if config_exists:
+            (config_dir / 'config.json').write_text('{}')
+        if secrets_exists:
+            (config_dir / 'config_secrets.json').write_text('{}')
+        plugins_dir = tmp_path / 'plugins'
+        plugins_dir.mkdir(exist_ok=True)
+        for i in range(plugins_count):
+            p = plugins_dir / f'plugin-{i}'
+            p.mkdir()
+            (p / 'manifest.json').write_text('{}')
+        return tmp_path
+
+    def test_doctor_all_pass(self, tmp_path):
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
+             patch('shutil.which', return_value='/usr/bin/uv'):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        # At minimum should not crash and should exit 0 or 1 (depends on system)
+        assert result.exit_code in (0, 1)
+
+    def test_doctor_missing_venv_reports_fail(self, tmp_path):
+        root = self._base_patches(tmp_path, venv_exists=False, config_exists=True)
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', return_value=MagicMock(returncode=0, stdout='3.11.0')), \
+             patch('shutil.which', return_value='/usr/bin/uv'):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert result.exit_code == 1
+        assert 'FAIL' in result.output or 'fail' in result.output.lower()
+
+    def test_doctor_missing_config_reports_fail(self, tmp_path):
+        root = self._base_patches(tmp_path, venv_exists=False, config_exists=False)
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', return_value=MagicMock(returncode=0, stdout='3.11.0')), \
+             patch('shutil.which', return_value='/usr/bin/uv'):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert result.exit_code == 1
+
+    def test_doctor_uv_not_found_reports_fail(self, tmp_path):
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
+             patch('shutil.which', return_value=None):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert result.exit_code == 1
+        assert 'FAIL' in result.output
+
+    def test_doctor_uses_venv_python_for_version_check(self, tmp_path):
+        """Python version check should query venv Python, not current process."""
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_ver_ok = MagicMock(returncode=0, stdout='3.11.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]) as mock_sub, \
+             patch('shutil.which', return_value='/usr/bin/uv'):
+            CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        # The second subprocess.run call should invoke venv Python for version
+        calls = mock_sub.call_args_list
+        version_call = calls[1][0][0]  # second call args
+        assert 'python' in version_call[0].lower()
+        assert 'python_version' in ' '.join(version_call)
+
+    def test_doctor_old_python_version_reports_fail(self, tmp_path):
+        root = self._base_patches(tmp_path, venv_exists=True, config_exists=True)
+        pillow_ok = MagicMock(returncode=0, stdout='10.0.0')
+        py_old = MagicMock(returncode=0, stdout='3.8.0')
+        with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
+             patch('subprocess.run', side_effect=[pillow_ok, py_old]), \
+             patch('shutil.which', return_value='/usr/bin/uv'):
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+        assert result.exit_code == 1
+        assert '3.8.0' in result.output
