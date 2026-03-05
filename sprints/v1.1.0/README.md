@@ -22,7 +22,7 @@
 | [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md) | Remove deprecated legacy shell scripts and clean up dead code | Done | FOUND-003 |
 | [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md) | Add `rgbmatrix` import check to `matrix doctor` | Done | FOUND-003 |
 | [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md) | Fix pre-existing ruff lint violations in `src/` | Done | FOUND-005 |
-| [SPIKE-007](SPIKE-007-bandit-config.md) | Create or remove `bandit.yaml` configuration | Open | FOUND-005 |
+| [SPIKE-007](SPIKE-007-bandit-config.md) | Create or remove `bandit.yaml` configuration | Done | FOUND-005 |
 | [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Open | FOUND-002 |
 | [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Open | FOUND-003, SPIKE-004 |
 | [SPIKE-010](SPIKE-010-install-hardware-flag.md) | `matrix install --hardware` for rgbmatrix C-extension build | Open | SPIKE-005, SPIKE-009 |
@@ -42,7 +42,7 @@ FOUND-001 (pyproject.toml + uv)
   ├── FOUND-004 (CI pipeline)
   │     └── FOUND-005 (pre-commit ruff)
   │           ├── SPIKE-006 [Done] (ruff lint cleanup)
-  │           └── SPIKE-007 [Open] (bandit config)
+  │           └── SPIKE-007 [Done] (bandit config)
   ├── SPIKE-001 [Done] (update diagnostic scripts)
   └── SPIKE-002 [Done] (update docs for uv)
 
@@ -67,6 +67,7 @@ FOUND-006 (plugin quick-fixes) [Done]
 
 - **SPIKE-003** -- Monorepo PR for 20 plugins (requires push access to external repo)
 - **SPIKE-007** -- Decide on bandit.yaml configuration
+- **SPIKE-005** -- Enhance `matrix doctor` with rgbmatrix import check
 - **SPIKE-008** -- Migrate plugin dependency installation to venv-aware commands
 - **SPIKE-009** -- Fully retire `first_time_install.sh`
 - **SPIKE-010** -- `matrix install --hardware` for rgbmatrix C-extension build (new, discovered during SPIKE-005)
