@@ -39,7 +39,7 @@ def test_utilities(display_width: int, display_height: int):
     print(f"Testing LEDMatrix Common utilities with {display_width}x{display_height} display")
 
     try:
-        from ledmatrix_common import APIHelper, ConfigHelper, DisplayHelper, GameHelper, LogoHelper, TextHelper
+        from ledmatrix_common import ConfigHelper, DisplayHelper, GameHelper, LogoHelper, TextHelper
 
         # Test LogoHelper
         print("Testing LogoHelper...")
@@ -60,12 +60,12 @@ def test_utilities(display_width: int, display_height: int):
 
         # Test GameHelper
         print("Testing GameHelper...")
-        game_helper = GameHelper()
+        GameHelper()
         print("GameHelper initialized")
 
         # Test ConfigHelper
         print("Testing ConfigHelper...")
-        config_helper = ConfigHelper()
+        ConfigHelper()
         print("ConfigHelper initialized")
 
         print("All tests passed!")

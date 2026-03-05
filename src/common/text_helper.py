@@ -115,11 +115,13 @@ class TextHelper:
         Returns:
             Width in pixels
         """
+        dummy = Image.new("RGB", (1, 1))
+        draw_ctx = ImageDraw.Draw(dummy)
         try:
-            return draw.textlength(text, font=font)
+            return draw_ctx.textlength(text, font=font)
         except AttributeError:
             # Fallback for older PIL versions
-            bbox = draw.textbbox((0, 0), text, font=font)
+            bbox = draw_ctx.textbbox((0, 0), text, font=font)
             return bbox[2] - bbox[0]
 
     def get_text_height(self, text: str, font: ImageFont.ImageFont) -> int:
@@ -133,13 +135,10 @@ class TextHelper:
         Returns:
             Height in pixels
         """
-        try:
-            bbox = draw.textbbox((0, 0), text, font=font)
-            return bbox[3] - bbox[1]
-        except AttributeError:
-            # Fallback for older PIL versions
-            bbox = draw.textbbox((0, 0), text, font=font)
-            return bbox[3] - bbox[1]
+        dummy = Image.new("RGB", (1, 1))
+        draw_ctx = ImageDraw.Draw(dummy)
+        bbox = draw_ctx.textbbox((0, 0), text, font=font)
+        return bbox[3] - bbox[1]
 
     def get_text_dimensions(self, text: str, font: ImageFont.ImageFont) -> Tuple[int, int]:
         """

@@ -231,7 +231,7 @@ class LayoutManager:
         # Format the text
         try:
             text = format_str.format(value=value)
-        except:
+        except (KeyError, ValueError, IndexError):
             text = str(value)
 
         self.display_manager.draw_text(text, x, y, color)

@@ -664,8 +664,8 @@ class SportsCore(ABC):
             self.logger.warning(f"Error fetching this weeks games for {self.sport} - {self.league} - {date_str}: {e}")
         return None
 
-    def _custom_scorebug_layout(self, game: dict, draw_overlay: ImageDraw.ImageDraw):
-        pass
+    def _custom_scorebug_layout(self, game: dict, draw_overlay: ImageDraw.ImageDraw):  # noqa: B027
+        """Override in subclasses to add sport-specific scorebug elements."""
 
 
 class SportsUpcoming(SportsCore):
@@ -795,7 +795,7 @@ class SportsUpcoming(SportsCore):
             should_log = (
                 current_time - self.last_log_time >= self.log_interval
                 or len(team_games) != len(self.games_list)
-                or any(g1["id"] != g2.get("id") for g1, g2 in zip(self.games_list, team_games))
+                or any(g1["id"] != g2.get("id") for g1, g2 in zip(self.games_list, team_games, strict=False))
                 or (not self.games_list and team_games)
             )
 
@@ -1481,7 +1481,7 @@ class SportsLive(SportsCore):
                         current_time_for_log - self.last_log_time >= self.log_interval
                         or len(new_live_games) != len(self.live_games)
                         or any(
-                            g1["id"] != g2.get("id") for g1, g2 in zip(self.live_games, new_live_games)
+                            g1["id"] != g2.get("id") for g1, g2 in zip(self.live_games, new_live_games, strict=False)
                         )  # Check if game IDs changed
                         or (not self.live_games and new_live_games)  # Log if games appeared
                     )

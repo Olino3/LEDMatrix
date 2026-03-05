@@ -276,14 +276,19 @@ class DisplayController:
                         # Subscribe plugin to config changes for hot-reload
                         if hasattr(self, "config_service") and hasattr(plugin_instance, "on_config_change"):
 
-                            def config_change_callback(old_config: Dict[str, Any], new_config: Dict[str, Any]) -> None:
+                            def config_change_callback(
+                                old_config: Dict[str, Any],
+                                new_config: Dict[str, Any],
+                                _plugin_instance=plugin_instance,
+                                _plugin_id=plugin_id,
+                            ) -> None:
                                 """Callback for plugin config changes."""
                                 try:
-                                    plugin_instance.on_config_change(new_config)
-                                    logger.debug("Plugin %s notified of config change", plugin_id)
+                                    _plugin_instance.on_config_change(new_config)
+                                    logger.debug("Plugin %s notified of config change", _plugin_id)
                                 except Exception as e:
                                     logger.error(
-                                        "Error in plugin %s config change handler: %s", plugin_id, e, exc_info=True
+                                        "Error in plugin %s config change handler: %s", _plugin_id, e, exc_info=True
                                     )
 
                             self.config_service.subscribe(config_change_callback, plugin_id=plugin_id)
@@ -1769,34 +1774,40 @@ class DisplayController:
                         target_duration = max_duration
                         start_time = time.time()
 
-                        def _should_exit_dynamic(elapsed_time: float) -> bool:
-                            if not dynamic_enabled:
+                        def _should_exit_dynamic(
+                            elapsed_time: float,
+                            _dynamic_enabled=dynamic_enabled,
+                            _min_duration=min_duration,
+                            _manager_to_display=manager_to_display,
+                            _active_mode=active_mode,
+                        ) -> bool:
+                            if not _dynamic_enabled:
                                 return False
                             # Add small grace period (0.5s) after min_duration to prevent
                             # premature exits due to timing issues
                             grace_period = 0.5
-                            if elapsed_time < min_duration + grace_period:
+                            if elapsed_time < _min_duration + grace_period:
                                 logger.debug(
                                     "_should_exit_dynamic: elapsed %.2fs < min_duration %.2fs + grace %.2fs, returning False",
                                     elapsed_time,
-                                    min_duration,
+                                    _min_duration,
                                     grace_period,
                                 )
                                 return False
-                            cycle_complete = self._plugin_cycle_complete(manager_to_display)
+                            cycle_complete = self._plugin_cycle_complete(_manager_to_display)
                             logger.debug(
                                 "_should_exit_dynamic: elapsed %.2fs >= min %.2fs, cycle_complete=%s, returning %s",
                                 elapsed_time,
-                                min_duration + grace_period,
+                                _min_duration + grace_period,
                                 cycle_complete,
                                 cycle_complete,
                             )
                             if cycle_complete:
                                 logger.debug(
                                     "Cycle complete detected for %s after %.2fs (min: %.2fs, grace: %.2fs)",
-                                    active_mode,
+                                    _active_mode,
                                     elapsed_time,
-                                    min_duration,
+                                    _min_duration,
                                     grace_period,
                                 )
                             return cycle_complete

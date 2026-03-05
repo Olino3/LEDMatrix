@@ -127,7 +127,7 @@ class RenderPipeline:
 
             # Add separator gaps between images
             content_with_gaps = []
-            for i, img in enumerate(images):
+            for _i, img in enumerate(images):
                 content_with_gaps.append(img)
 
             # Create scrolling image via ScrollHelper

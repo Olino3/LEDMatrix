@@ -1,6 +1,6 @@
 # SPIKE-006 — Fix Pre-existing Ruff Lint Violations in `src/`
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Chore / Code Quality
 **Depends on:** [FOUND-005](FOUND-005-precommit-ruff.md) — ruff must be the active linter
@@ -30,9 +30,9 @@ During FOUND-005 (migrating pre-commit hooks to ruff), 46 pre-existing lint viol
 
 ## Acceptance Criteria
 
-- [ ] All rules in the `# Pre-existing issues` ignore block in `pyproject.toml` are removed
-- [ ] `uv run ruff check src/` passes with no violations
-- [ ] No behavior regressions introduced by fixes
+- [x] All rules in the `# Pre-existing issues` ignore block in `pyproject.toml` are removed
+- [x] `uv run ruff check src/` passes with no violations
+- [x] No behavior regressions introduced by fixes
 
 ## Implementation Notes
 

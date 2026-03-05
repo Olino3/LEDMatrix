@@ -310,12 +310,11 @@ class ConfigManager:
                 self._merge_template_defaults(self.config, template_config)
 
                 # Save migrated config using atomic save to preserve permissions
-                # Load secrets if they exist to pass to atomic save
-                secrets_content = {}
+                # Load secrets if they exist (atomic save handles secrets internally)
                 if os.path.exists(self.secrets_path):
                     try:
                         with open(self.secrets_path, "r") as f_secrets:
-                            secrets_content = json.load(f_secrets)
+                            json.load(f_secrets)
                     except Exception:
                         pass  # Continue without secrets if can't load
 

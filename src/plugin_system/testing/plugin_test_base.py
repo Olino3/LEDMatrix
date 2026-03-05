@@ -14,7 +14,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.plugin_system.testing.mocks import MockCacheManager, MockConfigManager, MockDisplayManager, MockPluginManager
+from src.plugin_system.testing.mocks import (  # noqa: E402
+    MockCacheManager,
+    MockConfigManager,
+    MockDisplayManager,
+    MockPluginManager,
+)
 
 
 class PluginTestCase(unittest.TestCase):
