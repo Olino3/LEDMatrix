@@ -1,6 +1,6 @@
 # SPIKE-010 — Expand `matrix install` with Pi-Specific Setup Steps
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
