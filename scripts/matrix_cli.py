@@ -34,6 +34,10 @@ LEDMATRIX_ROOT = Path(__file__).resolve().parent.parent
 
 console = Console()
 
+# Pi detection paths
+_PI_DEV_MEM = Path("/dev/mem")
+_PI_MODEL_PATH = Path("/proc/device-tree/model")
+
 _venv_python = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
 
 if not _venv_python.exists():
@@ -147,6 +151,43 @@ def _require_web() -> bool:
         ))
         return False
     return True
+
+
+def _is_raspberry_pi() -> bool:
+    """Detect whether we are running on a Raspberry Pi."""
+    if _PI_DEV_MEM.exists():
+        return True
+    if _PI_MODEL_PATH.exists():
+        try:
+            model = _PI_MODEL_PATH.read_text(errors="replace").lower()
+            return "raspberry" in model
+        except OSError:
+            pass
+    return False
+
+
+# Apt packages required for a full Pi installation
+_PI_APT_PACKAGES = [
+    "python3-dev",
+    "python3-pip",
+    "python3-venv",
+    "build-essential",
+    "cython3",
+    "scons",
+    "cmake",
+    "git",
+    "curl",
+]
+
+
+def _run_install_script(script_name: str, *, use_sudo: bool = True) -> int:
+    """Run a script from scripts/install/ and return its exit code."""
+    script_path = LEDMATRIX_ROOT / "scripts" / "install" / script_name
+    if not script_path.exists():
+        console.print(f"[red]{script_name} not found at {script_path}[/red]")
+        return 1
+    cmd = ["sudo", "bash", str(script_path)] if use_sudo else ["bash", str(script_path)]
+    return _run(cmd)
 
 
 def _api_post(path: str, payload: dict) -> Optional[dict]:
@@ -322,9 +363,36 @@ def setup(extras: tuple) -> None:
 @cli.command()
 @click.option("--no-services", is_flag=True, help="Skip systemd service installation.")
 @click.option("--emulator", is_flag=True, help="Install emulator extras instead of hardware.")
-def install(no_services: bool, emulator: bool) -> None:
-    """Full installation: sync deps and optionally install systemd services."""
+@click.option("--permissions", is_flag=True, help="Set up cache directory, file permissions, and sudoers rules (Pi only).")
+@click.option("--services", "extra_services", is_flag=True, help="Install web interface and WiFi monitor services (Pi only).")
+@click.option("--prerequisites", is_flag=True, help="Install required apt packages (Pi only).")
+def install(no_services: bool, emulator: bool, permissions: bool,
+            extra_services: bool, prerequisites: bool) -> None:
+    """Full installation: sync deps and optionally install systemd services.
+
+    Pi-specific flags (--permissions, --services, --prerequisites) are
+    no-ops on non-Pi platforms.
+    """
     console.print(Rule("[green]install[/green]"))
+
+    is_pi = _is_raspberry_pi()
+    pi_flags_requested = permissions or extra_services or prerequisites
+
+    # Step 0: Prerequisites (apt packages, Pi only)
+    if prerequisites:
+        if is_pi:
+            console.print("  Installing system prerequisites (may prompt for sudo)...")
+            rc = _run(["sudo", "apt-get", "update", "-qq"])
+            if rc != 0:
+                console.print("[yellow]\u26a0 apt-get update failed — continuing anyway[/yellow]")
+            rc = _run(["sudo", "apt-get", "install", "-y", "-qq"] + _PI_APT_PACKAGES)
+            if rc == 0:
+                console.print("[green]\u2713 System prerequisites installed[/green]")
+            else:
+                console.print("[red]apt-get install failed[/red]")
+                sys.exit(rc)
+        else:
+            console.print("[dim]Skipping prerequisites — not a Raspberry Pi[/dim]")
 
     # Step 1: Setup venv
     extras = ("emulator",) if emulator else ()
@@ -357,6 +425,41 @@ def install(no_services: bool, emulator: bool) -> None:
             console.print("[red]Service installation failed[/red]")
             sys.exit(rc)
         console.print("[green]\u2713 Services installed[/green]")
+
+    # Step 4: Permissions (Pi only)
+    if permissions:
+        if is_pi:
+            console.print("  Setting up permissions (may prompt for sudo)...")
+            perm_scripts = [
+                ("setup_cache.sh", "Cache directory"),
+                ("configure_web_sudo.sh", "Web sudoers"),
+                ("configure_wifi_permissions.sh", "WiFi permissions"),
+            ]
+            for script, label in perm_scripts:
+                rc = _run_install_script(script)
+                if rc == 0:
+                    console.print(f"[green]\u2713 {label} configured[/green]")
+                else:
+                    console.print(f"[yellow]\u26a0 {label} setup failed (exit {rc})[/yellow]")
+        else:
+            console.print("[dim]Skipping permissions — not a Raspberry Pi[/dim]")
+
+    # Step 5: Extra services — web + WiFi monitor (Pi only)
+    if extra_services:
+        if is_pi:
+            console.print("  Installing additional services (may prompt for sudo)...")
+            svc_scripts = [
+                ("install_web_service.sh", "Web service"),
+                ("install_wifi_monitor.sh", "WiFi monitor service"),
+            ]
+            for script, label in svc_scripts:
+                rc = _run_install_script(script)
+                if rc == 0:
+                    console.print(f"[green]\u2713 {label} installed[/green]")
+                else:
+                    console.print(f"[yellow]\u26a0 {label} installation failed (exit {rc})[/yellow]")
+        else:
+            console.print("[dim]Skipping extra services — not a Raspberry Pi[/dim]")
 
     console.print(Panel("[green]Installation complete![/green]\n\nRun [bold]matrix doctor[/bold] to verify.", border_style="green"))
 
