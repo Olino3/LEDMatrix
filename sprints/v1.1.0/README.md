@@ -23,7 +23,7 @@
 | [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md) | Add `rgbmatrix` import check to `matrix doctor` | Done | FOUND-003 |
 | [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md) | Fix pre-existing ruff lint violations in `src/` | Done | FOUND-005 |
 | [SPIKE-007](SPIKE-007-bandit-config.md) | Create `bandit.yaml` configuration for pre-commit | Done | FOUND-005 |
-| [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Open | FOUND-002 |
+| [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Done | FOUND-002 |
 | [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Done | FOUND-003, SPIKE-004 |
 | [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md) | Expand `matrix install` with Pi-specific setup steps | Open | SPIKE-009 |
 | [SPIKE-011](SPIKE-011-install-hardware-flag.md) | `matrix install --hardware` for rgbmatrix C-extension build | Open | SPIKE-005, SPIKE-009 |
@@ -34,13 +34,14 @@
 | [SPIKE-016](SPIKE-016-matrix-doctor-full-validation.md) | `matrix doctor`: full installation validation | Open | SPIKE-012, SPIKE-013 |
 | [SPIKE-017](SPIKE-017-matrix-uninstall-subcommand.md) | `matrix uninstall`: replace `uninstall.sh` with CLI subcommand | Open | FOUND-003 |
 | [SPIKE-018](SPIKE-018-archive-obsolete-scripts.md) | Archive obsolete shell scripts | Open | SPIKE-012, SPIKE-013, SPIKE-014, SPIKE-015, SPIKE-017 |
+| [SPIKE-019](SPIKE-019-plugin-pyproject-toml.md) | Migrate plugin `requirements.txt` to per-plugin `pyproject.toml` | Open | SPIKE-008 |
 
 ## Status Summary
 
 | Status | Count | Tickets |
 |---|---|---|
-| Done | 12 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-007, SPIKE-009 |
-| Open | 12 | SPIKE-003, SPIKE-008, SPIKE-010 through SPIKE-018 |
+| Done | 13 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-009 |
+| Open | 12 | SPIKE-003, SPIKE-010 through SPIKE-019 |
 | In Progress | 0 | -- |
 | Blocked | 0 | -- |
 
@@ -68,7 +69,8 @@ FOUND-001 (pyproject.toml + uv) [Done]
   |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Open]
   |     |     +-- SPIKE-017 (matrix uninstall) [Open]
   |     |           +-- SPIKE-018 (archive obsolete scripts) [Open]
-  |     +-- SPIKE-008 (plugin deps venv migration) [Open]
+  |     +-- SPIKE-008 (plugin deps venv migration) [Done]
+  |           +-- SPIKE-019 (plugin pyproject.toml migration) [Open]
   +-- FOUND-004 (CI pipeline) [Done]
   |     +-- FOUND-005 (pre-commit ruff) [Done]
   |           +-- SPIKE-006 (ruff lint cleanup) [Done]
