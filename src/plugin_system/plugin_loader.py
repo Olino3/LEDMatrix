@@ -9,15 +9,24 @@ import importlib
 import importlib.util
 import json
 import logging
+import shutil
 import subprocess
 import sys
 import threading
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from src.common.permission_utils import ensure_file_permissions, get_plugin_file_mode
 from src.exceptions import PluginError
 from src.logging_config import get_logger
+
+
+def _build_pip_install_cmd(requirements_file: Path) -> List[str]:
+    """Build the pip install command, preferring uv when available."""
+    uv_path = shutil.which("uv")
+    if uv_path:
+        return [uv_path, "pip", "install", "-r", str(requirements_file)]
+    return [sys.executable, "-m", "pip", "install", "-r", str(requirements_file)]
 
 
 class PluginLoader:
@@ -142,8 +151,9 @@ class PluginLoader:
 
         try:
             self.logger.info("Installing dependencies for plugin %s...", plugin_id)
+            cmd = _build_pip_install_cmd(requirements_file)
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "--break-system-packages", "-r", str(requirements_file)],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,

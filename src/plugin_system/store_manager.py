@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from src.common.permission_utils import sudo_remove_directory
+from src.plugin_system.plugin_loader import _build_pip_install_cmd
 
 try:
     from jsonschema import Draft7Validator, ValidationError
@@ -1525,8 +1526,9 @@ class PluginStoreManager:
 
         try:
             self.logger.info(f"Installing dependencies for {plugin_path.name}")
+            cmd = _build_pip_install_cmd(requirements_file)
             subprocess.run(
-                ["pip3", "install", "--break-system-packages", "-r", str(requirements_file)],
+                cmd,
                 check=True,
                 capture_output=True,
                 text=True,

@@ -19,7 +19,7 @@ from src.common.permission_utils import ensure_directory_permissions, get_plugin
 from src.exceptions import PluginError
 from src.logging_config import get_logger
 from src.plugin_system.plugin_executor import PluginExecutor
-from src.plugin_system.plugin_loader import PluginLoader
+from src.plugin_system.plugin_loader import PluginLoader, _build_pip_install_cmd
 from src.plugin_system.plugin_state import PluginState, PluginStateManager
 from src.plugin_system.schema_manager import SchemaManager
 
@@ -199,17 +199,9 @@ class PluginManager:
         """
         try:
             self.logger.info("Installing dependencies from %s", requirements_file)
+            cmd = _build_pip_install_cmd(requirements_file)
             result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--break-system-packages",
-                    "--no-cache-dir",
-                    "-r",
-                    str(requirements_file),
-                ],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=300,
