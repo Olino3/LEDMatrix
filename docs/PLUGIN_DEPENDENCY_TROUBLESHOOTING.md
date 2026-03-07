@@ -1,172 +1,114 @@
 # Plugin Dependency Installation Troubleshooting
 
-This guide helps resolve issues with automatic plugin dependency installation in the LEDMatrix system.
+This guide helps resolve issues with plugin dependency installation in the LEDMatrix system.
 
-## Common Error Symptoms
+## How Dependencies Are Installed
 
-### Permission Errors
-```
-ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: '/root/.local'
-WARNING: The directory '/root/.cache/pip' or its parent directory is not owned or is not writable
-```
+Plugin dependencies are installed automatically at load time by the `PluginLoader` using:
 
-### Context Mismatch
-```
-WARNING: Installing plugin dependencies for current user (not root). 
-These will NOT be accessible to the systemd service.
-```
+1. **`uv pip install`** (preferred) — fast, reliable, venv-aware
+2. **`.venv/bin/python3 -m pip install`** (fallback) — when uv is not available
 
-## Root Cause
+All installs target the project virtual environment (`.venv/`). The `--break-system-packages` flag is no longer used.
 
-Plugin dependencies must be installed in a context accessible to the LEDMatrix systemd service, which runs as root. Permission errors typically occur when:
+## Common Issues
 
-1. The pip cache directory has incorrect permissions
-2. The process tries to install to user directories without proper permissions
-3. Environment variables (like HOME) are not set correctly for the service context
+### Dependencies not installing automatically
 
-## Solutions
+**Symptoms:**
+- Plugin fails to load with `ModuleNotFoundError`
+- No install attempt logged
 
-### Solution 1: Use the Manual Installation Script (Recommended)
+**Solutions:**
 
-We provide a helper script that handles dependency installation correctly:
-
-```bash
-# Run as root to install system-wide (for production)
-sudo /home/ledpi/LEDMatrix/scripts/install_plugin_dependencies.sh
-
-# After installation, restart the service
-sudo systemctl restart ledmatrix
-```
-
-This script:
-- Detects all plugins with requirements.txt files
-- Installs dependencies with correct permissions
-- Uses `--no-cache-dir` to avoid cache permission issues
-- Provides detailed logging for troubleshooting
-
-### Solution 2: Manual Installation per Plugin
-
-If you need to install dependencies for a specific plugin:
-
-```bash
-# Navigate to the plugin directory
-cd /home/ledpi/LEDMatrix/plugins/PLUGIN-NAME
-
-# Install as root (system-wide)
-sudo pip3 install --break-system-packages --no-cache-dir -r requirements.txt
-
-# Restart the service
-sudo systemctl restart ledmatrix
-```
-
-### Solution 3: Fix Cache Directory Permissions
-
-If you specifically have cache permission issues:
-
-```bash
-# Option A: Skip the cache (recommended)
-sudo pip3 install --no-cache-dir --break-system-packages -r requirements.txt
-
-# Option B: Fix cache permissions (if needed)
-sudo mkdir -p /root/.cache/pip
-sudo chown -R root:root /root/.cache
-sudo chmod -R 755 /root/.cache
-```
-
-### Solution 4: Install via Web Interface
-
-The web interface handles dependency installation correctly in the service context:
-
-1. Access the web interface (usually http://ledpi:8080)
-2. Navigate to Plugin Store or Plugin Management
-3. Install plugins through the web UI
-4. The system will automatically handle dependencies
-
-## Prevention
-
-### For Plugin Developers
-
-When creating plugins with dependencies:
-
-1. **Keep requirements minimal**: Only include essential packages
-2. **Test installation**: Verify your requirements.txt works with:
+1. **Remove the marker file** to force reinstall:
    ```bash
-   sudo pip3 install --break-system-packages --no-cache-dir -r requirements.txt
+   rm plugins/PLUGIN-NAME/.dependencies_installed
+   sudo systemctl restart ledmatrix
    ```
-3. **Document dependencies**: Note any system packages needed (via apt)
 
-### For Users
+2. **Install manually** with uv:
+   ```bash
+   uv pip install -r plugins/PLUGIN-NAME/requirements.txt
+   ```
 
-1. **Use web interface**: Install plugins via the web UI when possible
-2. **Install as root**: When using SSH/terminal, use sudo for plugin installations
-3. **Restart service**: After manual installations, restart the ledmatrix service
+3. **Verify uv is installed:**
+   ```bash
+   which uv
+   # If not found, install: curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-## Technical Details
+### uv not found
 
-### How Dependency Installation Works
+If `uv` is not on PATH, the system falls back to pip automatically. To install uv:
 
-The `PluginManager._install_plugin_dependencies()` method:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
-1. Detects if running as root using `os.geteuid() == 0`
-2. If root: Uses system-wide installation with `--break-system-packages --no-cache-dir`
-3. If not root: Uses user installation with `--user --break-system-packages --no-cache-dir`
-4. The `--no-cache-dir` flag prevents cache-related permission issues
+Or via the matrix CLI:
+```bash
+matrix doctor  # will report uv status
+```
 
-### Why `--break-system-packages`?
+### Dependency installation timed out
 
-Debian 12+ (Bookworm) and Raspberry Pi OS based on it implement PEP 668, which prevents pip from installing packages system-wide by default. The `--break-system-packages` flag overrides this protection, which is necessary for the plugin system.
+Default timeout is 300 seconds. For slow networks:
 
-### Service Context
+1. Install dependencies manually:
+   ```bash
+   uv pip install -r plugins/PLUGIN-NAME/requirements.txt
+   ```
 
-The ledmatrix.service runs as:
-- **User**: root
-- **WorkingDirectory**: /home/ledpi/LEDMatrix
-- **Python**: /usr/bin/python3
+2. Then restart:
+   ```bash
+   sudo systemctl restart ledmatrix
+   ```
 
-Dependencies must be installed in root's Python environment or system-wide to be accessible.
+### Permission errors
+
+Since installs target the venv, permission errors are rare. If encountered:
+
+1. Verify venv ownership:
+   ```bash
+   ls -la .venv/
+   ```
+
+2. Fix permissions if needed:
+   ```bash
+   sudo chown -R $USER:$USER .venv/
+   ```
 
 ## Checking Installation
 
-Verify dependencies are installed correctly:
-
 ```bash
-# Check as root (how the service sees it)
-sudo python3 -c "import package_name"
+# Verify a package is installed in the venv
+.venv/bin/python3 -c "import package_name; print(package_name.__version__)"
 
-# List installed packages
-pip3 list
+# List all installed packages
+uv pip list
 
 # Check specific package
-pip3 show package_name
+uv pip show package_name
 ```
 
 ## Getting Help
-
-If you continue to experience issues:
 
 1. Check the service logs:
    ```bash
    sudo journalctl -u ledmatrix -f
    ```
 
-2. Check pip logs (created by manual script):
+2. Run diagnostics:
    ```bash
-   cat /tmp/pip_install_*.log
+   matrix doctor
    ```
 
-3. Verify plugin manifest is correct:
+3. Verify plugin manifest:
    ```bash
-   cat /home/ledpi/LEDMatrix/plugins/PLUGIN-NAME/manifest.json
-   ```
-
-4. Check plugin requirements:
-   ```bash
-   cat /home/ledpi/LEDMatrix/plugins/PLUGIN-NAME/requirements.txt
+   cat plugins/PLUGIN-NAME/manifest.json
    ```
 
 ## Related Documentation
 
 - [Plugin Dependency Guide](PLUGIN_DEPENDENCY_GUIDE.md)
-- [Plugin Development Guide](docs/plugin_development.md)
-- [Troubleshooting Quick Start](TROUBLESHOOTING_QUICK_START.md)
-
