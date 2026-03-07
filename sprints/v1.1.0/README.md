@@ -25,7 +25,7 @@
 | [SPIKE-007](SPIKE-007-bandit-config.md) | Create `bandit.yaml` configuration for pre-commit | Done | FOUND-005 |
 | [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Open | FOUND-002 |
 | [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Done | FOUND-003, SPIKE-004 |
-| [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md) | Expand `matrix install` with Pi-specific setup steps | Open | SPIKE-009 |
+| [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md) | Expand `matrix install` with Pi-specific setup steps | Done | SPIKE-009 |
 | [SPIKE-011](SPIKE-011-install-hardware-flag.md) | `matrix install --hardware` for rgbmatrix C-extension build | Open | SPIKE-005, SPIKE-009 |
 | [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md) | `matrix install --full`: one-shot Pi installation | Open | SPIKE-010, SPIKE-011 |
 | [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md) | Replace diagnostic scripts with `matrix` CLI subcommands | Open | FOUND-003 |
@@ -39,8 +39,8 @@
 
 | Status | Count | Tickets |
 |---|---|---|
-| Done | 12 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-007, SPIKE-009 |
-| Open | 12 | SPIKE-003, SPIKE-008, SPIKE-010 through SPIKE-018 |
+| Done | 13 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-007, SPIKE-009, SPIKE-010 |
+| Open | 11 | SPIKE-003, SPIKE-008, SPIKE-011 through SPIKE-018 |
 | In Progress | 0 | -- |
 | Blocked | 0 | -- |
 
@@ -52,7 +52,7 @@ FOUND-001 (pyproject.toml + uv) [Done]
   |     +-- FOUND-003 (matrix CLI install/doctor) [Done]
   |     |     +-- SPIKE-004 (remove deprecated scripts) [Done]
   |     |     |     +-- SPIKE-009 (retire first_time_install.sh) [Done]
-  |     |     |           +-- SPIKE-010 (expand matrix install -- Pi setup) [Open]
+  |     |     |           +-- SPIKE-010 (expand matrix install -- Pi setup) [Done]
   |     |     |                 +-- SPIKE-012 (matrix install --full) [Open]
   |     |     |                       +-- SPIKE-016 (matrix doctor full validation) [Open]
   |     |     |                       +-- SPIKE-018 (archive obsolete scripts) [Open]
@@ -94,13 +94,12 @@ FOUND-006 (plugin quick-fixes) [Done]
 
 ## Remaining Work
 
-### Core Phase 1 (3 open tickets)
+### Core Phase 1 (2 open tickets)
 
 These are the remaining tickets from the original sprint scope:
 
 - **SPIKE-003** -- Monorepo PR for 20 plugins (requires push access to `ledmatrix-plugins` external repo)
 - **SPIKE-008** -- Migrate plugin dependency installation to venv-aware commands
-- **SPIKE-010** -- Expand `matrix install` with Pi-specific setup steps (apt, rgbmatrix, permissions, WiFi, sound, perf)
 
 ### CLI Consolidation (8 new tickets)
 
