@@ -35,11 +35,12 @@ class TestFindUv:
 
     def test_find_uv_not_found(self):
         """_find_uv returns None when uv is not available."""
-        from src.plugin_system.dep_installer import _find_uv
+        from src.plugin_system.dep_installer import _find_uv, _UV_SEARCH_PATHS
 
         with patch("shutil.which", return_value=None):
-            result = _find_uv()
-            assert result is None
+            with patch.object(Path, "exists", return_value=False):
+                result = _find_uv()
+                assert result is None
 
     def test_find_uv_prefers_venv_local(self):
         """_find_uv checks common locations beyond PATH."""
