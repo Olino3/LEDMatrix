@@ -193,6 +193,7 @@ target-version = "py310"
 select = ["E", "F", "W", "B", "I"]
 ignore = [
     "E501",   # line too long (handled by formatter)
+    "B008",   # FastAPI uses Depends/File/Form/Query in argument defaults by design
 ]
 
 [tool.ruff.lint.isort]

@@ -161,9 +161,11 @@ async def get_ap_auto_enable():
     """Read auto_enable_ap_mode setting from wifi_config.json."""
     try:
         config = _read_wifi_config()
-        return _success(data={
-            "auto_enable_ap_mode": config.get("auto_enable_ap_mode", False),
-        })
+        return _success(
+            data={
+                "auto_enable_ap_mode": config.get("auto_enable_ap_mode", False),
+            }
+        )
     except Exception as exc:
         logger.error("Failed to read AP auto-enable config: %s", exc)
         return _error("CONFIG_ERROR", str(exc), 500)

@@ -132,12 +132,14 @@ async def get_starlark_status():
         if rc == 0:
             pixlet_version = stdout
 
-    return _success(data={
-        "plugin_installed": plugin_installed,
-        "pixlet_available": pixlet_available,
-        "pixlet_version": pixlet_version,
-        "app_count": app_count,
-    })
+    return _success(
+        data={
+            "plugin_installed": plugin_installed,
+            "pixlet_available": pixlet_available,
+            "pixlet_version": pixlet_version,
+            "app_count": app_count,
+        }
+    )
 
 
 @router.get("/apps")
@@ -315,7 +317,11 @@ async def render_app(app_id: str):
 
     try:
         rc, stdout, stderr = await _run_cmd(
-            "pixlet", "render", str(star_file), "-o", str(output_path),
+            "pixlet",
+            "render",
+            str(star_file),
+            "-o",
+            str(output_path),
             timeout=30.0,
         )
         if rc != 0:
@@ -455,10 +461,7 @@ async def install_pixlet():
     if not go_arch:
         return _error("UNSUPPORTED", f"Unsupported architecture: {arch}")
 
-    tarball_url = (
-        f"https://github.com/tidbyt/pixlet/releases/latest/download/"
-        f"pixlet_linux_{go_arch}.tar.gz"
-    )
+    tarball_url = f"https://github.com/tidbyt/pixlet/releases/latest/download/pixlet_linux_{go_arch}.tar.gz"
     tmp_tarball = Path("/tmp/pixlet.tar.gz")
     tmp_binary = Path("/tmp/pixlet")
 

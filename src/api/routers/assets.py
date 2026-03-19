@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -322,6 +321,7 @@ async def list_calendars():
     # Fallback: try plugin-repos path
     try:
         import importlib.util
+
         helper_path = PLUGIN_REPOS_DIR / "google_calendar" / "calendar_helper.py"
         if helper_path.exists():
             spec = importlib.util.spec_from_file_location("calendar_helper", str(helper_path))
