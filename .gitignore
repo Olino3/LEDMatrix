@@ -41,6 +41,12 @@ htmlcov/
 plugins/*
 !plugins/.gitkeep
 
+# Local dev plugin symlinks — machine-specific, never commit these
+# Run scripts/dev/dev_plugin_setup.sh to recreate them locally
+scripts/dev/plugins/*
+!scripts/dev/plugins/.gitkeep
+plugin-repos/transit-board
+
 # Binary files and backups
 bin/pixlet/
 config/backups/
