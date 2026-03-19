@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
 from src.api.dependencies import init_services, shutdown_services
+from src.api.middleware import register_middleware
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 WEB_INTERFACE_DIR = PROJECT_ROOT / "web_interface"
@@ -31,6 +32,9 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         lifespan=lifespan,
     )
+
+    # Register middleware stack (CORS, security, request ID, timing, caching, captive portal)
+    register_middleware(app)
 
     # Mount static files from web_interface (kept during Phase 2-3 transition)
     static_dir = WEB_INTERFACE_DIR / "static"
