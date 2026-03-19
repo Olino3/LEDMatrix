@@ -8,6 +8,7 @@ config/config_secrets.json
 config/config.json
 config/config.json.backup
 config/wifi_config.json
+config/google_calendar_credentials.json
 credentials.json
 token.pickle
 
@@ -44,6 +45,10 @@ plugins/*
 # Binary files and backups
 bin/pixlet/
 config/backups/
+
+# Test-generated upload artifacts
+assets/plugins/
+fonts/user/
 
 # Starlark apps runtime storage (installed .star files and cached renders)
 /starlark-apps/

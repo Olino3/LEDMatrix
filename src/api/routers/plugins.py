@@ -1,16 +1,24 @@
 """Plugin API routes — /plugins/* endpoints for CRUD, health, metrics, state, and auth."""
+
 from __future__ import annotations
 
-import asyncio, os, sys
+import asyncio
+import os
+import sys
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
+
 from src.api.dependencies import (
-    get_config_manager, get_operation_history, get_operation_queue,
-    get_plugin_manager, get_plugin_state_manager, get_schema_manager,
+    get_config_manager,
+    get_operation_history,
+    get_operation_queue,
+    get_plugin_manager,
+    get_plugin_state_manager,
+    get_schema_manager,
 )
 from src.config_manager import ConfigManager
 from src.logging_config import get_logger
@@ -24,8 +32,10 @@ logger = get_logger("api.plugins")
 router = APIRouter(prefix="/plugins", tags=["plugins"])
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
+
 def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     return JSONResponse({"status": "error", "error_code": error_code, "message": message}, status_code=status)
+
 
 def _success(data: Any = None, message: str | None = None):
     resp: dict[str, Any] = {"status": "success"}
@@ -34,6 +44,7 @@ def _success(data: Any = None, message: str | None = None):
     if message is not None:
         resp["message"] = message
     return resp
+
 
 def _save_config_atomic(cm: ConfigManager, data: dict) -> tuple[bool, str | None]:
     try:
@@ -47,6 +58,7 @@ def _save_config_atomic(cm: ConfigManager, data: dict) -> tuple[bool, str | None
     except Exception as exc:
         return False, str(exc)
 
+
 def _find_secret_fields(properties: dict, prefix: str = "") -> set[str]:
     fields: set[str] = set()
     if not isinstance(properties, dict):
@@ -58,6 +70,7 @@ def _find_secret_fields(properties: dict, prefix: str = "") -> set[str]:
         if isinstance(props, dict) and props.get("type") == "object" and "properties" in props:
             fields.update(_find_secret_fields(props["properties"], path))
     return fields
+
 
 def _separate_secrets(config: dict, secret_fields: set[str], prefix: str = ""):
     regular: dict[str, Any] = {}
@@ -76,22 +89,28 @@ def _separate_secrets(config: dict, secret_fields: set[str], prefix: str = ""):
             regular[key] = value
     return regular, secrets
 
+
 def _get_plugin_dir(pm: PluginManager, pid: str):
     return pm.get_plugin_directory(pid) if hasattr(pm, "get_plugin_directory") else None
 
+
 async def _run_script(script: Path, env: dict, *, stdin_data: bytes | None = None, timeout: float = 60.0):
     proc = await asyncio.create_subprocess_exec(
-        sys.executable, str(script),
+        sys.executable,
+        str(script),
         stdin=asyncio.subprocess.PIPE if stdin_data else asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT if stdin_data else asyncio.subprocess.PIPE, env=env,
+        stderr=asyncio.subprocess.STDOUT if stdin_data else asyncio.subprocess.PIPE,
+        env=env,
     )
     stdout, _ = await asyncio.wait_for(proc.communicate(input=stdin_data), timeout=timeout)
     return proc.returncode == 0, stdout.decode()
 
+
 @router.get("/installed")
 async def get_installed_plugins(
-    pm: PluginManager = Depends(get_plugin_manager), cm: ConfigManager = Depends(get_config_manager),
+    pm: PluginManager = Depends(get_plugin_manager),
+    cm: ConfigManager = Depends(get_config_manager),
 ):
     try:
         pm.discover_plugins()
@@ -106,9 +125,11 @@ async def get_installed_plugins(
     except Exception as exc:
         return _error("PLUGIN_LIST_FAILED", str(exc), 500)
 
+
 @router.post("/toggle")
 async def toggle_plugin(
-    request: Request, cm: ConfigManager = Depends(get_config_manager),
+    request: Request,
+    cm: ConfigManager = Depends(get_config_manager),
     sm: PluginStateManager = Depends(get_plugin_state_manager),
 ):
     try:
@@ -129,9 +150,11 @@ async def toggle_plugin(
     except Exception as exc:
         return _error("TOGGLE_FAILED", str(exc), 500)
 
+
 @router.get("/config")
 async def get_plugin_config(
-    plugin_id: str = Query(...), cm: ConfigManager = Depends(get_config_manager),
+    plugin_id: str = Query(...),
+    cm: ConfigManager = Depends(get_config_manager),
     schema_mgr: SchemaManager = Depends(get_schema_manager),
 ):
     try:
@@ -141,9 +164,11 @@ async def get_plugin_config(
     except Exception as exc:
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
+
 @router.post("/config")
 async def save_plugin_config(
-    request: Request, cm: ConfigManager = Depends(get_config_manager),
+    request: Request,
+    cm: ConfigManager = Depends(get_config_manager),
     schema_mgr: SchemaManager = Depends(get_schema_manager),
     pm: PluginManager = Depends(get_plugin_manager),
 ):
@@ -197,9 +222,11 @@ async def save_plugin_config(
         logger.error("Failed to save plugin config for %s: %s", plugin_id, exc)
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
+
 @router.post("/config/reset")
 async def reset_plugin_config(
-    request: Request, cm: ConfigManager = Depends(get_config_manager),
+    request: Request,
+    cm: ConfigManager = Depends(get_config_manager),
     schema_mgr: SchemaManager = Depends(get_schema_manager),
 ):
     try:
@@ -232,6 +259,7 @@ async def reset_plugin_config(
     except Exception as exc:
         return _error("CONFIG_RESET_FAILED", str(exc), 500)
 
+
 @router.get("/schema")
 async def get_plugin_schema(plugin_id: str = Query(...), sm: SchemaManager = Depends(get_schema_manager)):
     try:
@@ -241,6 +269,7 @@ async def get_plugin_schema(plugin_id: str = Query(...), sm: SchemaManager = Dep
         return _success(data=schema)
     except Exception as exc:
         return _error("SCHEMA_LOAD_FAILED", str(exc), 500)
+
 
 @router.post("/action")
 async def execute_plugin_action(request: Request, pm: PluginManager = Depends(get_plugin_manager)):
@@ -269,6 +298,7 @@ async def execute_plugin_action(request: Request, pm: PluginManager = Depends(ge
     except Exception as exc:
         return _error("ACTION_FAILED", str(exc), 500)
 
+
 @router.get("/health")
 async def get_all_plugin_health(pm: PluginManager = Depends(get_plugin_manager)):
     tracker = getattr(pm, "health_tracker", None)
@@ -279,6 +309,7 @@ async def get_all_plugin_health(pm: PluginManager = Depends(get_plugin_manager))
     except Exception as exc:
         return _error("HEALTH_FETCH_FAILED", str(exc), 500)
 
+
 @router.get("/health/{plugin_id}")
 async def get_plugin_health(plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)):
     tracker = getattr(pm, "health_tracker", None)
@@ -288,6 +319,7 @@ async def get_plugin_health(plugin_id: str, pm: PluginManager = Depends(get_plug
         return _success(data=tracker.get_health_summary(plugin_id))
     except Exception as exc:
         return _error("HEALTH_FETCH_FAILED", str(exc), 500)
+
 
 @router.post("/health/{plugin_id}/reset")
 async def reset_plugin_health(plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)):
@@ -300,6 +332,7 @@ async def reset_plugin_health(plugin_id: str, pm: PluginManager = Depends(get_pl
     except Exception as exc:
         return _error("HEALTH_RESET_FAILED", str(exc), 500)
 
+
 @router.get("/metrics")
 async def get_all_plugin_metrics(pm: PluginManager = Depends(get_plugin_manager)):
     monitor = getattr(pm, "resource_monitor", None)
@@ -310,6 +343,7 @@ async def get_all_plugin_metrics(pm: PluginManager = Depends(get_plugin_manager)
     except Exception as exc:
         return _error("METRICS_FETCH_FAILED", str(exc), 500)
 
+
 @router.get("/metrics/{plugin_id}")
 async def get_plugin_metrics(plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)):
     monitor = getattr(pm, "resource_monitor", None)
@@ -319,6 +353,7 @@ async def get_plugin_metrics(plugin_id: str, pm: PluginManager = Depends(get_plu
         return _success(data=monitor.get_metrics_summary(plugin_id))
     except Exception as exc:
         return _error("METRICS_FETCH_FAILED", str(exc), 500)
+
 
 @router.post("/metrics/{plugin_id}/reset")
 async def reset_plugin_metrics(plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)):
@@ -331,6 +366,7 @@ async def reset_plugin_metrics(plugin_id: str, pm: PluginManager = Depends(get_p
     except Exception as exc:
         return _error("METRICS_RESET_FAILED", str(exc), 500)
 
+
 @router.get("/limits/{plugin_id}")
 async def get_resource_limits(plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)):
     monitor = getattr(pm, "resource_monitor", None)
@@ -341,6 +377,7 @@ async def get_resource_limits(plugin_id: str, pm: PluginManager = Depends(get_pl
         return _success(data=asdict(limits) if limits else {})
     except Exception as exc:
         return _error("LIMITS_FETCH_FAILED", str(exc), 500)
+
 
 @router.post("/limits/{plugin_id}")
 async def set_resource_limits(plugin_id: str, request: Request, pm: PluginManager = Depends(get_plugin_manager)):
@@ -353,13 +390,20 @@ async def set_resource_limits(plugin_id: str, request: Request, pm: PluginManage
         return _error("INVALID_INPUT", "Request body must be valid JSON")
     try:
         from src.plugin_system.resource_monitor import ResourceLimits
-        monitor.set_limits(plugin_id, ResourceLimits(
-            max_memory_mb=body.get("max_memory_mb"), max_cpu_percent=body.get("max_cpu_percent"),
-            max_execution_time=body.get("max_execution_time"), warning_threshold=body.get("warning_threshold", 0.8),
-        ))
+
+        monitor.set_limits(
+            plugin_id,
+            ResourceLimits(
+                max_memory_mb=body.get("max_memory_mb"),
+                max_cpu_percent=body.get("max_cpu_percent"),
+                max_execution_time=body.get("max_execution_time"),
+                warning_threshold=body.get("warning_threshold", 0.8),
+            ),
+        )
         return _success(message=f"Resource limits set for '{plugin_id}'")
     except Exception as exc:
         return _error("LIMITS_SET_FAILED", str(exc), 500)
+
 
 @router.get("/operation/{operation_id}")
 async def get_operation_status(operation_id: str, oq: PluginOperationQueue = Depends(get_operation_queue)):
@@ -371,16 +415,20 @@ async def get_operation_status(operation_id: str, oq: PluginOperationQueue = Dep
     except Exception as exc:
         return _error("OPERATION_FETCH_FAILED", str(exc), 500)
 
+
 @router.get("/operation/history")
 async def get_operation_history_list(
-    limit: int = Query(50, ge=1, le=500), plugin_id: str | None = Query(None),
-    operation_type: str | None = Query(None), history: OperationHistory = Depends(get_operation_history),
+    limit: int = Query(50, ge=1, le=500),
+    plugin_id: str | None = Query(None),
+    operation_type: str | None = Query(None),
+    history: OperationHistory = Depends(get_operation_history),
 ):
     try:
         records = history.get_history(limit=limit, plugin_id=plugin_id, operation_type=operation_type)
         return _success(data=[r.to_dict() if hasattr(r, "to_dict") else r for r in records])
     except Exception as exc:
         return _error("HISTORY_FETCH_FAILED", str(exc), 500)
+
 
 @router.delete("/operation/history")
 async def clear_operation_history(history: OperationHistory = Depends(get_operation_history)):
@@ -390,9 +438,11 @@ async def clear_operation_history(history: OperationHistory = Depends(get_operat
     except Exception as exc:
         return _error("HISTORY_CLEAR_FAILED", str(exc), 500)
 
+
 @router.get("/state")
 async def get_plugin_state(
-    plugin_id: str | None = Query(None), sm: PluginStateManager = Depends(get_plugin_state_manager),
+    plugin_id: str | None = Query(None),
+    sm: PluginStateManager = Depends(get_plugin_state_manager),
 ):
     try:
         if plugin_id:
@@ -403,6 +453,7 @@ async def get_plugin_state(
         return _success(data={pid: s.to_dict() for pid, s in sm.get_all_states().items()})
     except Exception as exc:
         return _error("STATE_FETCH_FAILED", str(exc), 500)
+
 
 @router.post("/state/reconcile")
 async def reconcile_state(
@@ -425,6 +476,7 @@ async def reconcile_state(
         return _success(data={"reconciled_count": reconciled}, message=f"Reconciled {reconciled} plugins")
     except Exception as exc:
         return _error("RECONCILE_FAILED", str(exc), 500)
+
 
 @router.post("/authenticate/spotify")
 async def authenticate_spotify(request: Request, pm: PluginManager = Depends(get_plugin_manager)):
@@ -454,6 +506,7 @@ async def authenticate_spotify(request: Request, pm: PluginManager = Depends(get
     else:
         try:
             import importlib.util
+
             spec = importlib.util.spec_from_file_location("auth_spotify", script)
             mod = importlib.util.module_from_spec(spec)
             sys.modules["auth_spotify"] = mod
@@ -463,13 +516,18 @@ async def authenticate_spotify(request: Request, pm: PluginManager = Depends(get
             if not all([cid, csec, ruri]):
                 return _error("AUTH_CONFIG_MISSING", "Spotify credentials not configured", 400)
             from spotipy.oauth2 import SpotifyOAuth
+
             sp = SpotifyOAuth(
-                client_id=cid, client_secret=csec, redirect_uri=ruri,
-                scope=mod.SCOPE, cache_path=getattr(mod, "SPOTIFY_AUTH_CACHE_PATH", None),
+                client_id=cid,
+                client_secret=csec,
+                redirect_uri=ruri,
+                scope=mod.SCOPE,
+                cache_path=getattr(mod, "SPOTIFY_AUTH_CACHE_PATH", None),
             )
             return _success(data={"auth_url": sp.get_authorize_url(), "needs_redirect": True})
         except Exception as exc:
             return _error("AUTH_FAILED", f"Error generating auth URL: {exc}", 500)
+
 
 @router.post("/authenticate/ytm")
 async def authenticate_ytm(pm: PluginManager = Depends(get_plugin_manager)):

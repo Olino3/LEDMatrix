@@ -52,13 +52,15 @@ def _scan_fonts(directory: Path) -> list[dict[str, Any]]:
         return fonts
     for path in sorted(directory.iterdir()):
         if path.is_file() and path.suffix.lower() in ALLOWED_FONT_EXTENSIONS:
-            fonts.append({
-                "filename": path.name,
-                "family": path.stem,
-                "format": path.suffix.lstrip(".").lower(),
-                "size_bytes": path.stat().st_size,
-                "path": str(path.relative_to(PROJECT_ROOT)),
-            })
+            fonts.append(
+                {
+                    "filename": path.name,
+                    "family": path.stem,
+                    "format": path.suffix.lstrip(".").lower(),
+                    "size_bytes": path.stat().st_size,
+                    "path": str(path.relative_to(PROJECT_ROOT)),
+                }
+            )
     return fonts
 
 

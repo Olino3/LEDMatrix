@@ -283,21 +283,23 @@ class TestStarlark:
 @pytest.mark.unit
 class TestRouterImports:
     def test_all_routers_importable(self):
-        from src.api.routers.plugins import router as pr
-        from src.api.routers.store import router as sr
-        from src.api.routers.fonts import router as fr
-        from src.api.routers.wifi import router as wr
         from src.api.routers.assets import router as ar
+        from src.api.routers.fonts import router as fr
+        from src.api.routers.plugins import router as pr
         from src.api.routers.starlark import router as str_r
+        from src.api.routers.store import router as sr
+        from src.api.routers.wifi import router as wr
+
         assert all(r is not None for r in [pr, sr, fr, wr, ar, str_r])
 
     def test_total_route_count(self):
         """Verify we have a meaningful number of routes across all routers."""
-        from src.api.routers.plugins import router as pr
-        from src.api.routers.store import router as sr
-        from src.api.routers.fonts import router as fr
-        from src.api.routers.wifi import router as wr
         from src.api.routers.assets import router as ar
+        from src.api.routers.fonts import router as fr
+        from src.api.routers.plugins import router as pr
         from src.api.routers.starlark import router as str_r
+        from src.api.routers.store import router as sr
+        from src.api.routers.wifi import router as wr
+
         total = sum(len(r.routes) for r in [pr, sr, fr, wr, ar, str_r])
         assert total >= 50, f"Expected at least 50 plugin routes, got {total}"
