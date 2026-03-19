@@ -2,11 +2,11 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** In Progress
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-003](BACK-003-pydantic-settings.md), [BACK-005](BACK-005-api-routes-system.md)
-**Blocks:** [BACK-008](BACK-008-flask-removal-cleanup.md)
+**Blocks:** [BACK-008](BACK-008-flask-removal-cleanup.md), [SPIKE-003](SPIKE-003-openapi-schema-validation.md), [SPIKE-004](SPIKE-004-mypy-strict-api.md)
 
 ---
 
