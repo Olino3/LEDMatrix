@@ -6,7 +6,7 @@
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-001](BACK-001-fastapi-app-scaffold.md), [BACK-002](BACK-002-dependency-updates.md)
-**Blocks:** [BACK-005](BACK-005-api-routes-system.md)
+**Blocks:** [BACK-005](BACK-005-api-routes-system.md), [SPIKE-006](SPIKE-006-fastapi-rate-limiting.md)
 
 ---
 

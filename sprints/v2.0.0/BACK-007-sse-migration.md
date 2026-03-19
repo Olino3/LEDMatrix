@@ -2,11 +2,11 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-005](BACK-005-api-routes-system.md)
-**Blocks:** [BACK-008](BACK-008-flask-removal-cleanup.md)
+**Blocks:** [BACK-008](BACK-008-flask-removal-cleanup.md), [SPIKE-003](SPIKE-003-openapi-schema-validation.md), [SPIKE-006](SPIKE-006-fastapi-rate-limiting.md)
 
 ---
 
