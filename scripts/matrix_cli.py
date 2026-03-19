@@ -428,6 +428,312 @@ def _install_rgbmatrix_hardware() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Full install step helpers (used by `matrix install --full`)
+# ---------------------------------------------------------------------------
+
+class _StepError(Exception):
+    """Raised when a full-install step fails."""
+
+
+def _full_install_step_01_os_validate() -> None:
+    """Verify we are on a supported Raspberry Pi OS."""
+    if not _is_raspberry_pi():
+        raise _StepError("Not running on a Raspberry Pi.")
+
+    os_release = Path("/etc/os-release")
+    if os_release.exists():
+        content = os_release.read_text()
+        if "debian" not in content.lower() and "raspbian" not in content.lower():
+            raise _StepError(
+                "Unsupported OS — expected Debian or Raspbian. "
+                f"Contents of /etc/os-release:\n{content[:300]}"
+            )
+    else:
+        console.print("[yellow]  /etc/os-release not found — skipping distro check[/yellow]")
+
+    major, minor = sys.version_info[:2]
+    if (major, minor) < (3, 10):
+        raise _StepError(f"Python >= 3.10 required (found {major}.{minor}).")
+    console.print(f"  Python {major}.{minor} on Raspberry Pi — OK")
+
+
+def _full_install_step_02_network() -> None:
+    """Verify network connectivity."""
+    # Ping check
+    rc = subprocess.run(
+        ["ping", "-c", "1", "-W", "5", "8.8.8.8"],
+        capture_output=True, check=False,
+    ).returncode
+    if rc != 0:
+        raise _StepError("No network — ping 8.8.8.8 failed.")
+
+    # DNS check
+    try:
+        socket.getaddrinfo("pypi.org", 443)
+    except socket.gaierror as exc:
+        raise _StepError(f"DNS resolution failed for pypi.org: {exc}") from exc
+    console.print("  Network connectivity verified")
+
+
+def _full_install_step_03_apt_packages() -> None:
+    """Install required apt packages."""
+    rc = subprocess.run(
+        ["sudo", "apt-get", "update", "-qq"],
+        check=False,
+    ).returncode
+    if rc != 0:
+        console.print("[yellow]  apt-get update failed — continuing anyway[/yellow]")
+
+    # Merge _PI_APT_PACKAGES with any additional packages needed for full install
+    full_packages = list(_PI_APT_PACKAGES)
+    extras = ["libgraphicsmagick++-dev", "libwebp-dev", "python3"]
+    for pkg in extras:
+        if pkg not in full_packages:
+            full_packages.append(pkg)
+
+    rc = subprocess.run(
+        ["sudo", "apt-get", "install", "-y", "-qq"] + full_packages,
+        check=False,
+    ).returncode
+    if rc != 0:
+        raise _StepError(f"apt-get install failed (exit {rc}).")
+    console.print(f"  {len(full_packages)} packages installed")
+
+
+def _full_install_step_04_uv() -> None:
+    """Ensure uv is installed."""
+    if shutil.which("uv"):
+        console.print("  uv already installed — skipping")
+        return
+
+    rc = subprocess.run(
+        ["bash", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"],
+        check=False,
+    ).returncode
+    if rc != 0:
+        raise _StepError("uv installation failed.")
+
+    # Verify uv is accessible (may need to refresh PATH)
+    uv_path = Path.home() / ".local" / "bin" / "uv"
+    if not shutil.which("uv") and not uv_path.exists():
+        raise _StepError(
+            "uv installed but not found on PATH. "
+            "Add ~/.local/bin to your PATH and retry."
+        )
+    console.print("  uv installed successfully")
+
+
+def _full_install_step_05_venv() -> None:
+    """Sync the virtualenv via uv."""
+    rc = _sync_venv(())
+    if rc != 0:
+        raise _StepError(f"uv sync failed (exit {rc}).")
+
+
+def _full_install_step_06_rgbmatrix(*, skip_hardware: bool = False) -> None:
+    """Build and install the rgbmatrix C-extension."""
+    if skip_hardware:
+        console.print("  Skipped (--skip-hardware)")
+        return
+    _install_rgbmatrix_hardware()
+
+
+def _full_install_step_07_config() -> None:
+    """Create config files from templates if they do not exist."""
+    config_dir = LEDMATRIX_ROOT / "config"
+
+    for template_name, target_name in [
+        ("config.template.json", "config.json"),
+        ("config_secrets.template.json", "config_secrets.json"),
+    ]:
+        template = config_dir / template_name
+        target = config_dir / target_name
+        if target.exists():
+            console.print(f"  {target_name} already exists — skipping")
+        elif template.exists():
+            shutil.copy(template, target)
+            console.print(f"  Created {target_name} from template")
+        else:
+            console.print(f"[yellow]  {template_name} not found — skipping[/yellow]")
+
+
+def _full_install_step_08_cache() -> None:
+    """Set up /var/cache/ledmatrix with group permissions."""
+    cmds = [
+        ["sudo", "mkdir", "-p", "/var/cache/ledmatrix"],
+        ["sudo", "groupadd", "-f", "ledmatrix"],
+        ["sudo", "usermod", "-a", "-G", "ledmatrix", os.environ.get("USER", "pi")],
+        ["sudo", "chown", "-R", f":{os.environ.get('USER', 'pi')}", "/var/cache/ledmatrix"],
+        ["sudo", "chown", "-R", ":ledmatrix", "/var/cache/ledmatrix"],
+        ["sudo", "chmod", "-R", "775", "/var/cache/ledmatrix"],
+        ["sudo", "chmod", "g+s", "/var/cache/ledmatrix"],
+    ]
+    for cmd in cmds:
+        rc = subprocess.run(cmd, check=False).returncode
+        if rc != 0:
+            raise _StepError(f"Command failed: {' '.join(cmd)} (exit {rc})")
+    console.print("  Cache directory configured")
+
+
+def _full_install_step_09_permissions() -> None:
+    """Set file permissions on key directories."""
+    dirs_755 = ["assets", "plugins", "web_interface"]
+    for d in dirs_755:
+        path = LEDMATRIX_ROOT / d
+        if path.exists():
+            subprocess.run(["chmod", "-R", "755", str(path)], check=False)
+
+    config_dir = LEDMATRIX_ROOT / "config"
+    if config_dir.exists():
+        for f in config_dir.iterdir():
+            if f.is_file():
+                subprocess.run(["chmod", "644", str(f)], check=False)
+    console.print("  File permissions set")
+
+
+def _full_install_step_10_sound_blacklist(*, skip_hardware: bool = False) -> None:
+    """Blacklist onboard sound to free DMA channels for LED matrix."""
+    if skip_hardware:
+        console.print("  Skipped (--skip-hardware)")
+        return
+
+    blacklist_path = Path("/etc/modprobe.d/ledmatrix-blacklist.conf")
+    content = "blacklist snd_bcm2835\n"
+    rc = subprocess.run(
+        ["sudo", "bash", "-c", f"echo '{content.strip()}' > {blacklist_path}"],
+        check=False,
+    ).returncode
+    if rc != 0:
+        raise _StepError(f"Failed to write sound blacklist to {blacklist_path}")
+    console.print(f"  Sound blacklist written to {blacklist_path}")
+
+
+def _full_install_step_11_performance(*, skip_hardware: bool = False) -> dict:
+    """Apply kernel-level performance tuning for LED matrix output.
+
+    Returns a dict with 'needs_reboot' key.
+    """
+    result = {"needs_reboot": False}
+    if skip_hardware:
+        console.print("  Skipped (--skip-hardware)")
+        return result
+
+    # isolcpus in /boot/cmdline.txt
+    cmdline = Path("/boot/cmdline.txt")
+    if cmdline.exists():
+        text = cmdline.read_text()
+        if "isolcpus=3" not in text:
+            new_text = text.rstrip() + " isolcpus=3\n"
+            rc = subprocess.run(
+                ["sudo", "bash", "-c", f"echo '{new_text.strip()}' > {cmdline}"],
+                check=False,
+            ).returncode
+            if rc != 0:
+                raise _StepError("Failed to update /boot/cmdline.txt")
+            result["needs_reboot"] = True
+            console.print("  Added isolcpus=3 to /boot/cmdline.txt")
+        else:
+            console.print("  isolcpus=3 already present")
+    else:
+        console.print("[yellow]  /boot/cmdline.txt not found — skipping isolcpus[/yellow]")
+
+    # dtparam=audio=off in /boot/config.txt
+    config_txt = Path("/boot/config.txt")
+    if config_txt.exists():
+        text = config_txt.read_text()
+        if "dtparam=audio=off" not in text:
+            rc = subprocess.run(
+                ["sudo", "bash", "-c", f"echo 'dtparam=audio=off' >> {config_txt}"],
+                check=False,
+            ).returncode
+            if rc != 0:
+                raise _StepError("Failed to update /boot/config.txt")
+            result["needs_reboot"] = True
+            console.print("  Added dtparam=audio=off to /boot/config.txt")
+        else:
+            console.print("  dtparam=audio=off already present")
+    else:
+        console.print("[yellow]  /boot/config.txt not found — skipping audio param[/yellow]")
+
+    return result
+
+
+def _full_install_step_12_conflicting_services(*, skip_hardware: bool = False) -> None:
+    """Disable services that conflict with LED matrix operation."""
+    if skip_hardware:
+        console.print("  Skipped (--skip-hardware)")
+        return
+
+    services = ["bluetooth", "triggerhappy", "pigpiod"]
+    for svc in services:
+        subprocess.run(
+            ["sudo", "systemctl", "disable", "--now", svc],
+            capture_output=True, check=False,
+        )
+    console.print(f"  Disabled conflicting services: {', '.join(services)}")
+
+
+def _full_install_step_13_display_service() -> None:
+    """Install the main LED display systemd service."""
+    rc = _run_install_script("install_service.sh")
+    if rc != 0:
+        raise _StepError(f"install_service.sh failed (exit {rc}).")
+    console.print("  Display service installed")
+
+
+def _full_install_step_14_web_service() -> None:
+    """Install the web interface systemd service."""
+    rc = _run_install_script("install_web_service.sh")
+    if rc != 0:
+        raise _StepError(f"install_web_service.sh failed (exit {rc}).")
+    console.print("  Web service installed")
+
+
+def _full_install_step_15_wifi_monitor() -> None:
+    """Install the WiFi monitor systemd service."""
+    rc = _run_install_script("install_wifi_monitor.sh")
+    if rc != 0:
+        raise _StepError(f"install_wifi_monitor.sh failed (exit {rc}).")
+    console.print("  WiFi monitor installed")
+
+
+def _full_install_step_16_web_sudoers() -> None:
+    """Configure sudoers rules for the web interface."""
+    script_path = LEDMATRIX_ROOT / "scripts" / "install" / "configure_web_sudo.sh"
+    if not script_path.exists():
+        raise _StepError(f"configure_web_sudo.sh not found at {script_path}")
+    rc = subprocess.run(
+        ["bash", str(script_path)],
+        check=False,
+    ).returncode
+    if rc != 0:
+        raise _StepError(f"configure_web_sudo.sh failed (exit {rc}).")
+    console.print("  Web sudoers configured")
+
+
+def _full_install_step_17_verify(results: list[tuple[str, bool]]) -> None:
+    """Print a summary table of all installation steps."""
+    table = Table(title="Installation Summary", show_lines=False)
+    table.add_column("Step", style="bold")
+    table.add_column("Status")
+
+    passed = 0
+    failed = 0
+    for label, success in results:
+        if success:
+            table.add_row(label, "[green]PASS[/green]")
+            passed += 1
+        else:
+            table.add_row(label, "[red]FAIL[/red]")
+            failed += 1
+
+    console.print()
+    console.print(table)
+    console.print(f"\n  [bold]{passed}[/bold] passed, [bold]{failed}[/bold] failed")
+    console.print("\n  Run [bold]matrix doctor[/bold] for full system verification.")
+
+
+# ---------------------------------------------------------------------------
 # matrix install
 # ---------------------------------------------------------------------------
 
@@ -438,14 +744,113 @@ def _install_rgbmatrix_hardware() -> None:
 @click.option("--services", "extra_services", is_flag=True, help="Install web interface and WiFi monitor services (Pi only).")
 @click.option("--prerequisites", is_flag=True, help="Install required apt packages (Pi only).")
 @click.option("--hardware", is_flag=True, help="Install rgbmatrix C-extension (Pi only).")
+@click.option("--full", is_flag=True, help="Run complete Pi installation (17 steps).")
+@click.option("--skip-hardware", is_flag=True, help="Skip rgbmatrix build and hardware tuning (emulator-only Pi install).")
+@click.option("--yes", "-y", "auto_yes", is_flag=True, help="Skip confirmation prompts.")
 def install(no_services: bool, emulator: bool, permissions: bool,
-            extra_services: bool, prerequisites: bool, hardware: bool) -> None:
+            extra_services: bool, prerequisites: bool, hardware: bool,
+            full: bool, skip_hardware: bool, auto_yes: bool) -> None:
     """Full installation: sync deps and optionally install systemd services.
 
     Pi-specific flags (--permissions, --services, --prerequisites, --hardware)
     are no-ops on non-Pi platforms.
+
+    Use --full for a complete one-shot Raspberry Pi installation (17 steps).
+    Combine with --skip-hardware for an emulator-only Pi setup.
     """
     console.print(Rule("[green]install[/green]"))
+
+    # --full: complete Pi installation path
+    if full:
+        if not _is_raspberry_pi():
+            console.print(
+                "[red]--full requires a Raspberry Pi.[/red]\n"
+                "Use [bold]matrix install --emulator[/bold] for non-Pi platforms."
+            )
+            sys.exit(1)
+
+        steps: list[tuple[str, object]] = [
+            ("OS validation", lambda: _full_install_step_01_os_validate()),
+            ("Network check", lambda: _full_install_step_02_network()),
+            ("Apt packages", lambda: _full_install_step_03_apt_packages()),
+            ("Install uv", lambda: _full_install_step_04_uv()),
+            ("Venv sync", lambda: _full_install_step_05_venv()),
+            ("rgbmatrix build", lambda: _full_install_step_06_rgbmatrix(skip_hardware=skip_hardware)),
+            ("Config creation", lambda: _full_install_step_07_config()),
+            ("Cache directory", lambda: _full_install_step_08_cache()),
+            ("File permissions", lambda: _full_install_step_09_permissions()),
+            ("Sound blacklist", lambda: _full_install_step_10_sound_blacklist(skip_hardware=skip_hardware)),
+            ("Performance tuning", lambda: _full_install_step_11_performance(skip_hardware=skip_hardware)),
+            ("Conflicting services", lambda: _full_install_step_12_conflicting_services(skip_hardware=skip_hardware)),
+            ("Display service", lambda: _full_install_step_13_display_service()),
+            ("Web service", lambda: _full_install_step_14_web_service()),
+            ("WiFi monitor", lambda: _full_install_step_15_wifi_monitor()),
+            ("Web sudoers", lambda: _full_install_step_16_web_sudoers()),
+        ]
+
+        console.print(Rule("[bold green]Full Installation[/bold green]"))
+        console.print(f"\n  Running {len(steps) + 1} installation steps on Raspberry Pi...")
+        if skip_hardware:
+            console.print("  [dim]Hardware steps will be skipped (--skip-hardware)[/dim]")
+        console.print()
+
+        if not auto_yes:
+            confirm = click.confirm("  Proceed with full installation?", default=True)
+            if not confirm:
+                console.print("[yellow]Installation cancelled.[/yellow]")
+                return
+
+        results: list[tuple[str, bool]] = []
+        needs_reboot = False
+
+        for i, (label, func) in enumerate(steps, 1):
+            console.print(f"  [bold]Step {i}/{len(steps) + 1}: {label}[/bold]")
+            try:
+                step_result = func()
+                # Step 11 (performance tuning) returns a dict
+                if isinstance(step_result, dict) and step_result.get("needs_reboot"):
+                    needs_reboot = True
+                results.append((label, True))
+                console.print(f"  [green]✓ {label} complete[/green]\n")
+            except (_StepError, SystemExit) as exc:
+                results.append((label, False))
+                if isinstance(exc, _StepError):
+                    console.print(f"  [red]✗ {label} failed: {exc}[/red]\n")
+                else:
+                    console.print(f"  [red]✗ {label} failed[/red]\n")
+
+        # Step 17: Verification (always runs)
+        console.print(f"  [bold]Step {len(steps) + 1}/{len(steps) + 1}: Verification[/bold]")
+        _full_install_step_17_verify(results)
+
+        if needs_reboot:
+            console.print(
+                Panel(
+                    "[yellow bold]Reboot recommended[/yellow bold]\n\n"
+                    "Hardware tuning changes (isolcpus, audio) require a reboot.\n"
+                    "Run: [bold]sudo reboot[/bold]",
+                    border_style="yellow",
+                )
+            )
+
+        failed_count = sum(1 for _, ok in results if not ok)
+        if failed_count == 0:
+            console.print(
+                Panel(
+                    "[green]Full installation complete![/green]\n\n"
+                    "Run [bold]matrix doctor[/bold] to verify the installation.",
+                    border_style="green",
+                )
+            )
+        else:
+            console.print(
+                Panel(
+                    f"[yellow]Installation finished with {failed_count} failed step(s).[/yellow]\n\n"
+                    "Run [bold]matrix doctor[/bold] to diagnose issues.",
+                    border_style="yellow",
+                )
+            )
+        return
 
     is_pi = _is_raspberry_pi()
     pi_flags_requested = permissions or extra_services or prerequisites
