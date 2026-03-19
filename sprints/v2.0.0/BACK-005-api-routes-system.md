@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-002](BACK-002-dependency-updates.md), [BACK-003](BACK-003-pydantic-settings.md), [BACK-004](BACK-004-middleware-stack.md)
