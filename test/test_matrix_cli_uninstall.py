@@ -109,8 +109,10 @@ class TestUninstallServices:
 
     def test_daemon_reload_called(self, mock_subprocess):
         """Uninstall calls daemon-reload after removing unit files."""
-        # Mock the unit files as existing
-        with patch.object(Path, "exists", return_value=True):
+        # Mock the unit files as existing + mock filesystem ops
+        with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "unlink"), \
+             patch("shutil.rmtree"):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
         reload_calls = [
@@ -131,7 +133,9 @@ class TestUninstallUnitFiles:
     def test_removes_unit_files_when_present(self, mock_subprocess):
         """When unit files exist, they are removed."""
         with patch.object(Path, "exists", return_value=True), \
-             patch.object(Path, "is_symlink", return_value=False):
+             patch.object(Path, "is_symlink", return_value=False), \
+             patch.object(Path, "unlink"), \
+             patch("shutil.rmtree"):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
         all_args = " ".join(str(c) for c in mock_subprocess.call_args_list)
@@ -171,7 +175,9 @@ class TestUninstallSymlink:
     def test_removes_matrix_symlink_when_present(self, mock_subprocess):
         """When symlink exists, it is removed."""
         with patch.object(Path, "exists", return_value=True), \
-             patch.object(Path, "is_symlink", return_value=True):
+             patch.object(Path, "is_symlink", return_value=True), \
+             patch.object(Path, "unlink"), \
+             patch("shutil.rmtree"):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
         all_args = " ".join(str(c) for c in mock_subprocess.call_args_list)

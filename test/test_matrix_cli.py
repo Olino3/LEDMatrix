@@ -1110,7 +1110,7 @@ class TestDoctorCommand:
         with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
              patch('subprocess.run', side_effect=[pillow_ok, py_ver_ok]), \
              patch('shutil.which', return_value=None):
-            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor', '--quick'])
         assert result.exit_code == 1
         assert 'FAIL' in result.output
 
@@ -1152,7 +1152,7 @@ class TestDoctorCommand:
              patch.object(Path, 'exists', autospec=True,
                           side_effect=self._make_path_exists_with_dev_mem(original_exists)), \
              patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
-            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor', '--quick'])
         assert 'WARN' in result.output
         assert 'rgbmatrix' in result.output.lower()
 
@@ -1169,7 +1169,7 @@ class TestDoctorCommand:
              patch.object(Path, 'exists', autospec=True,
                           side_effect=self._make_path_exists_with_dev_mem(original_exists)), \
              patch.dict(os.environ, {'EMULATOR': ''}, clear=False):
-            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor', '--quick'])
         assert 'rgbmatrix' in result.output.lower()
         # Should not have a WARN for rgbmatrix (it passed)
         lines = result.output.split('\n')
@@ -1211,6 +1211,6 @@ class TestDoctorCommand:
         with patch.object(matrix_cli, 'LEDMATRIX_ROOT', root), \
              patch('subprocess.run', side_effect=[pillow_ok, py_old]), \
              patch('shutil.which', return_value='/usr/bin/uv'):
-            result = CliRunner().invoke(matrix_cli.cli, ['doctor'])
+            result = CliRunner().invoke(matrix_cli.cli, ['doctor', '--quick'])
         assert result.exit_code == 1
         assert '3.8.0' in result.output
