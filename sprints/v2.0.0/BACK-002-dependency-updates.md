@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Chore
 **Depends on:** [BACK-001](BACK-001-fastapi-app-scaffold.md)
