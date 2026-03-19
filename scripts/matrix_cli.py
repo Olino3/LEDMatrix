@@ -950,22 +950,34 @@ def install(no_services: bool, emulator: bool, permissions: bool,
 # ---------------------------------------------------------------------------
 
 @cli.command()
-def doctor() -> None:
+@click.option("--quick", is_flag=True, help="Run only core checks (fast path for CI).")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output for each check.")
+@click.option("--json-output", "--json", "json_output", is_flag=True, help="Output results as JSON.")
+def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
     """Check system health: venv, config, services, hardware."""
-    console.print(Rule("[green]doctor[/green]"))
+    if not json_output:
+        console.print(Rule("[green]doctor[/green]"))
     rows: list[tuple[str, str, str]] = []  # (check_name, status_icon, detail)
+    # Parallel list for JSON output: (name, "pass"|"warn"|"fail", detail)
+    json_rows: list[dict[str, str]] = []
     any_fail = False
+    any_warn = False
 
     def ok(name: str, detail: str = "") -> None:
         rows.append((name, "[green]\u2713 PASS[/green]", detail))
+        json_rows.append({"name": name, "status": "pass", "detail": detail})
 
     def warn(name: str, detail: str = "") -> None:
+        nonlocal any_warn
+        any_warn = True
         rows.append((name, "[yellow]\u26a0 WARN[/yellow]", detail))
+        json_rows.append({"name": name, "status": "warn", "detail": detail})
 
     def fail(name: str, detail: str = "") -> None:
         nonlocal any_fail
         any_fail = True
         rows.append((name, "[red]\u2717 FAIL[/red]", detail))
+        json_rows.append({"name": name, "status": "fail", "detail": detail})
 
     # --- uv ---
     uv_path = shutil.which("uv")
@@ -1060,21 +1072,208 @@ def doctor() -> None:
     else:
         fail(f"Python {py_ver}", "Requires Python 3.10+")
 
-    # Render table
-    table = Table(title="LEDMatrix Health Check", show_header=True, header_style="bold")
-    table.add_column("Check", style="bold")
-    table.add_column("Status", justify="center")
-    table.add_column("Detail", style="dim")
-    for name, status, detail in rows:
-        table.add_row(name, status, detail)
-    console.print(table)
+    # -----------------------------------------------------------------------
+    # Extended checks (skipped with --quick)
+    # -----------------------------------------------------------------------
+    if not quick:
+        is_pi = _is_raspberry_pi()
+
+        # --- Cache directory ---
+        cache_dir = Path("/var/cache/ledmatrix")
+        if cache_dir.exists() and os.access(cache_dir, os.W_OK):
+            ok("Cache directory", str(cache_dir))
+            if verbose and not json_output:
+                console.print("    [dim]Writable cache directory found[/dim]")
+        elif cache_dir.exists():
+            warn("Cache directory", f"{cache_dir} exists but is not writable")
+        else:
+            warn("Cache directory", f"{cache_dir} not found (OK on dev machines)")
+
+        # --- Web interface reachability ---
+        web_unit = Path("/etc/systemd/system/ledmatrix-web.service")
+        if web_unit.exists():
+            web_active = subprocess.run(
+                ["systemctl", "is-active", "ledmatrix-web"],
+                capture_output=True, text=True,
+            ).stdout.strip() == "active"
+        else:
+            web_active = False
+        if web_active:
+            if _check_port_open("localhost", 5000, timeout=2.0):
+                ok("Web interface", "localhost:5000 reachable")
+            else:
+                warn("Web interface", "ledmatrix-web is active but localhost:5000 unreachable")
+        else:
+            ok("Web interface", "ledmatrix-web not active — skipped")
+            if verbose and not json_output:
+                console.print("    [dim]Service not running; TCP check skipped[/dim]")
+
+        # --- Sound blacklist (Pi only) ---
+        if is_pi:
+            blacklist = Path("/etc/modprobe.d/ledmatrix-blacklist.conf")
+            if blacklist.exists():
+                try:
+                    content = blacklist.read_text()
+                    if "snd_bcm2835" in content:
+                        ok("Sound blacklist", "snd_bcm2835 blacklisted")
+                    else:
+                        warn("Sound blacklist", f"{blacklist} exists but snd_bcm2835 not listed")
+                except OSError:
+                    warn("Sound blacklist", f"Cannot read {blacklist}")
+            else:
+                warn("Sound blacklist", f"{blacklist} not found — audio may interfere with LED timing")
+        else:
+            ok("Sound blacklist", "Not a Pi — skipped")
+
+        # --- Performance tuning — isolcpus (Pi only) ---
+        if is_pi:
+            cmdline_found = False
+            for cmdline_path in (Path("/boot/firmware/cmdline.txt"), Path("/boot/cmdline.txt")):
+                if cmdline_path.exists():
+                    try:
+                        cmdline_content = cmdline_path.read_text()
+                        cmdline_found = True
+                        if "isolcpus=3" in cmdline_content:
+                            ok("isolcpus", "isolcpus=3 set in " + str(cmdline_path))
+                        else:
+                            warn("isolcpus", f"isolcpus=3 not found in {cmdline_path} — may improve LED refresh")
+                        if verbose and not json_output:
+                            console.print(f"    [dim]Read from {cmdline_path}[/dim]")
+                        break
+                    except OSError:
+                        warn("isolcpus", f"Cannot read {cmdline_path}")
+                        cmdline_found = True
+                        break
+            if not cmdline_found:
+                warn("isolcpus", "No cmdline.txt found at /boot/firmware/ or /boot/")
+        else:
+            ok("isolcpus", "Not a Pi — skipped")
+
+        # --- Conflicting services (Pi only) ---
+        if is_pi:
+            conflicting = ["bluetooth", "triggerhappy", "pigpiod"]
+            any_conflict = False
+            for svc in conflicting:
+                result = subprocess.run(
+                    ["systemctl", "is-active", svc],
+                    capture_output=True, text=True,
+                )
+                if result.stdout.strip() == "active":
+                    warn(f"Conflicting: {svc}", f"{svc}.service is active — may interfere with LED timing")
+                    any_conflict = True
+            if not any_conflict:
+                ok("Conflicting services", "None of bluetooth/triggerhappy/pigpiod active")
+        else:
+            ok("Conflicting services", "Not a Pi — skipped")
+
+        # --- Plugin dependencies ---
+        if PLUGINS_DIR.exists():
+            missing_deps: list[str] = []
+            for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
+                if not plugin_dir.is_dir() and not plugin_dir.is_symlink():
+                    continue
+                req_file = plugin_dir / "requirements.txt"
+                marker = plugin_dir / ".dependencies_installed"
+                if req_file.exists() and not marker.exists():
+                    missing_deps.append(plugin_dir.name)
+            if missing_deps:
+                warn("Plugin dependencies", f"Missing .dependencies_installed: {', '.join(missing_deps)}")
+                if verbose and not json_output:
+                    for p in missing_deps:
+                        console.print(f"    [dim]{p}/requirements.txt exists but marker missing[/dim]")
+            else:
+                ok("Plugin dependencies", "All plugins with requirements.txt have dependency markers")
+        else:
+            ok("Plugin dependencies", "No plugins directory — skipped")
+
+        # --- Config JSON valid ---
+        cfg_path = LEDMATRIX_ROOT / "config" / "config.json"
+        if cfg_path.exists():
+            try:
+                json.loads(cfg_path.read_text())
+                ok("Config JSON valid", str(cfg_path))
+            except (json.JSONDecodeError, OSError) as exc:
+                fail("Config JSON valid", f"Invalid JSON: {exc}")
+        else:
+            ok("Config JSON valid", "config.json not present — skipped")
+
+        # --- Disk space ---
+        try:
+            usage = shutil.disk_usage(LEDMATRIX_ROOT)
+            free_mb = usage.free / (1024 * 1024)
+            if free_mb < 100:
+                fail("Disk space", f"{free_mb:.0f} MB free — critically low (<100 MB)")
+            elif free_mb < 500:
+                warn("Disk space", f"{free_mb:.0f} MB free — consider freeing space (<500 MB)")
+            else:
+                ok("Disk space", f"{free_mb:.0f} MB free")
+            if verbose and not json_output:
+                total_mb = usage.total / (1024 * 1024)
+                console.print(f"    [dim]Total: {total_mb:.0f} MB, Used: {(usage.used / (1024 * 1024)):.0f} MB[/dim]")
+        except OSError as exc:
+            warn("Disk space", f"Cannot determine: {exc}")
+
+        # --- Git status (informational) ---
+        try:
+            branch_result = subprocess.run(
+                ["git", "-C", str(LEDMATRIX_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True, text=True,
+            )
+            branch_name = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
+            dirty_result = subprocess.run(
+                ["git", "-C", str(LEDMATRIX_ROOT), "status", "--porcelain"],
+                capture_output=True, text=True,
+            )
+            is_dirty = bool(dirty_result.stdout.strip()) if dirty_result.returncode == 0 else False
+            dirty_label = " (uncommitted changes)" if is_dirty else ""
+            ok("Git status", f"Branch: {branch_name}{dirty_label}")
+            if verbose and not json_output and is_dirty:
+                changed = len(dirty_result.stdout.strip().splitlines())
+                console.print(f"    [dim]{changed} file(s) with uncommitted changes[/dim]")
+        except FileNotFoundError:
+            ok("Git status", "git not installed — skipped")
+
+        # --- Config secrets template ---
+        secrets_path = LEDMATRIX_ROOT / "config" / "config_secrets.json"
+        if secrets_path.exists():
+            try:
+                json.loads(secrets_path.read_text())
+                ok("Config secrets valid JSON", str(secrets_path))
+            except (json.JSONDecodeError, OSError) as exc:
+                warn("Config secrets valid JSON", f"Invalid JSON: {exc}")
+        else:
+            ok("Config secrets valid JSON", "Not present — skipped")
+
+    # -----------------------------------------------------------------------
+    # Output
+    # -----------------------------------------------------------------------
+    if json_output:
+        summary = {
+            "passed": sum(1 for r in json_rows if r["status"] == "pass"),
+            "warned": sum(1 for r in json_rows if r["status"] == "warn"),
+            "failed": sum(1 for r in json_rows if r["status"] == "fail"),
+        }
+        click.echo(json.dumps({"checks": json_rows, "summary": summary}, indent=2))
+    else:
+        # Render table
+        table = Table(title="LEDMatrix Health Check", show_header=True, header_style="bold")
+        table.add_column("Check", style="bold")
+        table.add_column("Status", justify="center")
+        table.add_column("Detail", style="dim")
+        for name, status, detail in rows:
+            table.add_row(name, status, detail)
+        console.print(table)
+
+        if any_fail:
+            console.print("\n[red]One or more checks failed. Fix the issues above and re-run:[/red]")
+            console.print("  [bold]matrix doctor[/bold]")
+        elif any_warn:
+            console.print("\n[yellow]All checks passed with warnings.[/yellow]")
+        else:
+            console.print("\n[green]All checks passed![/green]")
 
     if any_fail:
-        console.print("\n[red]One or more checks failed. Fix the issues above and re-run:[/red]")
-        console.print("  [bold]matrix doctor[/bold]")
         sys.exit(1)
-    else:
-        console.print("\n[green]All checks passed![/green]")
 
 
 # ---------------------------------------------------------------------------
