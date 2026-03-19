@@ -25,7 +25,7 @@ alwaysApply: true
 ## Deployment Considerations
 - **Service files**: [ledmatrix.service](mdc:ledmatrix.service), [ledmatrix-web.service](mdc:ledmatrix-web.service)
 - **Installation**: `matrix install` (CLI), [install_service.sh](mdc:install_service.sh)
-- **Dependencies**: [requirements.txt](mdc:requirements.txt) for Pi environment
+- **Dependencies**: [pyproject.toml](mdc:pyproject.toml) managed via `uv sync`
 - **Permissions**: Handle file permissions for Pi user
 
 ## Performance Optimization

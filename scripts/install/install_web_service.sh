@@ -22,6 +22,12 @@ PROJECT_ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 
 VENV_PYTHON="${PROJECT_ROOT_DIR}/.venv/bin/python3"
 
+# Check if running as root before performing any side effects
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root (use sudo)"
+    exit 1
+fi
+
 echo "Installing for user: $ACTUAL_USER"
 echo "Project root directory: $PROJECT_ROOT_DIR"
 
@@ -38,12 +44,6 @@ if [ ! -x "$VENV_PYTHON" ]; then
         exit 1
     fi
     echo "Venv bootstrapped successfully."
-fi
-
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root (use sudo)"
-    exit 1
 fi
 
 # Generate the service file dynamically with the correct paths
