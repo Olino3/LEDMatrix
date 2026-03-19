@@ -26,5 +26,39 @@
       "Bash(sudo:*)",
       "Bash(git reset --hard:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/check_arch_violations.sh",
+            "statusMessage": "Checking architecture violations..."
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/auto_format.sh",
+            "statusMessage": "Auto-formatting with ruff..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/check_arch_violations.sh",
+            "statusMessage": "Checking architecture violations..."
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/auto_format.sh",
+            "statusMessage": "Auto-formatting with ruff..."
+          }
+        ]
+      }
+    ]
   }
 }

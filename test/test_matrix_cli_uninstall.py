@@ -25,7 +25,7 @@ from matrix_cli import cli
 
 def _invoke(args, input=None):
     """Run the CLI via CliRunner and return the result."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     return runner.invoke(cli, ["uninstall"] + args, input=input, catch_exceptions=False)
 
 
