@@ -1,6 +1,6 @@
 # SPIKE-012 -- `matrix install --full`: One-Shot Pi Installation
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md), [SPIKE-011](SPIKE-011-install-hardware-flag.md)

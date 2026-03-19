@@ -99,7 +99,7 @@ FOUND-006 (plugin quick-fixes) [Done]
 All 25 tickets (6 FOUND + 19 SPIKE) are done. The `matrix` CLI is now the single entry point for all LEDMatrix operations.
 
 ### Notes
-- **SPIKE-003**: PR opened at https://github.com/ChuckBuilds/ledmatrix-plugins/pull/52 (pending upstream merge)
+- **SPIKE-003**: PR opened at https://github.com/Olino3/ledmatrix-plugins/pull/1 (completed via Olino3 fork)
 - **SPIKE-019**: Research-only spike; recommendation doc at `docs/plans/2026-03-19-spike-019-plugin-pyproject-toml.md`
 - **Tests**: New test files need validation once dev environment has `python3-devel` installed
 - 30 deprecated scripts archived to `scripts/archive/` with deprecation wrappers

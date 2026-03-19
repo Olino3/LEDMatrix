@@ -1,6 +1,6 @@
 # SPIKE-003 — Open PR for `display_manager.matrix.width/height` Fixes in ledmatrix-plugins Monorepo
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** FOUND-006 (local fixes complete)

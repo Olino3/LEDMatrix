@@ -4,7 +4,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike / Cleanup
 **Depends on:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md), [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md), [SPIKE-011](SPIKE-011-install-hardware-flag.md)
 
 ---
 

@@ -1,6 +1,6 @@
 # SPIKE-018 -- Archive Obsolete Shell Scripts
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Cleanup
 **Depends on:** [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md), [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md), [SPIKE-014](SPIKE-014-matrix-cli-replace-fix-perms-scripts.md), [SPIKE-015](SPIKE-015-matrix-cli-replace-network-scripts.md), [SPIKE-017](SPIKE-017-matrix-uninstall-subcommand.md)

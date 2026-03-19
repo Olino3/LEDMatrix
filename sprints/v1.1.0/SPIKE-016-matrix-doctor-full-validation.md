@@ -1,6 +1,6 @@
 # SPIKE-016 -- `matrix doctor`: Full Installation Validation
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md), [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md)

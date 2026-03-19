@@ -1,10 +1,10 @@
 # SPIKE-011 -- `matrix install --hardware` for rgbmatrix C-extension Build
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md), [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md)
 
 ---
 

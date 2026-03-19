@@ -1,10 +1,10 @@
 # SPIKE-015 -- Replace Network and WiFi Scripts with `matrix` CLI Subcommands
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 -- Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [FOUND-003](FOUND-003-matrix-cli-install-doctor.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-018](SPIKE-018-archive-obsolete-scripts.md)
 
 ---
 

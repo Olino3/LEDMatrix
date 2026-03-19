@@ -4,7 +4,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike / Enhancement
 **Depends on:** [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md)
 
 ---
 

@@ -6,7 +6,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Feature
 **Depends on:** [FOUND-001](FOUND-001-pyproject-uv-migration.md), [FOUND-002](FOUND-002-venv-bootstrap.md)
-**Blocks:** [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md), [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md), [SPIKE-009](SPIKE-009-retire-first-time-install-script.md)
+**Blocks:** [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md), [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md), [SPIKE-009](SPIKE-009-retire-first-time-install-script.md), [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md), [SPIKE-014](SPIKE-014-matrix-cli-replace-fix-perms-scripts.md), [SPIKE-015](SPIKE-015-matrix-cli-replace-network-scripts.md), [SPIKE-017](SPIKE-017-matrix-uninstall-subcommand.md)
 
 ---
 

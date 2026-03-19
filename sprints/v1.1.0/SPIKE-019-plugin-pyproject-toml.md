@@ -1,6 +1,6 @@
 # SPIKE-019 — Migrate Plugin `requirements.txt` to Per-Plugin `pyproject.toml`
 
-**Status:** Open
+**Status:** Done
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md)
