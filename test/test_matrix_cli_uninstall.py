@@ -30,21 +30,27 @@ def _invoke(args, input=None):
 
 
 @pytest.fixture
-def mock_subprocess(monkeypatch):
-    """Mock subprocess.run so no real commands are executed."""
+def mock_subprocess(monkeypatch, tmp_path):
+    """Mock subprocess.run and redirect LEDMATRIX_ROOT to tmp_path.
+
+    Prevents real filesystem damage (e.g. .venv deletion) from uninstall commands.
+    """
     mock = MagicMock(return_value=MagicMock(returncode=0))
     monkeypatch.setattr("matrix_cli.subprocess.run", mock)
+    # Redirect LEDMATRIX_ROOT to tmp_path so uninstall never touches real files
+    monkeypatch.setattr("matrix_cli.LEDMATRIX_ROOT", tmp_path)
     return mock
 
 
 @pytest.fixture
-def mock_filesystem(monkeypatch, tmp_path):
-    """Mock LEDMATRIX_ROOT and filesystem paths to use tmp_path."""
-    monkeypatch.setattr("matrix_cli.LEDMATRIX_ROOT", tmp_path)
-    # Create expected directory structure
-    (tmp_path / "config").mkdir()
-    (tmp_path / "plugins").mkdir()
-    (tmp_path / ".venv").mkdir()
+def mock_filesystem(tmp_path):
+    """Create expected directory structure in tmp_path for uninstall tests.
+
+    LEDMATRIX_ROOT is already redirected by mock_subprocess.
+    """
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "plugins").mkdir(exist_ok=True)
+    (tmp_path / ".venv").mkdir(exist_ok=True)
     return tmp_path
 
 
@@ -107,7 +113,7 @@ class TestUninstallServices:
         ]
         assert len(disable_calls) >= 1
 
-    def test_daemon_reload_called(self, mock_subprocess):
+    def test_daemon_reload_called(self, mock_subprocess, mock_filesystem):
         """Uninstall calls daemon-reload after removing unit files."""
         # Mock the unit files as existing + mock filesystem ops
         with patch.object(Path, "exists", return_value=True), \
@@ -130,7 +136,7 @@ class TestUninstallServices:
 class TestUninstallUnitFiles:
     """Remove systemd unit files."""
 
-    def test_removes_unit_files_when_present(self, mock_subprocess):
+    def test_removes_unit_files_when_present(self, mock_subprocess, mock_filesystem):
         """When unit files exist, they are removed."""
         with patch.object(Path, "exists", return_value=True), \
              patch.object(Path, "is_symlink", return_value=False), \
@@ -172,7 +178,7 @@ class TestUninstallSudoers:
 class TestUninstallSymlink:
     """Remove /usr/local/bin/matrix symlink."""
 
-    def test_removes_matrix_symlink_when_present(self, mock_subprocess):
+    def test_removes_matrix_symlink_when_present(self, mock_subprocess, mock_filesystem):
         """When symlink exists, it is removed."""
         with patch.object(Path, "exists", return_value=True), \
              patch.object(Path, "is_symlink", return_value=True), \
