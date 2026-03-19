@@ -25,6 +25,13 @@ fi
 MAJOR=$(echo "$CURRENT" | cut -d. -f1)
 MINOR=$(echo "$CURRENT" | cut -d. -f2)
 PATCH=$(echo "$CURRENT" | cut -d. -f3)
+
+# Validate that PATCH is a plain non-negative integer (no pre-release/build suffixes)
+if ! echo "$PATCH" | grep -qE '^[0-9]+$'; then
+    echo "[pre-push] Version patch '$PATCH' is not a plain integer (pre-release/build suffix?). Skipping version bump." >&2
+    exit 0
+fi
+
 NEW_PATCH=$((PATCH + 1))
 NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
 
@@ -46,10 +53,12 @@ git add "$MANIFEST"
 git commit -m "chore: bump version to $NEW_VERSION [skip ci]" --no-verify
 
 # Create a git tag unless SKIP_TAG is set
+# NOTE: local tags are NOT pushed automatically; run `git push origin v$NEW_VERSION`
+# (or set push.followTags=true) to publish the tag alongside the branch.
 if [ -z "$SKIP_TAG" ]; then
     TAG="v$NEW_VERSION"
     git tag "$TAG"
-    echo "[pre-push] Created tag $TAG"
+    echo "[pre-push] Created local tag $TAG (push it explicitly with: git push origin $TAG)"
 else
     echo "[pre-push] SKIP_TAG set — skipping tag creation."
 fi

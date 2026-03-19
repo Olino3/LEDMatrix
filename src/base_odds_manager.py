@@ -85,7 +85,7 @@ class BaseOddsManager:
             self.logger.warning(f"Failed to load BaseOddsManager configuration: {e}")
 
     def get_odds(
-        self, sport: str | None, league: str | None, event_id: str, update_interval_seconds: int = None
+        self, sport: str | None, league: str | None, event_id: str, update_interval_seconds: int | None = None
     ) -> Optional[Dict[str, Any]]:
         """
         Fetch odds data for a specific game.

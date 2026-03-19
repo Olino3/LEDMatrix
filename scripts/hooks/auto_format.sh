@@ -9,7 +9,16 @@ if [[ ! "$file" =~ \.py$ ]]; then
   exit 0
 fi
 
-cd /var/home/olino3/git/LEDMatrix
+# Resolve the repo root dynamically from the file path or git
+REPO_ROOT=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null) \
+  || REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ -z "$REPO_ROOT" ]; then
+  echo "[auto_format] Could not determine repo root — skipping format." >&2
+  exit 0
+fi
+
+cd "$REPO_ROOT"
 uv run ruff format --quiet "$file" 2>/dev/null
 uv run ruff check --fix --quiet "$file" 2>/dev/null
 exit 0
