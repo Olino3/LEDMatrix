@@ -9,7 +9,17 @@ from starlette.responses import RedirectResponse
 
 from src.api.dependencies import init_services, shutdown_services
 from src.api.middleware import register_middleware
-from src.api.routers import config_router, streams_router, system_router
+from src.api.routers import (
+    assets_router,
+    config_router,
+    fonts_router,
+    plugins_router,
+    starlark_router,
+    store_router,
+    streams_router,
+    system_router,
+    wifi_router,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 WEB_INTERFACE_DIR = PROJECT_ROOT / "web_interface"
@@ -39,8 +49,14 @@ def create_app() -> FastAPI:
 
     # Include API routers under /api/v3 prefix
     app.include_router(config_router, prefix="/api/v3")
-    app.include_router(streams_router, prefix="/api/v3")
     app.include_router(system_router, prefix="/api/v3")
+    app.include_router(plugins_router, prefix="/api/v3")
+    app.include_router(store_router, prefix="/api/v3")
+    app.include_router(fonts_router, prefix="/api/v3")
+    app.include_router(wifi_router, prefix="/api/v3")
+    app.include_router(assets_router, prefix="/api/v3")
+    app.include_router(starlark_router, prefix="/api/v3")
+    app.include_router(streams_router, prefix="/api/v3")
 
     # Mount static files from web_interface (kept during Phase 2-3 transition)
     static_dir = WEB_INTERFACE_DIR / "static"
