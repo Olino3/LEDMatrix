@@ -428,7 +428,7 @@ sudo systemctl cat ledmatrix-web | grep User
 3. **Check dependencies installed:**
    ```bash
    if [ -f plugins/plugin-id/requirements.txt ]; then
-     pip3 install --break-system-packages -r plugins/plugin-id/requirements.txt
+     uv pip install -r plugins/plugin-id/requirements.txt
    fi
    ```
 

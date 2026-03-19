@@ -18,6 +18,7 @@ from typing import Any, Dict, Optional, Tuple, Type
 from src.common.permission_utils import ensure_file_permissions, get_plugin_file_mode
 from src.exceptions import PluginError
 from src.logging_config import get_logger
+from src.plugin_system.dep_installer import install_plugin_dependencies
 
 
 class PluginLoader:
@@ -120,7 +121,7 @@ class PluginLoader:
 
     def install_dependencies(self, plugin_dir: Path, plugin_id: str, timeout: int = 300) -> bool:
         """
-        Install plugin dependencies from requirements.txt.
+        Install plugin dependencies from requirements.txt via uv (or pip fallback).
 
         Args:
             plugin_dir: Plugin directory path
@@ -140,50 +141,15 @@ class PluginLoader:
             self.logger.debug("Dependencies already installed for %s", plugin_id)
             return True
 
-        try:
-            self.logger.info("Installing dependencies for plugin %s...", plugin_id)
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "--break-system-packages", "-r", str(requirements_file)],
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                check=False,
-            )
+        success = install_plugin_dependencies(
+            requirements_file, plugin_id=plugin_id, timeout=timeout
+        )
 
-            if result.returncode == 0:
-                # Mark as installed
-                marker_path.touch()
-                # Set proper file permissions after creating marker
-                ensure_file_permissions(marker_path, get_plugin_file_mode())
-                self.logger.info("Dependencies installed successfully for %s", plugin_id)
-                return True
-            else:
-                self.logger.warning(
-                    "Dependency installation returned non-zero exit code for %s: %s", plugin_id, result.stderr
-                )
-                return False
-        except subprocess.TimeoutExpired:
-            self.logger.error("Dependency installation timed out for %s", plugin_id)
-            return False
-        except FileNotFoundError:
-            self.logger.warning("pip not found. Skipping dependency installation for %s", plugin_id)
-            return True
-        except (BrokenPipeError, OSError) as e:
-            # Handle broken pipe errors (errno 32) which can occur during pip downloads
-            # Often caused by network interruptions or output buffer issues
-            if isinstance(e, OSError) and e.errno == 32:
-                self.logger.error(
-                    "Broken pipe error during dependency installation for %s. "
-                    "This usually indicates a network interruption or pip output buffer issue. "
-                    "Try installing again or check your network connection.",
-                    plugin_id,
-                )
-            else:
-                self.logger.error("OS error during dependency installation for %s: %s", plugin_id, e)
-            return False
-        except Exception as e:
-            self.logger.error("Unexpected error installing dependencies for %s: %s", plugin_id, e, exc_info=True)
-            return False
+        if success:
+            marker_path.touch()
+            ensure_file_permissions(marker_path, get_plugin_file_mode())
+
+        return success
 
     @staticmethod
     def _iter_plugin_bare_modules(plugin_dir: Path, before_keys: set) -> list:

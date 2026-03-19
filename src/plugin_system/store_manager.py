@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from src.common.permission_utils import sudo_remove_directory
+from src.plugin_system.dep_installer import install_plugin_dependencies
 
 try:
     from jsonschema import Draft7Validator, ValidationError
@@ -1509,7 +1510,7 @@ class PluginStoreManager:
 
     def _install_dependencies(self, plugin_path: Path) -> bool:
         """
-        Install Python dependencies from requirements.txt.
+        Install Python dependencies from requirements.txt via uv (or pip fallback).
 
         Args:
             plugin_path: Path to plugin directory
@@ -1523,40 +1524,9 @@ class PluginStoreManager:
             self.logger.debug(f"No requirements.txt found in {plugin_path.name}")
             return True
 
-        try:
-            self.logger.info(f"Installing dependencies for {plugin_path.name}")
-            subprocess.run(
-                ["pip3", "install", "--break-system-packages", "-r", str(requirements_file)],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-            self.logger.info(f"Dependencies installed successfully for {plugin_path.name}")
-            return True
-
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Error installing dependencies: {e.stderr}")
-            return False
-        except subprocess.TimeoutExpired:
-            self.logger.error("Dependency installation timed out")
-            return False
-        except (BrokenPipeError, OSError) as e:
-            # Handle broken pipe errors (errno 32) which can occur during pip downloads
-            # Often caused by network interruptions or output buffer issues
-            if isinstance(e, OSError) and e.errno == 32:
-                self.logger.error(
-                    f"Broken pipe error during dependency installation for {plugin_path.name}. "
-                    f"This usually indicates a network interruption or pip output buffer issue. "
-                    f"Try installing again or check your network connection."
-                )
-            else:
-                self.logger.error(f"OS error during dependency installation: {e}")
-            return False
-        except Exception as e:
-            # Catch any other unexpected errors
-            self.logger.error(f"Unexpected error installing dependencies for {plugin_path.name}: {e}", exc_info=True)
-            return False
+        return install_plugin_dependencies(
+            requirements_file, plugin_id=plugin_path.name
+        )
 
     def _get_local_git_info(self, plugin_path: Path) -> Optional[Dict[str, str]]:
         """Return local git branch, commit hash, and commit date if the plugin is a git checkout."""

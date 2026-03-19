@@ -9,7 +9,6 @@ API Version: 1.0.0
 
 import json
 import logging
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -186,63 +185,6 @@ class PluginManager:
                 marker_path.unlink()
         except (OSError, PermissionError) as e:
             self.logger.warning("Could not remove dependency marker for %s: %s", plugin_id, e)
-
-    def _install_plugin_dependencies(self, requirements_file: Path) -> bool:
-        """
-        Install plugin dependencies from requirements.txt.
-
-        Args:
-            requirements_file: Path to requirements.txt
-
-        Returns:
-            True if installation succeeded or not needed, False on error
-        """
-        try:
-            self.logger.info("Installing dependencies from %s", requirements_file)
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--break-system-packages",
-                    "--no-cache-dir",
-                    "-r",
-                    str(requirements_file),
-                ],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                self.logger.info("Dependencies installed successfully")
-                return True
-            else:
-                self.logger.warning("Dependency installation returned non-zero exit code: %s", result.stderr)
-                return False
-        except subprocess.TimeoutExpired:
-            self.logger.error("Dependency installation timed out")
-            return False
-        except FileNotFoundError as e:
-            self.logger.warning("Command not found: %s. Skipping dependency installation", e)
-            return True
-        except (BrokenPipeError, OSError) as e:
-            # Handle broken pipe errors (errno 32) which can occur during pip downloads
-            # Often caused by network interruptions or output buffer issues
-            if isinstance(e, OSError) and e.errno == 32:
-                self.logger.error(
-                    "Broken pipe error during dependency installation. "
-                    "This usually indicates a network interruption or pip output buffer issue. "
-                    "Try installing again or check your network connection."
-                )
-            else:
-                self.logger.error("OS error during dependency installation: %s", e)
-            return False
-        except Exception as e:
-            self.logger.error("Unexpected error installing dependencies: %s", e, exc_info=True)
-            return True
 
     def load_plugin(self, plugin_id: str) -> bool:
         """
