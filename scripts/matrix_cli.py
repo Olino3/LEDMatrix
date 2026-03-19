@@ -357,6 +357,75 @@ def setup(extras: tuple) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Hardware (rgbmatrix C-extension) helper
+# ---------------------------------------------------------------------------
+
+_RGBMATRIX_APT_DEPS = ["python3-dev", "gcc", "make"]
+
+_RGBMATRIX_PIP_URL = (
+    "git+https://github.com/hzeller/rpi-rgb-led-matrix@master"
+    "#subdirectory=bindings/python"
+)
+
+
+def _install_rgbmatrix_hardware() -> None:
+    """Build and install the rgbmatrix C-extension from source."""
+    arch = platform.machine()
+    if not (arch.startswith("aarch64") or arch.startswith("arm")):
+        console.print(
+            f"[red]--hardware requires an ARM platform (detected: {arch})[/red]\n"
+            "The rgbmatrix C-extension can only be built on Raspberry Pi / ARM boards."
+        )
+        sys.exit(1)
+
+    # Check required apt packages
+    missing: list[str] = []
+    for pkg in _RGBMATRIX_APT_DEPS:
+        result = subprocess.run(
+            ["dpkg", "-l", pkg], capture_output=True, check=False,
+        )
+        if result.returncode != 0:
+            missing.append(pkg)
+
+    if missing:
+        console.print(
+            f"[red]Missing build dependencies: {', '.join(missing)}[/red]\n"
+            f"Install them with:  [bold]sudo apt install {' '.join(missing)}[/bold]"
+        )
+        sys.exit(1)
+
+    # Build rgbmatrix via uv pip
+    uv = shutil.which("uv")
+    if not uv:
+        console.print("[red]'uv' not found. Install it:[/red]")
+        console.print("  curl -LsSf https://astral.sh/uv/install.sh | sh")
+        sys.exit(1)
+
+    console.print("  Building rgbmatrix C-extension (this may take a few minutes)...")
+    with console.status("[bold green]Compiling rgbmatrix...", spinner="dots"):
+        result = subprocess.run(
+            [uv, "pip", "install", "--project", str(LEDMATRIX_ROOT), _RGBMATRIX_PIP_URL],
+            capture_output=True, text=True,
+        )
+
+    if result.returncode != 0:
+        console.print("[red]rgbmatrix build failed![/red]")
+        if result.stderr:
+            console.print(f"[dim]{result.stderr[:500]}[/dim]")
+        console.print(
+            "\nTroubleshooting:\n"
+            "  1. Ensure build tools are installed: sudo apt install python3-dev gcc make\n"
+            "  2. Check you have enough disk space and memory\n"
+            "  3. Try running manually:\n"
+            f"     uv pip install --project {LEDMATRIX_ROOT} {_RGBMATRIX_PIP_URL}"
+        )
+        sys.exit(result.returncode)
+
+    console.print("[green]✓ rgbmatrix C-extension installed[/green]")
+    console.print("  Run [bold]matrix doctor[/bold] to verify the installation.")
+
+
+# ---------------------------------------------------------------------------
 # matrix install
 # ---------------------------------------------------------------------------
 
@@ -366,12 +435,13 @@ def setup(extras: tuple) -> None:
 @click.option("--permissions", is_flag=True, help="Set up cache directory, file permissions, and sudoers rules (Pi only).")
 @click.option("--services", "extra_services", is_flag=True, help="Install web interface and WiFi monitor services (Pi only).")
 @click.option("--prerequisites", is_flag=True, help="Install required apt packages (Pi only).")
+@click.option("--hardware", is_flag=True, help="Install rgbmatrix C-extension (Pi only).")
 def install(no_services: bool, emulator: bool, permissions: bool,
-            extra_services: bool, prerequisites: bool) -> None:
+            extra_services: bool, prerequisites: bool, hardware: bool) -> None:
     """Full installation: sync deps and optionally install systemd services.
 
-    Pi-specific flags (--permissions, --services, --prerequisites) are
-    no-ops on non-Pi platforms.
+    Pi-specific flags (--permissions, --services, --prerequisites, --hardware)
+    are no-ops on non-Pi platforms.
     """
     console.print(Rule("[green]install[/green]"))
 
@@ -460,6 +530,10 @@ def install(no_services: bool, emulator: bool, permissions: bool,
                     console.print(f"[yellow]\u26a0 {label} installation failed (exit {rc})[/yellow]")
         else:
             console.print("[dim]Skipping extra services — not a Raspberry Pi[/dim]")
+
+    # Step 6: Hardware — build rgbmatrix C-extension (ARM only)
+    if hardware:
+        _install_rgbmatrix_hardware()
 
     console.print(Panel("[green]Installation complete![/green]\n\nRun [bold]matrix doctor[/bold] to verify.", border_style="green"))
 
@@ -1146,6 +1220,356 @@ def plugin_store(query: Optional[str]) -> None:
         console.print(f"  [dim]{len(plugins)} result(s) for \"{query}\"[/dim]\n")
     else:
         console.print(f"  [dim]{len(plugins)} plugins in registry[/dim]\n")
+
+
+# ---------------------------------------------------------------------------
+# matrix diagnose
+# ---------------------------------------------------------------------------
+
+@cli.group()
+def diagnose() -> None:
+    """Run diagnostic checks on LEDMatrix components."""
+    pass
+
+
+# -- diagnose helpers -------------------------------------------------------
+
+class _DiagResult:
+    """Accumulator for diagnostic check results."""
+
+    def __init__(self) -> None:
+        self.rows: list[tuple[str, str, str]] = []
+        self.passed = 0
+        self.failed = 0
+        self.warnings = 0
+
+    def ok(self, name: str, detail: str = "") -> None:
+        self.rows.append((name, "[green]✓ PASS[/green]", detail))
+        self.passed += 1
+
+    def warn(self, name: str, detail: str = "") -> None:
+        self.rows.append((name, "[yellow]⚠ WARN[/yellow]", detail))
+        self.warnings += 1
+
+    def fail(self, name: str, detail: str = "") -> None:
+        self.rows.append((name, "[red]✗ FAIL[/red]", detail))
+        self.failed += 1
+
+    def render(self, title: str) -> None:
+        """Print a Rich table with results and a summary line."""
+        table = Table(title=title, show_header=True, header_style="bold")
+        table.add_column("Check", style="bold")
+        table.add_column("Status", justify="center")
+        table.add_column("Detail", style="dim")
+        for name, status, detail in self.rows:
+            table.add_row(name, status, detail)
+        console.print(table)
+        summary_parts = [
+            f"[green]{self.passed} passed[/green]",
+            f"[red]{self.failed} failed[/red]",
+            f"[yellow]{self.warnings} warning(s)[/yellow]",
+        ]
+        console.print("  " + "  |  ".join(summary_parts) + "\n")
+
+
+def _check_port_open(host: str, port: int, timeout: float = 2.0) -> bool:
+    """Return True if a TCP connection to *host*:*port* succeeds."""
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def _check_url(url: str, timeout: float = 3.0) -> Optional[int]:
+    """Return the HTTP status code or None on failure."""
+    try:
+        resp = requests.get(url, timeout=timeout)
+        return resp.status_code
+    except Exception:
+        return None
+
+
+# -- diagnose web -----------------------------------------------------------
+
+@diagnose.command("web")
+def diagnose_web() -> None:
+    """Check web interface health: process, port, API, static assets."""
+    console.print(Rule("[green]diagnose web[/green]"))
+    r = _DiagResult()
+
+    # 1. Flask process — look for a process listening on port 5000
+    if _check_port_open("127.0.0.1", 5000):
+        r.ok("Port 5000 reachable", "Something is listening on localhost:5000")
+    else:
+        r.fail("Port 5000 reachable", "Nothing listening on localhost:5000")
+
+    # 2. API status endpoint
+    status_code = _check_url(f"{API_BASE}/status")
+    if status_code is not None and 200 <= status_code < 400:
+        r.ok("/api/v3/status responds", f"HTTP {status_code}")
+    elif status_code is not None:
+        r.warn("/api/v3/status responds", f"HTTP {status_code}")
+    else:
+        r.fail("/api/v3/status responds", "No response (is the web interface running?)")
+
+    # 3. Plugin health endpoint
+    health_code = _check_url(f"{API_BASE}/plugins/health")
+    if health_code is not None and 200 <= health_code < 400:
+        r.ok("/api/v3/plugins/health", f"HTTP {health_code}")
+    elif health_code is not None:
+        r.warn("/api/v3/plugins/health", f"HTTP {health_code}")
+    else:
+        r.fail("/api/v3/plugins/health", "No response")
+
+    # 4. Required web interface files
+    required_files = [
+        "web_interface/app.py",
+        "web_interface/start.py",
+        "web_interface/blueprints/api_v3.py",
+        "web_interface/blueprints/pages_v3.py",
+    ]
+    for rel in required_files:
+        fp = LEDMATRIX_ROOT / rel
+        if fp.exists():
+            r.ok(f"File: {rel}")
+        else:
+            r.fail(f"File: {rel}", "MISSING")
+
+    # 5. Static assets directory
+    static_dir = LEDMATRIX_ROOT / "web_interface" / "static"
+    if static_dir.is_dir():
+        asset_count = sum(1 for _ in static_dir.rglob("*") if _.is_file())
+        r.ok("Static assets directory", f"{asset_count} file(s)")
+    else:
+        r.warn("Static assets directory", "web_interface/static/ not found")
+
+    # 6. Templates directory
+    templates_dir = LEDMATRIX_ROOT / "web_interface" / "templates"
+    if templates_dir.is_dir():
+        tpl_count = sum(1 for _ in templates_dir.rglob("*.html"))
+        r.ok("Templates directory", f"{tpl_count} template(s)")
+    else:
+        r.warn("Templates directory", "web_interface/templates/ not found")
+
+    # 7. Config — web_display_autostart
+    cfg = _read_config()
+    autostart = cfg.get("web_display_autostart", None)
+    if autostart is True:
+        r.ok("web_display_autostart", "true")
+    elif autostart is False:
+        r.warn("web_display_autostart", "false — web UI will not auto-start")
+    else:
+        r.warn("web_display_autostart", "not set in config.json")
+
+    # 8. systemd service (Pi only)
+    svc_file = Path("/etc/systemd/system/ledmatrix-web.service")
+    if svc_file.exists():
+        result = subprocess.run(
+            ["systemctl", "is-active", "ledmatrix-web"],
+            capture_output=True, text=True,
+        )
+        status = result.stdout.strip()
+        if status == "active":
+            r.ok("ledmatrix-web.service", "active")
+        else:
+            r.warn("ledmatrix-web.service", f"status: {status}")
+    else:
+        r.warn("ledmatrix-web.service", "Not installed (OK on dev machine)")
+
+    r.render("Web Interface Diagnostics")
+
+    if r.failed > 0:
+        console.print("[dim]Hint: start the web interface with[/dim]  [bold]matrix web[/bold]\n")
+
+
+# -- diagnose network -------------------------------------------------------
+
+@diagnose.command("network")
+def diagnose_network() -> None:
+    """Check network connectivity: internet, DNS, WiFi signal (Pi only)."""
+    console.print(Rule("[green]diagnose network[/green]"))
+    r = _DiagResult()
+
+    # 1. Internet connectivity — ping 8.8.8.8
+    ping_result = subprocess.run(
+        ["ping", "-c", "1", "-W", "3", "8.8.8.8"],
+        capture_output=True, text=True,
+    )
+    if ping_result.returncode == 0:
+        r.ok("Internet (ping 8.8.8.8)", "Reachable")
+    else:
+        r.fail("Internet (ping 8.8.8.8)", "Unreachable")
+
+    # 2. DNS resolution
+    import socket as _socket
+    try:
+        addr = _socket.getaddrinfo("pypi.org", 443, proto=_socket.IPPROTO_TCP)
+        if addr:
+            r.ok("DNS resolution (pypi.org)", addr[0][4][0])
+        else:
+            r.fail("DNS resolution (pypi.org)", "No results")
+    except _socket.gaierror as exc:
+        r.fail("DNS resolution (pypi.org)", str(exc))
+
+    # 3. Captive portal detection — expect 204 from connectivity check URLs
+    portal_urls = [
+        ("http://connectivitycheck.gstatic.com/generate_204", 204),
+        ("http://detectportal.firefox.com/canonical.html", 200),
+    ]
+    for url, expected in portal_urls:
+        code = _check_url(url, timeout=5.0)
+        if code == expected:
+            r.ok(f"No captive portal ({url.split('/')[2]})")
+        elif code is not None:
+            r.warn(f"Possible captive portal ({url.split('/')[2]})", f"HTTP {code} (expected {expected})")
+        else:
+            r.warn(f"Captive portal check ({url.split('/')[2]})", "No response")
+
+    # 4. WiFi signal strength (Pi only)
+    if _is_raspberry_pi():
+        iwconfig_result = subprocess.run(
+            ["iwconfig", "wlan0"], capture_output=True, text=True,
+        )
+        if iwconfig_result.returncode == 0:
+            output = iwconfig_result.stdout
+            import re
+            essid_match = re.search(r'ESSID:"([^"]*)"', output)
+            signal_match = re.search(r"Signal level[=:](-?\d+)", output)
+            quality_match = re.search(r"Link Quality[=:](\S+)", output)
+
+            if essid_match and essid_match.group(1):
+                r.ok("WiFi SSID", essid_match.group(1))
+            else:
+                r.warn("WiFi SSID", "Not connected or ESSID not found")
+
+            if signal_match:
+                level = int(signal_match.group(1))
+                if level > -50:
+                    r.ok("WiFi signal", f"{level} dBm (excellent)")
+                elif level > -70:
+                    r.ok("WiFi signal", f"{level} dBm (good)")
+                else:
+                    r.warn("WiFi signal", f"{level} dBm (weak)")
+            elif quality_match:
+                r.ok("WiFi link quality", quality_match.group(1))
+        else:
+            r.warn("WiFi diagnostics", "iwconfig failed (no wlan0 or iwconfig not installed)")
+
+        # 5. WiFi monitor service (Pi only)
+        svc_file = Path("/etc/systemd/system/ledmatrix-wifi-monitor.service")
+        if svc_file.exists():
+            res = subprocess.run(
+                ["systemctl", "is-active", "ledmatrix-wifi-monitor"],
+                capture_output=True, text=True,
+            )
+            status = res.stdout.strip()
+            if status == "active":
+                r.ok("ledmatrix-wifi-monitor.service", "active")
+            else:
+                r.warn("ledmatrix-wifi-monitor.service", f"status: {status}")
+        else:
+            r.warn("ledmatrix-wifi-monitor.service", "Not installed")
+    else:
+        r.warn("WiFi diagnostics", "Skipped (not a Raspberry Pi)")
+
+    r.render("Network Diagnostics")
+
+
+# -- diagnose plugins -------------------------------------------------------
+
+@diagnose.command("plugins")
+def diagnose_plugins() -> None:
+    """Check plugin health: permissions, deps markers, manifests."""
+    console.print(Rule("[green]diagnose plugins[/green]"))
+    r = _DiagResult()
+
+    # 1. Plugin directory existence & permissions
+    if PLUGINS_DIR.exists():
+        r.ok("plugins/ directory", str(PLUGINS_DIR))
+        if os.access(PLUGINS_DIR, os.R_OK):
+            r.ok("plugins/ readable")
+        else:
+            r.fail("plugins/ readable", "No read permission")
+        if os.access(PLUGINS_DIR, os.W_OK):
+            r.ok("plugins/ writable")
+        else:
+            r.warn("plugins/ writable", "No write permission (plugin install may fail)")
+    else:
+        r.fail("plugins/ directory", f"Not found at {PLUGINS_DIR}")
+        r.render("Plugin Diagnostics")
+        return
+
+    # 2. plugin-repos directory
+    plugin_repos_dir = LEDMATRIX_ROOT / "plugin-repos"
+    if plugin_repos_dir.exists():
+        r.ok("plugin-repos/ directory", str(plugin_repos_dir))
+    else:
+        r.warn("plugin-repos/ directory", "Not found (OK if not doing plugin development)")
+
+    # 3. Scan each plugin
+    plugin_dirs = sorted(
+        p for p in PLUGINS_DIR.iterdir()
+        if p.is_dir() or p.is_symlink()
+    )
+
+    if not plugin_dirs:
+        r.warn("Installed plugins", "No plugins found in plugins/")
+        r.render("Plugin Diagnostics")
+        return
+
+    for pdir in plugin_dirs:
+        pid = pdir.name
+
+        # 3a. Manifest
+        manifest = _read_manifest(pdir)
+        if manifest is None:
+            r.fail(f"[{pid}] manifest.json", "Missing or invalid JSON")
+            continue
+
+        # Validate required manifest fields
+        required_fields = ["id", "name", "version"]
+        missing = [f for f in required_fields if f not in manifest]
+        if missing:
+            r.warn(f"[{pid}] manifest.json", f"Missing fields: {', '.join(missing)}")
+        else:
+            r.ok(f"[{pid}] manifest.json", f"v{manifest.get('version', '?')}")
+
+        # 3b. config_schema.json
+        schema_file = pdir / "config_schema.json"
+        if schema_file.exists():
+            try:
+                json.loads(schema_file.read_text())
+                r.ok(f"[{pid}] config_schema.json")
+            except json.JSONDecodeError:
+                r.fail(f"[{pid}] config_schema.json", "Invalid JSON")
+        else:
+            r.warn(f"[{pid}] config_schema.json", "Missing")
+
+        # 3c. manager.py (entry point)
+        manager_file = pdir / "manager.py"
+        if manager_file.exists():
+            r.ok(f"[{pid}] manager.py")
+        else:
+            r.fail(f"[{pid}] manager.py", "Missing entry point")
+
+        # 3d. Dependencies installed marker
+        deps_marker = pdir / ".dependencies_installed"
+        if deps_marker.exists():
+            r.ok(f"[{pid}] dependencies installed")
+        else:
+            req_file = pdir / "requirements.txt"
+            if req_file.exists() and req_file.read_text().strip():
+                r.warn(f"[{pid}] dependencies installed", "Marker missing — run: matrix plugin install")
+            else:
+                r.ok(f"[{pid}] dependencies", "No requirements")
+
+        # 3e. Directory permissions
+        if not os.access(pdir, os.R_OK):
+            r.fail(f"[{pid}] permissions", "Not readable")
+
+    r.render("Plugin Diagnostics")
 
 
 # ---------------------------------------------------------------------------
