@@ -9,13 +9,13 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 
 from src.config_manager import ConfigManager
+from src.plugin_system.operation_history import OperationHistory
+from src.plugin_system.operation_queue import PluginOperationQueue
 from src.plugin_system.plugin_manager import PluginManager
-from src.plugin_system.store_manager import PluginStoreManager
 from src.plugin_system.saved_repositories import SavedRepositoriesManager
 from src.plugin_system.schema_manager import SchemaManager
-from src.plugin_system.operation_queue import PluginOperationQueue
 from src.plugin_system.state_manager import PluginStateManager
-from src.plugin_system.operation_history import OperationHistory
+from src.plugin_system.store_manager import PluginStoreManager
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

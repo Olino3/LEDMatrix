@@ -153,11 +153,13 @@ async def get_system_status():
 @router.get("/system/version")
 async def get_system_version():
     """Return version info."""
-    return _success(data={
-        "version": _get_git_version(),
-        "python_version": sys.version,
-        "platform": platform.platform(),
-    })
+    return _success(
+        data={
+            "version": _get_git_version(),
+            "python_version": sys.version,
+            "platform": platform.platform(),
+        }
+    )
 
 
 @router.post("/system/action")
@@ -195,18 +197,24 @@ async def execute_system_action(request: Request):
     rc, stdout, stderr = await _run_cmd(*cmd, timeout=30.0)
     if rc != 0:
         return _error("SYSTEM_ERROR", f"Action '{action}' failed: {stderr}", 500)
-    return _success(message=f"Action {action} completed", data={
-        "returncode": rc,
-        "stdout": stdout,
-        "stderr": stderr,
-    })
+    return _success(
+        message=f"Action {action} completed",
+        data={
+            "returncode": rc,
+            "stdout": stdout,
+            "stderr": stderr,
+        },
+    )
 
 
 async def _handle_git_pull():
     """Run git pull with auto-stash for local changes."""
     # Check for local changes
     rc, stdout, _ = await _run_cmd(
-        "git", "status", "--porcelain", "--untracked-files=no",
+        "git",
+        "status",
+        "--porcelain",
+        "--untracked-files=no",
         timeout=30.0,
     )
     has_changes = bool(stdout.strip()) if rc == 0 else False
@@ -214,8 +222,13 @@ async def _handle_git_pull():
 
     if has_changes:
         rc, _, stderr = await _run_cmd(
-            "git", "stash", "push", "-m", "LEDMatrix auto-stash before update",
-            "--", ":!plugins",
+            "git",
+            "stash",
+            "push",
+            "-m",
+            "LEDMatrix auto-stash before update",
+            "--",
+            ":!plugins",
             timeout=30.0,
         )
         if rc != 0:
@@ -301,7 +314,13 @@ async def get_health(
 async def get_logs():
     """Fetch recent ledmatrix service logs via journalctl."""
     rc, stdout, stderr = await _run_cmd(
-        "sudo", "journalctl", "-u", "ledmatrix.service", "-n", "100", "--no-pager",
+        "sudo",
+        "journalctl",
+        "-u",
+        "ledmatrix.service",
+        "-n",
+        "100",
+        "--no-pager",
         timeout=5.0,
     )
     if rc == -1 and "timed out" in stderr.lower():

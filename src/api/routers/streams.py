@@ -17,8 +17,6 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
 
-from src.api.dependencies import get_config_manager
-
 try:
     import psutil
 except ImportError:  # pragma: no cover
@@ -43,9 +41,7 @@ async def _generate_stats_event() -> dict:
 
     if psutil is not None:
         try:
-            cpu_percent = round(
-                await asyncio.to_thread(psutil.cpu_percent, interval=1), 1
-            )
+            cpu_percent = round(await asyncio.to_thread(psutil.cpu_percent, interval=1), 1)
             mem = await asyncio.to_thread(psutil.virtual_memory)
             memory_used_percent = round(mem.percent, 1)
             disk = await asyncio.to_thread(psutil.disk_usage, "/")
@@ -155,10 +151,7 @@ async def _generate_logs_event() -> dict:
             if text:
                 logs_text = text
         else:
-            logs_text = (
-                f"journalctl failed with return code {proc.returncode}: "
-                f"{stderr.decode().strip()}"
-            )
+            logs_text = f"journalctl failed with return code {proc.returncode}: {stderr.decode().strip()}"
     except FileNotFoundError:
         logs_text = "journalctl not available on this platform"
     except asyncio.TimeoutError:
