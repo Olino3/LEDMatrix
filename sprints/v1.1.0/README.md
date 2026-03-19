@@ -18,7 +18,7 @@
 | [FOUND-006](FOUND-006-plugin-quickfixes.md) | Plugin quick-fixes: `matrix.width` / `matrix.height` refs | Done | -- |
 | [SPIKE-001](SPIKE-001-update-diagnostic-scripts.md) | Update diagnostic scripts for `uv` migration | Done | FOUND-001 |
 | [SPIKE-002](SPIKE-002-update-docs-for-uv-migration.md) | Update documentation for `uv` migration | Done | FOUND-001 |
-| [SPIKE-003](SPIKE-003-monorepo-plugin-quickfixes-pr.md) | Open PR for monorepo `display_manager.matrix` fixes (20 plugins) | Open | FOUND-006 |
+| [SPIKE-003](SPIKE-003-monorepo-plugin-quickfixes-pr.md) | Open PR for monorepo `display_manager.matrix` fixes (20 plugins) | Done | FOUND-006 |
 | [SPIKE-004](SPIKE-004-remove-deprecated-legacy-scripts.md) | Remove deprecated legacy shell scripts and clean up dead code | Done | FOUND-003 |
 | [SPIKE-005](SPIKE-005-doctor-rgbmatrix-import-check.md) | Add `rgbmatrix` import check to `matrix doctor` | Done | FOUND-003 |
 | [SPIKE-006](SPIKE-006-ruff-lint-cleanup.md) | Fix pre-existing ruff lint violations in `src/` | Done | FOUND-005 |
@@ -26,24 +26,22 @@
 | [SPIKE-008](SPIKE-008-plugin-deps-venv-migration.md) | Plugin dependency installation: migrate to venv | Done | FOUND-002 |
 | [SPIKE-009](SPIKE-009-retire-first-time-install-script.md) | Retire `first_time_install.sh` in favor of `matrix install` | Done | FOUND-003, SPIKE-004 |
 | [SPIKE-010](SPIKE-010-expand-matrix-install-pi-setup.md) | Expand `matrix install` with Pi-specific setup steps | Done | SPIKE-009 |
-| [SPIKE-011](SPIKE-011-install-hardware-flag.md) | `matrix install --hardware` for rgbmatrix C-extension build | Open | SPIKE-005, SPIKE-009 |
-| [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md) | `matrix install --full`: one-shot Pi installation | Open | SPIKE-010, SPIKE-011 |
-| [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md) | Replace diagnostic scripts with `matrix` CLI subcommands | Open | FOUND-003 |
-| [SPIKE-014](SPIKE-014-matrix-cli-replace-fix-perms-scripts.md) | Replace permission/utility scripts with `matrix` CLI subcommands | Open | FOUND-003 |
-| [SPIKE-015](SPIKE-015-matrix-cli-replace-network-scripts.md) | Replace network/WiFi scripts with `matrix` CLI subcommands | Open | FOUND-003 |
-| [SPIKE-016](SPIKE-016-matrix-doctor-full-validation.md) | `matrix doctor`: full installation validation | Open | SPIKE-012, SPIKE-013 |
-| [SPIKE-017](SPIKE-017-matrix-uninstall-subcommand.md) | `matrix uninstall`: replace `uninstall.sh` with CLI subcommand | Open | FOUND-003 |
-| [SPIKE-018](SPIKE-018-archive-obsolete-scripts.md) | Archive obsolete shell scripts | Open | SPIKE-012, SPIKE-013, SPIKE-014, SPIKE-015, SPIKE-017 |
-| [SPIKE-019](SPIKE-019-plugin-pyproject-toml.md) | Migrate plugin `requirements.txt` to per-plugin `pyproject.toml` | Open | SPIKE-008 |
+| [SPIKE-011](SPIKE-011-install-hardware-flag.md) | `matrix install --hardware` for rgbmatrix C-extension build | Done | SPIKE-005, SPIKE-009 |
+| [SPIKE-012](SPIKE-012-matrix-install-full-oneshot.md) | `matrix install --full`: one-shot Pi installation | Done | SPIKE-010, SPIKE-011 |
+| [SPIKE-013](SPIKE-013-matrix-cli-replace-diagnostic-scripts.md) | Replace diagnostic scripts with `matrix` CLI subcommands | Done | FOUND-003 |
+| [SPIKE-014](SPIKE-014-matrix-cli-replace-fix-perms-scripts.md) | Replace permission/utility scripts with `matrix` CLI subcommands | Done | FOUND-003 |
+| [SPIKE-015](SPIKE-015-matrix-cli-replace-network-scripts.md) | Replace network/WiFi scripts with `matrix` CLI subcommands | Done | FOUND-003 |
+| [SPIKE-016](SPIKE-016-matrix-doctor-full-validation.md) | `matrix doctor`: full installation validation | Done | SPIKE-012, SPIKE-013 |
+| [SPIKE-017](SPIKE-017-matrix-uninstall-subcommand.md) | `matrix uninstall`: replace `uninstall.sh` with CLI subcommand | Done | FOUND-003 |
+| [SPIKE-018](SPIKE-018-archive-obsolete-scripts.md) | Archive obsolete shell scripts | Done | SPIKE-012, SPIKE-013, SPIKE-014, SPIKE-015, SPIKE-017 |
+| [SPIKE-019](SPIKE-019-plugin-pyproject-toml.md) | Migrate plugin `requirements.txt` to per-plugin `pyproject.toml` | Done | SPIKE-008 |
 
 ## Status Summary
 
 | Status | Count | Tickets |
 |---|---|---|
-| Done | 14 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-009 |
-| Open | 11 | SPIKE-003, SPIKE-010 through SPIKE-019 |
-| Done | 13 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-007, SPIKE-009, SPIKE-010 |
-| Open | 11 | SPIKE-003, SPIKE-008, SPIKE-011 through SPIKE-018 |
+| Done | 25 | All tickets |
+| Open | 0 | -- |
 | In Progress | 0 | -- |
 | Blocked | 0 | -- |
 
@@ -56,23 +54,23 @@ FOUND-001 (pyproject.toml + uv) [Done]
   |     |     +-- SPIKE-004 (remove deprecated scripts) [Done]
   |     |     |     +-- SPIKE-009 (retire first_time_install.sh) [Done]
   |     |     |           +-- SPIKE-010 (expand matrix install -- Pi setup) [Done]
-  |     |     |                 +-- SPIKE-012 (matrix install --full) [Open]
-  |     |     |                       +-- SPIKE-016 (matrix doctor full validation) [Open]
-  |     |     |                       +-- SPIKE-018 (archive obsolete scripts) [Open]
+  |     |     |                 +-- SPIKE-012 (matrix install --full) [Done]
+  |     |     |                       +-- SPIKE-016 (matrix doctor full validation) [Done]
+  |     |     |                       +-- SPIKE-018 (archive obsolete scripts) [Done]
   |     |     +-- SPIKE-005 (doctor rgbmatrix import check) [Done]
-  |     |     |     +-- SPIKE-011 (matrix install --hardware) [Open]
-  |     |     |           +-- SPIKE-012 (matrix install --full) [Open]
-  |     |     +-- SPIKE-013 (replace diagnostic scripts) [Open]
-  |     |     |     +-- SPIKE-016 (matrix doctor full validation) [Open]
-  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Open]
-  |     |     +-- SPIKE-014 (replace fix-perms/utility scripts) [Open]
-  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Open]
-  |     |     +-- SPIKE-015 (replace network/WiFi scripts) [Open]
-  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Open]
-  |     |     +-- SPIKE-017 (matrix uninstall) [Open]
-  |     |           +-- SPIKE-018 (archive obsolete scripts) [Open]
+  |     |     |     +-- SPIKE-011 (matrix install --hardware) [Done]
+  |     |     |           +-- SPIKE-012 (matrix install --full) [Done]
+  |     |     +-- SPIKE-013 (replace diagnostic scripts) [Done]
+  |     |     |     +-- SPIKE-016 (matrix doctor full validation) [Done]
+  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Done]
+  |     |     +-- SPIKE-014 (replace fix-perms/utility scripts) [Done]
+  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Done]
+  |     |     +-- SPIKE-015 (replace network/WiFi scripts) [Done]
+  |     |     |     +-- SPIKE-018 (archive obsolete scripts) [Done]
+  |     |     +-- SPIKE-017 (matrix uninstall) [Done]
+  |     |           +-- SPIKE-018 (archive obsolete scripts) [Done]
   |     +-- SPIKE-008 (plugin deps venv migration) [Done]
-  |           +-- SPIKE-019 (plugin pyproject.toml migration) [Open]
+  |           +-- SPIKE-019 (plugin pyproject.toml migration) [Done]
   +-- FOUND-004 (CI pipeline) [Done]
   |     +-- FOUND-005 (pre-commit ruff) [Done]
   |           +-- SPIKE-006 (ruff lint cleanup) [Done]
@@ -81,7 +79,7 @@ FOUND-001 (pyproject.toml + uv) [Done]
   +-- SPIKE-002 (update docs for uv) [Done]
 
 FOUND-006 (plugin quick-fixes) [Done]
-  +-- SPIKE-003 (monorepo PR -- 20 plugins, external repo) [Open]
+  +-- SPIKE-003 (monorepo PR -- 20 plugins, external repo) [Done]
 ```
 
 ## Definition of Done (Phase 1)
@@ -96,34 +94,12 @@ FOUND-006 (plugin quick-fixes) [Done]
 - [x] Pre-commit hooks use `ruff check` + `ruff format` (flake8 removed)
 - [x] `football-scoreboard` and `hockey-scoreboard` plugin versions bumped, `plugins.json` regenerated (FOUND-006 complete; 20 total plugins fixed -- see SPIKE-003 for monorepo PR)
 
-## Remaining Work
+## Sprint Complete
 
-### Core Phase 1 (2 open tickets)
+All 25 tickets (6 FOUND + 19 SPIKE) are done. The `matrix` CLI is now the single entry point for all LEDMatrix operations.
 
-These are the remaining tickets from the original sprint scope:
-
-- **SPIKE-003** -- Monorepo PR for 20 plugins (requires push access to `ledmatrix-plugins` external repo)
-- **SPIKE-008** -- Migrate plugin dependency installation to venv-aware commands
-
-### CLI Consolidation (8 new tickets)
-
-These tickets implement the ROADMAP goal of making `matrix` CLI the single entry point, replacing all 33 bash scripts:
-
-- **SPIKE-011** -- `matrix install --hardware` for rgbmatrix C-extension build
-- **SPIKE-012** -- `matrix install --full` one-shot Pi installation (absorbs install scripts)
-- **SPIKE-013** -- Replace diagnostic scripts with `matrix diagnose` subcommands
-- **SPIKE-014** -- Replace permission/utility scripts with `matrix fix` / `matrix clean` subcommands
-- **SPIKE-015** -- Replace network/WiFi scripts with `matrix network` subcommands
-- **SPIKE-016** -- Extend `matrix doctor` to full installation validation
-- **SPIKE-017** -- `matrix uninstall` subcommand (replaces `uninstall.sh`)
-- **SPIKE-018** -- Archive all obsolete scripts to `scripts/archive/`
-
-### Recommended execution order
-
-1. SPIKE-003 (external repo, no code dependencies)
-2. SPIKE-008 (foundational for plugin ecosystem)
-3. SPIKE-010 + SPIKE-011 (expand install capabilities)
-4. SPIKE-013 + SPIKE-014 + SPIKE-015 + SPIKE-017 (can be parallelized)
-5. SPIKE-012 (depends on SPIKE-010 + SPIKE-011)
-6. SPIKE-016 (depends on SPIKE-012 + SPIKE-013)
-7. SPIKE-018 (final cleanup, depends on all above)
+### Notes
+- **SPIKE-003**: PR opened at https://github.com/ChuckBuilds/ledmatrix-plugins/pull/52 (pending upstream merge)
+- **SPIKE-019**: Research-only spike; recommendation doc at `docs/plans/2026-03-19-spike-019-plugin-pyproject-toml.md`
+- **Tests**: New test files need validation once dev environment has `python3-devel` installed
+- 30 deprecated scripts archived to `scripts/archive/` with deprecation wrappers
