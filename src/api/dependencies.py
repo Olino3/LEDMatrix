@@ -102,3 +102,7 @@ def get_plugin_state_manager(request: Request) -> PluginStateManager:
 
 def get_operation_history(request: Request) -> OperationHistory:
     return request.app.state.operation_history
+
+
+def get_saved_repositories_manager(request: Request) -> SavedRepositoriesManager:
+    return request.app.state.saved_repositories_manager
