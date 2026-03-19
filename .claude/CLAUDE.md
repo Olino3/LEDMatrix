@@ -2,6 +2,36 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Environment
+
+The host machine is Fedora (immutable/Silverblue). System packages like `python3-devel` cannot be installed directly. Until a container-based dev setup is created (Phase 4), **all commands that need build tools or the venv must run inside the Debian Trixie distrobox.**
+
+### Distrobox quirk: venv rebuilds each session
+
+The `.venv` is **ephemeral** — it disappears when the distrobox container restarts because `uv` links to a container-local Python interpreter. Always chain `uv sync` before any venv command:
+
+```bash
+# CORRECT — chain uv sync with the command in a single distrobox invocation
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && EMULATOR=true .venv/bin/pytest test/ -q --override-ini="addopts=" --ignore=test/plugins'
+
+# WRONG — venv will be gone by the second command
+distrobox enter debian-trixie -- uv sync
+distrobox enter debian-trixie -- .venv/bin/pytest test/  # ❌ .venv/bin/pytest: No such file
+```
+
+The rebuild is fast (~1-2s) because `uv` caches compiled wheels. Always use `--extra test --extra dev --extra emulator` for the full dev environment.
+
+### Distrobox installed packages
+
+The distrobox has these build deps pre-installed:
+`python3-dev`, `libffi-dev`, `build-essential`, `libsdl2-dev`, `libsdl2-image-dev`, `libsdl2-mixer-dev`, `libsdl2-ttf-dev`, `libfreetype6-dev`, `pkg-config`
+
+### When to use distrobox
+
+**Need distrobox:** pytest, mypy, `uv sync`, `uv pip install`, running `scripts/matrix_cli.py` with venv deps, any C compilation
+
+**Do NOT need distrobox:** `git`, `gh`, file reads/writes, `grep`, `ls`, basic shell, `python3 -c "import ast; ..."` (syntax checks)
+
 ## Commands
 
 ### Running the Display
@@ -30,7 +60,7 @@ python3 scripts/render_plugin.py <plugin-id>
 
 ### Running Tests
 ```bash
-# All tests (with coverage)
+# All tests (with coverage) — run inside distrobox
 EMULATOR=true .venv/bin/pytest test/ -q
 
 # Single test file

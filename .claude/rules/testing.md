@@ -27,13 +27,17 @@ Applies to: `test/**/*`
 
 ## Running Tests
 
+The host is Fedora immutable. All test commands must run inside the Debian Trixie distrobox. The `.venv` is **ephemeral** (disappears between distrobox invocations), so always chain `uv sync` before pytest:
+
 ```bash
-# Standard — ignores plugin tests, applies emulator
-EMULATOR=true .venv/bin/pytest test/ -q --override-ini="addopts=" --ignore=test/plugins
+# CORRECT — single distrobox invocation with uv sync chained
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && EMULATOR=true .venv/bin/pytest test/ -q --override-ini="addopts=" --ignore=test/plugins'
 
 # With coverage
-EMULATOR=true .venv/bin/pytest test/ --cov=src --cov-report=term-missing
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && EMULATOR=true .venv/bin/pytest test/ --cov=src --cov-report=term-missing --override-ini="addopts=" --ignore=test/plugins'
 
 # Specific test
-EMULATOR=true .venv/bin/pytest test/test_<module>.py::TestClass::test_method -v
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && EMULATOR=true .venv/bin/pytest test/test_<module>.py::TestClass::test_method -v --override-ini="addopts="'
 ```
+
+**IMPORTANT:** Do NOT run `uv sync` and `pytest` in separate `distrobox enter` calls — the venv will be gone by the second call. The rebuild is fast (~1-2s) because uv caches wheels.

@@ -2,6 +2,22 @@
 
 Applies to: `scripts/matrix_cli.py`, `test/test_matrix_cli*.py`
 
+## Dev Environment
+
+The host is Fedora immutable. CLI verification and tests require the distrobox. The `.venv` is ephemeral — always chain `uv sync` before any venv command:
+```bash
+# Verify CLI
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && .venv/bin/python scripts/matrix_cli.py --help'
+
+# Run CLI tests
+distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator && EMULATOR=true .venv/bin/pytest test/test_matrix_cli*.py -q --override-ini="addopts="'
+```
+
+**Syntax-only checks work on the host** (no distrobox needed):
+```bash
+python3 -c "import ast; ast.parse(open('scripts/matrix_cli.py').read()); print('OK')"
+```
+
 ## matrix_cli.py Structure
 
 The CLI is a single-file Click application at `scripts/matrix_cli.py` (~2800 lines). Code is organized in sections:
