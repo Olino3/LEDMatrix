@@ -13,13 +13,11 @@ from src.api.dependencies import (
     get_plugin_state_manager,
     get_plugin_store_manager,
     get_saved_repositories_manager,
-    get_schema_manager,
 )
 from src.logging_config import get_logger
 from src.plugin_system.operation_queue import PluginOperationQueue
 from src.plugin_system.plugin_manager import PluginManager
 from src.plugin_system.saved_repositories import SavedRepositoriesManager
-from src.plugin_system.schema_manager import SchemaManager
 from src.plugin_system.state_manager import PluginStateManager
 from src.plugin_system.store_manager import PluginStoreManager
 
@@ -83,34 +81,38 @@ async def get_github_auth_status(
     try:
         token = store_manager.github_token
         if not token:
-            return _success(data={
-                "token_status": "none",
-                "authenticated": False,
-                "rate_limit": 60,
-                "message": "No GitHub token configured",
-                "error": None,
-            })
+            return _success(
+                data={
+                    "token_status": "none",
+                    "authenticated": False,
+                    "rate_limit": 60,
+                    "message": "No GitHub token configured",
+                    "error": None,
+                }
+            )
 
         is_valid, error_message = store_manager._validate_github_token(token)
         if is_valid:
-            return _success(data={
-                "token_status": "valid",
-                "authenticated": True,
-                "rate_limit": 5000,
-                "message": "GitHub API authenticated",
-                "error": None,
-            })
-        return _success(data={
-            "token_status": "invalid",
-            "authenticated": False,
-            "rate_limit": 60,
-            "message": (
-                f"GitHub token is invalid: {error_message}"
-                if error_message
-                else "GitHub token is invalid"
-            ),
-            "error": error_message,
-        })
+            return _success(
+                data={
+                    "token_status": "valid",
+                    "authenticated": True,
+                    "rate_limit": 5000,
+                    "message": "GitHub API authenticated",
+                    "error": None,
+                }
+            )
+        return _success(
+            data={
+                "token_status": "invalid",
+                "authenticated": False,
+                "rate_limit": 60,
+                "message": (
+                    f"GitHub token is invalid: {error_message}" if error_message else "GitHub token is invalid"
+                ),
+                "error": error_message,
+            }
+        )
     except Exception as exc:
         return _error("GITHUB_STATUS_FAILED", str(exc), 500)
 
@@ -129,15 +131,11 @@ async def refresh_store(
     try:
         registry = store_manager.fetch_registry(force_refresh=True)
         plugin_count = len(registry.get("plugins", []))
-        fetch_commit_info = body.get(
-            "fetch_commit_info", body.get("fetch_latest_versions", False)
-        )
+        fetch_commit_info = body.get("fetch_commit_info", body.get("fetch_latest_versions", False))
         message = "Plugin store refreshed"
         if fetch_commit_info:
             message += " (with refreshed commit metadata from GitHub)"
-        return _success(
-            data={"plugin_count": plugin_count}, message=message
-        )
+        return _success(data={"plugin_count": plugin_count}, message=message)
     except Exception as exc:
         return _error("STORE_REFRESH_FAILED", str(exc), 500)
 
@@ -207,9 +205,7 @@ async def install_from_url(
         if success:
             if plugin_id:
                 state_manager.set_plugin_installed(plugin_id)
-            return _success(
-                message=f"Plugin installed from {repo_url}"
-            )
+            return _success(message=f"Plugin installed from {repo_url}")
         return _error("INSTALL_FAILED", "Failed to install plugin from URL", 500)
     except Exception as exc:
         logger.error("Failed to install from URL %s: %s", repo_url, exc)
@@ -235,9 +231,7 @@ async def update_plugin(
     try:
         success = store_manager.update_plugin(plugin_id)
         if success:
-            return _success(
-                message=f"Plugin '{plugin_id}' updated successfully"
-            )
+            return _success(message=f"Plugin '{plugin_id}' updated successfully")
         return _error(
             "UPDATE_FAILED",
             f"Failed to update plugin '{plugin_id}'",
@@ -262,7 +256,6 @@ async def uninstall_plugin(
         return _error("INVALID_INPUT", "Request body must be valid JSON")
 
     plugin_id = body.get("plugin_id")
-    preserve_config = body.get("preserve_config", True)
     if not plugin_id:
         return _error("INVALID_INPUT", "Missing 'plugin_id'")
 
@@ -270,9 +263,7 @@ async def uninstall_plugin(
         success = store_manager.uninstall_plugin(plugin_id)
         if success:
             state_manager.remove_plugin_state(plugin_id)
-            return _success(
-                message=f"Plugin '{plugin_id}' uninstalled successfully"
-            )
+            return _success(message=f"Plugin '{plugin_id}' uninstalled successfully")
         return _error(
             "UNINSTALL_FAILED",
             f"Failed to uninstall plugin '{plugin_id}'",
