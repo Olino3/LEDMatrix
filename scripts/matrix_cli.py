@@ -10,8 +10,10 @@ import json
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -1797,6 +1799,430 @@ def backups():
             console.print(f"  [red]Error[/red] {bak}: {exc}")
 
     console.print(f"  [green]✓[/green] Removed {removed} backup item(s)")
+
+
+# ---------------------------------------------------------------------------
+# matrix network
+# ---------------------------------------------------------------------------
+
+CAPTIVE_PORTAL_URL = "http://detectportal.firefox.com/canonical.html"
+
+
+@cli.group()
+@click.pass_context
+def network(ctx: click.Context) -> None:
+    """Network and WiFi management."""
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+
+
+def _check_ping(host: str = "8.8.8.8", timeout: int = 3) -> bool:
+    """Return True if host responds to a single ICMP ping."""
+    flag = "-W" if platform.system() != "Windows" else "-w"
+    timeout_val = str(timeout) if platform.system() != "Windows" else str(timeout * 1000)
+    result = subprocess.run(
+        ["ping", "-c", "1", flag, timeout_val, host],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def _get_ip_address() -> str:
+    """Return the primary IP address or 'N/A'."""
+    try:
+        output = subprocess.check_output(["hostname", "-I"], stderr=subprocess.DEVNULL)
+        ips = output.decode().strip().split()
+        return ips[0] if ips else "N/A"
+    except Exception:
+        return "N/A"
+
+
+def _check_dns(hostname: str = "google.com") -> bool:
+    """Return True if hostname resolves via DNS."""
+    try:
+        socket.getaddrinfo(hostname, 443)
+        return True
+    except OSError:
+        return False
+
+
+def _get_wifi_info() -> dict:
+    """Parse iwconfig wlan0 output for WiFi info (Pi only)."""
+    info: dict = {"ssid": "N/A", "signal": "N/A", "quality": "N/A"}
+    try:
+        output = subprocess.check_output(
+            ["iwconfig", "wlan0"], stderr=subprocess.DEVNULL
+        ).decode()
+        if 'ESSID:"' in output:
+            start = output.index('ESSID:"') + 7
+            end = output.index('"', start)
+            info["ssid"] = output[start:end]
+        if "Signal level=" in output:
+            start = output.index("Signal level=") + 13
+            end = output.index(" ", start)
+            info["signal"] = output[start:end]
+        if "Link Quality=" in output:
+            start = output.index("Link Quality=") + 13
+            end = output.index(" ", start)
+            info["quality"] = output[start:end]
+    except Exception:
+        pass
+    return info
+
+
+@network.command()
+def status() -> None:
+    """Show network connectivity, IP address, DNS, and WiFi signal."""
+    t = Table(title="Network Status", show_header=True, header_style="bold green", border_style="dim")
+    t.add_column("Check", min_width=20)
+    t.add_column("Result", min_width=30)
+
+    is_online = _check_ping()
+    t.add_row(
+        "Internet",
+        Text("Online", style="bold green") if is_online else Text("Offline", style="bold red"),
+    )
+
+    ip_addr = _get_ip_address()
+    t.add_row("IP Address", ip_addr)
+
+    dns_ok = _check_dns()
+    t.add_row(
+        "DNS Resolution",
+        Text("OK", style="green") if dns_ok else Text("Failed", style="red"),
+    )
+
+    if _is_raspberry_pi():
+        wifi = _get_wifi_info()
+        t.add_row("WiFi SSID", wifi["ssid"])
+        t.add_row("WiFi Signal", wifi["signal"])
+        t.add_row("WiFi Quality", wifi["quality"])
+
+    console.print(t)
+
+
+@network.command()
+def reconnect() -> None:
+    """Attempt to restore network connectivity (Pi only, requires sudo)."""
+    if not _is_raspberry_pi():
+        console.print(
+            Panel(
+                "[yellow]This command is only available on Raspberry Pi.[/yellow]\n\n"
+                "Use [bold]matrix network status[/bold] to check connectivity on any platform.",
+                title="[dim]Not a Raspberry Pi[/dim]",
+                border_style="yellow",
+            )
+        )
+        return
+
+    if os.geteuid() != 0:
+        console.print(
+            Panel(
+                "[yellow]This command requires root privileges.[/yellow]\n\n"
+                "Run with sudo:\n"
+                "  [bold green]sudo matrix network reconnect[/bold green]",
+                title="[red]Sudo Required[/red]",
+                border_style="red",
+            )
+        )
+        return
+
+    console.print(Rule("[bold]Network Reconnect[/bold]"))
+    console.print("\n[bold]Step 1:[/bold] Checking current connectivity...")
+
+    if _check_ping():
+        console.print("  [green]Already connected to the internet.[/green]")
+        return
+
+    console.print("  [red]No internet connectivity detected.[/red]\n")
+
+    console.print("[bold]Step 2:[/bold] Restarting network service...")
+    for svc in ("NetworkManager", "networking"):
+        result = subprocess.run(
+            ["systemctl", "restart", svc],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            console.print(f"  [green]Restarted {svc}[/green]")
+            break
+    else:
+        console.print("  [yellow]Could not restart network service[/yellow]")
+
+    console.print("\n[bold]Step 3:[/bold] Waiting for connectivity (up to 30s)...")
+    connected = False
+    for i in range(6):
+        time.sleep(5)
+        if _check_ping():
+            connected = True
+            break
+        console.print(f"  [dim]...{(i + 1) * 5}s[/dim]")
+
+    if connected:
+        console.print("  [bold green]Internet connectivity restored![/bold green]")
+        return
+
+    console.print("  [red]Still no connectivity after NetworkManager restart.[/red]\n")
+
+    console.print("[bold]Step 4:[/bold] Trying DHCP release/renew...")
+    subprocess.run(["dhclient", "-r", "wlan0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(2)
+    subprocess.run(["dhclient", "wlan0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(5)
+
+    if _check_ping():
+        console.print("  [bold green]Internet connectivity restored after DHCP renew![/bold green]")
+    else:
+        console.print(
+            Panel(
+                "[red]Could not restore connectivity.[/red]\n\n"
+                "Manual troubleshooting:\n"
+                "  1. Check WiFi: [bold]nmcli device status[/bold]\n"
+                "  2. Scan networks: [bold]nmcli device wifi list[/bold]\n"
+                "  3. Reconnect: [bold]nmcli device wifi connect <SSID> password <pass>[/bold]\n"
+                "  4. Check routes: [bold]ip route show[/bold]",
+                title="[red]Reconnect Failed[/red]",
+                border_style="red",
+            )
+        )
+
+
+@network.command("test-portal")
+def test_portal() -> None:
+    """Check for captive portal by probing a detection endpoint."""
+    console.print(Rule("[bold]Captive Portal Test[/bold]"))
+    console.print(f"\n  Probing [cyan]{CAPTIVE_PORTAL_URL}[/cyan] ...\n")
+
+    try:
+        resp = requests.get(CAPTIVE_PORTAL_URL, timeout=5, allow_redirects=True)
+    except Exception:
+        console.print(
+            Panel(
+                "[red]Could not reach the detection endpoint.[/red]\n\n"
+                "This usually means there is no network connectivity.\n"
+                "Run [bold]matrix network status[/bold] to diagnose.",
+                title="[red]No Connectivity[/red]",
+                border_style="red",
+            )
+        )
+        return
+
+    if "success" in resp.text.lower():
+        console.print(
+            Panel(
+                "[bold green]No captive portal detected.[/bold green]\n\n"
+                "Your connection to the internet is direct and unrestricted.",
+                title="[green]All Clear[/green]",
+                border_style="green",
+            )
+        )
+    else:
+        portal_url = resp.url if resp.url != CAPTIVE_PORTAL_URL else "unknown"
+        console.print(
+            Panel(
+                "[bold yellow]Captive portal detected![/bold yellow]\n\n"
+                f"You were redirected to:\n  [cyan]{portal_url}[/cyan]\n\n"
+                "Open the URL above in a browser to authenticate.",
+                title="[yellow]Captive Portal[/yellow]",
+                border_style="yellow",
+            )
+        )
+
+
+# ---------------------------------------------------------------------------
+# matrix uninstall
+# ---------------------------------------------------------------------------
+
+_SYSTEMD_DIR = Path("/etc/systemd/system")
+_SUDOERS_DIR = Path("/etc/sudoers.d")
+_MATRIX_SYMLINK = Path("/usr/local/bin/matrix")
+
+_SERVICE_UNITS = ["ledmatrix.service", "ledmatrix-web.service"]
+_SERVICE_NAMES = ["ledmatrix", "ledmatrix-web"]
+
+
+def _sudo_run(cmd: list, *, check: bool = False) -> int:
+    """Run a command with sudo, returning the exit code."""
+    return subprocess.run(["sudo"] + cmd, check=check).returncode
+
+
+def _uninstall_step_stop_services() -> None:
+    for svc in _SERVICE_NAMES:
+        rc = _sudo_run(["systemctl", "stop", svc])
+        if rc == 0:
+            console.print(f"  [green]✓[/green] Stopped {svc}")
+        else:
+            console.print(f"  [dim]- Skipped stopping {svc} (not running)[/dim]")
+
+
+def _uninstall_step_disable_services() -> None:
+    for svc in _SERVICE_NAMES:
+        rc = _sudo_run(["systemctl", "disable", svc])
+        if rc == 0:
+            console.print(f"  [green]✓[/green] Disabled {svc}")
+        else:
+            console.print(f"  [dim]- Skipped disabling {svc} (not enabled)[/dim]")
+
+
+def _uninstall_step_remove_unit_files() -> None:
+    removed_any = False
+    for unit in _SERVICE_UNITS:
+        unit_path = _SYSTEMD_DIR / unit
+        if unit_path.exists():
+            _sudo_run(["rm", "-f", str(unit_path)])
+            console.print(f"  [green]✓[/green] Removed {unit_path}")
+            removed_any = True
+        else:
+            console.print(f"  [dim]- Skipped {unit_path} (not found)[/dim]")
+    if removed_any:
+        _sudo_run(["systemctl", "daemon-reload"])
+        console.print("  [green]✓[/green] Reloaded systemd daemon")
+
+
+def _uninstall_step_remove_sudoers() -> None:
+    if _SUDOERS_DIR.exists():
+        found = list(_SUDOERS_DIR.glob("ledmatrix-*"))
+        if found:
+            for f in found:
+                _sudo_run(["rm", "-f", str(f)])
+                console.print(f"  [green]✓[/green] Removed {f}")
+        else:
+            console.print("  [dim]- Skipped sudoers (no ledmatrix-* files found)[/dim]")
+    else:
+        console.print("  [dim]- Skipped sudoers (/etc/sudoers.d not found)[/dim]")
+
+
+def _uninstall_step_remove_symlink() -> None:
+    if _MATRIX_SYMLINK.exists() or _MATRIX_SYMLINK.is_symlink():
+        _sudo_run(["rm", "-f", str(_MATRIX_SYMLINK)])
+        console.print(f"  [green]✓[/green] Removed {_MATRIX_SYMLINK}")
+    else:
+        console.print(f"  [dim]- Skipped {_MATRIX_SYMLINK} (not found)[/dim]")
+
+
+def _uninstall_step_remove_data(*, keep_config: bool, keep_plugins: bool, keep_venv: bool) -> None:
+    config_json = LEDMATRIX_ROOT / "config" / "config.json"
+    config_secrets = LEDMATRIX_ROOT / "config" / "config_secrets.json"
+    if keep_config:
+        console.print("  [yellow]⚠[/yellow] Kept config files (--keep-config)")
+    else:
+        for cfg in (config_json, config_secrets):
+            if cfg.exists():
+                cfg.unlink()
+                console.print(f"  [green]✓[/green] Removed {cfg.relative_to(LEDMATRIX_ROOT)}")
+            else:
+                console.print(f"  [dim]- Skipped {cfg.relative_to(LEDMATRIX_ROOT)} (not found)[/dim]")
+
+    plugins_dir = LEDMATRIX_ROOT / "plugins"
+    if keep_plugins:
+        console.print("  [yellow]⚠[/yellow] Kept plugins (--keep-plugins)")
+    else:
+        if plugins_dir.exists() and any(plugins_dir.iterdir()):
+            for item in plugins_dir.iterdir():
+                if item.is_dir() and not item.is_symlink():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+            console.print("  [green]✓[/green] Removed plugins/ contents")
+        else:
+            console.print("  [dim]- Skipped plugins/ (empty or not found)[/dim]")
+
+    venv_dir = LEDMATRIX_ROOT / ".venv"
+    if keep_venv:
+        console.print("  [yellow]⚠[/yellow] Kept .venv (--keep-venv)")
+    else:
+        if venv_dir.exists():
+            shutil.rmtree(venv_dir)
+            console.print("  [green]✓[/green] Removed .venv/")
+        else:
+            console.print("  [dim]- Skipped .venv/ (not found)[/dim]")
+
+
+def _uninstall_step_remove_group() -> None:
+    rc = _sudo_run(["groupdel", "ledmatrix"])
+    if rc == 0:
+        console.print("  [green]✓[/green] Removed ledmatrix group")
+    else:
+        console.print("  [dim]- Skipped ledmatrix group (not found or not empty)[/dim]")
+
+
+@cli.command()
+@click.option("--keep-config", is_flag=True, help="Preserve config/config.json and config_secrets.json")
+@click.option("--keep-plugins", is_flag=True, help="Preserve installed plugins")
+@click.option("--keep-venv", is_flag=True, help="Preserve .venv directory")
+@click.option("--all", "remove_all", is_flag=True, help="Remove everything including config and plugins")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
+def uninstall(keep_config: bool, keep_plugins: bool, keep_venv: bool,
+              remove_all: bool, yes: bool) -> None:
+    """Uninstall LEDMatrix services and optionally remove data."""
+    console.print(Rule("[red]uninstall[/red]"))
+
+    if remove_all:
+        keep_config = False
+        keep_plugins = False
+        keep_venv = False
+
+    console.print("\n  [bold]The following will be removed:[/bold]")
+    console.print("    • systemd services (ledmatrix, ledmatrix-web)")
+    console.print("    • systemd unit files")
+    console.print("    • sudoers rules (/etc/sudoers.d/ledmatrix-*)")
+    console.print("    • /usr/local/bin/matrix symlink")
+    if not keep_config:
+        console.print("    • config/config.json and config_secrets.json")
+    if not keep_plugins:
+        console.print("    • plugins/ directory contents")
+    if not keep_venv:
+        console.print("    • .venv/ directory")
+    console.print("    • ledmatrix system group\n")
+
+    if keep_config:
+        console.print("  [yellow]⚠[/yellow] Config files will be preserved (--keep-config)")
+    if keep_plugins:
+        console.print("  [yellow]⚠[/yellow] Plugins will be preserved (--keep-plugins)")
+    if keep_venv:
+        console.print("  [yellow]⚠[/yellow] .venv will be preserved (--keep-venv)")
+
+    if not yes:
+        console.print()
+        if not click.confirm("  Are you sure?", default=False):
+            console.print("  [dim]Uninstall cancelled.[/dim]")
+            return
+
+    console.print()
+
+    console.print("  [bold]Step 1/8: Stopping services[/bold]")
+    _uninstall_step_stop_services()
+
+    console.print("  [bold]Step 2/8: Disabling services[/bold]")
+    _uninstall_step_disable_services()
+
+    console.print("  [bold]Step 3/8: Removing unit files[/bold]")
+    _uninstall_step_remove_unit_files()
+
+    console.print("  [bold]Step 4/8: Removing sudoers rules[/bold]")
+    _uninstall_step_remove_sudoers()
+
+    console.print("  [bold]Step 5/8: Removing matrix symlink[/bold]")
+    _uninstall_step_remove_symlink()
+
+    console.print("  [bold]Step 6/8: Removing data[/bold]")
+    _uninstall_step_remove_data(
+        keep_config=keep_config,
+        keep_plugins=keep_plugins,
+        keep_venv=keep_venv,
+    )
+
+    console.print("  [bold]Step 7/8: Removing ledmatrix group[/bold]")
+    _uninstall_step_remove_group()
+
+    console.print("  [bold]Step 8/8: Cleanup complete[/bold]")
+    console.print(Panel(
+        "[green]LEDMatrix has been uninstalled.[/green]\n\n"
+        "The source code remains in this directory.\n"
+        "To reinstall, run: [bold]matrix install[/bold]",
+        border_style="green",
+    ))
 
 
 # ---------------------------------------------------------------------------
