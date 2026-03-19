@@ -6,11 +6,12 @@ across the LEDMatrix codebase.
 """
 
 import logging
-from typing import Any, Callable, Optional, TypeVar, Dict
 from functools import wraps
+from typing import Any, Callable, Dict, Optional, TypeVar
+
 from src.exceptions import LEDMatrixError
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def handle_file_operation(
@@ -18,18 +19,18 @@ def handle_file_operation(
     error_message: str,
     logger: logging.Logger,
     default: Optional[T] = None,
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ) -> Optional[T]:
     """
     Handle file operations with consistent error handling.
-    
+
     Args:
         operation: Function to execute (file read/write)
         error_message: Base error message
         logger: Logger instance
         default: Default value to return on error
         context: Optional context dictionary for error details
-        
+
     Returns:
         Result of operation or default value
     """
@@ -54,18 +55,18 @@ def handle_json_operation(
     error_message: str,
     logger: logging.Logger,
     default: Optional[T] = None,
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ) -> Optional[T]:
     """
     Handle JSON operations with consistent error handling.
-    
+
     Args:
         operation: Function to execute (JSON load/dump)
         error_message: Base error message
         logger: Logger instance
         default: Default value to return on error
         context: Optional context dictionary for error details
-        
+
     Returns:
         Result of operation or default value
     """
@@ -94,11 +95,11 @@ def safe_execute(
     logger: logging.Logger,
     default: Optional[T] = None,
     raise_on_error: bool = False,
-    exception_type: type = LEDMatrixError
+    exception_type: type = LEDMatrixError,
 ) -> Optional[T]:
     """
     Safely execute an operation with error handling.
-    
+
     Args:
         operation: Function to execute
         error_message: Base error message
@@ -106,7 +107,7 @@ def safe_execute(
         default: Default value to return on error
         raise_on_error: If True, raise exception instead of returning default
         exception_type: Type of exception to raise if raise_on_error is True
-        
+
     Returns:
         Result of operation or default value (or raises exception)
     """
@@ -118,7 +119,7 @@ def safe_execute(
     except Exception as e:
         logger.error("%s: %s", error_message, e, exc_info=True)
         if raise_on_error:
-            raise exception_type(error_message, context={'original_error': str(e)}) from e
+            raise exception_type(error_message, context={"original_error": str(e)}) from e
         return default
 
 
@@ -127,27 +128,28 @@ def retry_on_failure(
     delay: float = 1.0,
     backoff: float = 2.0,
     exceptions: tuple = (Exception,),
-    logger: Optional[logging.Logger] = None
+    logger: Optional[logging.Logger] = None,
 ):
     """
     Decorator to retry a function on failure.
-    
+
     Args:
         max_attempts: Maximum number of retry attempts
         delay: Initial delay between retries in seconds
         backoff: Multiplier for delay after each retry
         exceptions: Tuple of exceptions to catch and retry on
         logger: Optional logger instance
-        
+
     Returns:
         Decorator function
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             current_delay = delay
             last_exception = None
-            
+
             for attempt in range(max_attempts):
                 try:
                     return func(*args, **kwargs)
@@ -157,34 +159,36 @@ def retry_on_failure(
                         if logger:
                             logger.warning(
                                 "%s failed (attempt %d/%d): %s. Retrying in %.1fs...",
-                                func.__name__, attempt + 1, max_attempts, e, current_delay
+                                func.__name__,
+                                attempt + 1,
+                                max_attempts,
+                                e,
+                                current_delay,
                             )
                         import time
+
                         time.sleep(current_delay)
                         current_delay *= backoff
                     else:
                         if logger:
                             logger.error(
-                                "%s failed after %d attempts: %s",
-                                func.__name__, max_attempts, e, exc_info=True
+                                "%s failed after %d attempts: %s", func.__name__, max_attempts, e, exc_info=True
                             )
-            
+
             # If we get here, all attempts failed
             raise last_exception
-        
+
         return wrapper
+
     return decorator
 
 
 def log_and_continue(
-    logger: logging.Logger,
-    message: str,
-    level: int = logging.WARNING,
-    context: Optional[Dict[str, Any]] = None
+    logger: logging.Logger, message: str, level: int = logging.WARNING, context: Optional[Dict[str, Any]] = None
 ):
     """
     Log a message and continue execution (for non-critical errors).
-    
+
     Args:
         logger: Logger instance
         message: Log message
@@ -201,20 +205,19 @@ def log_and_raise(
     logger: logging.Logger,
     message: str,
     exception_type: type = LEDMatrixError,
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ):
     """
     Log an error and raise an exception.
-    
+
     Args:
         logger: Logger instance
         message: Error message
         exception_type: Type of exception to raise
         context: Optional context dictionary
-        
+
     Raises:
         exception_type: The specified exception type
     """
     logger.error(message, exc_info=True)
     raise exception_type(message, context=context)
-

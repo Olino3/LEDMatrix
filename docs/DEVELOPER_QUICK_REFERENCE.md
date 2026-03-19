@@ -175,7 +175,7 @@ def display(self, force_clear=False):
 | Error | Solution |
 |-------|----------|
 | Plugin not discovered | Check `manifest.json` exists and `id` matches directory name |
-| Import errors | Check `requirements.txt` and dependencies |
+| Import errors | Check `pyproject.toml` dependencies and run `uv sync` |
 | Config validation fails | Verify `config_schema.json` syntax |
 | Display not updating | Call `update_display()` after drawing |
 | Cache not working | Check cache directory permissions |

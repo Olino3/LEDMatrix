@@ -4,10 +4,11 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=ledpi
+Group=ledpi
 WorkingDirectory=__PROJECT_ROOT_DIR__
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/usr/bin/python3 __PROJECT_ROOT_DIR__/run.py
+ExecStart=__VENV_PYTHON__ __PROJECT_ROOT_DIR__/run.py
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

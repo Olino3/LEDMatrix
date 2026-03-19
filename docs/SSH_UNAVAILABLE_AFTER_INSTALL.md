@@ -2,7 +2,7 @@
 
 ## Why SSH Becomes Unavailable
 
-After running `first_time_install.sh`, SSH may become unavailable for the following reasons:
+After running `matrix install`, SSH may become unavailable for the following reasons:
 
 ### 1. WiFi Monitor Service Enables AP Mode
 
@@ -94,7 +94,7 @@ If you have physical access to the Pi:
 
 ### Method 1: Configure WiFi Before Installation
 
-Before running `first_time_install.sh`, ensure WiFi is properly configured and connected:
+Before running `matrix install`, ensure WiFi is properly configured and connected:
 
 ```bash
 # Check WiFi status

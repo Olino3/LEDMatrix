@@ -894,6 +894,20 @@
                     {% set btn_class = 'bg-blue-600 hover:bg-blue-700' %}
                 {% endif %}
                 <div class="{{ bg_class }} border {{ border_class }} rounded-lg p-4">
+                    {% if action.autocomplete and action.input_label %}
+                    <div>
+                        <h4 class="font-medium {{ text_class }} mb-1">
+                            {% if action.icon %}<i class="{{ action.icon }} mr-2"></i>{% endif %}{{ action.title or action.id }}
+                        </h4>
+                        <p class="text-sm {{ text_light_class }} mb-3">{{ action.description or '' }}</p>
+                        <input type="text"
+                               id="action-input-{{ action.id }}-{{ loop.index0 }}"
+                               placeholder="{{ action.input_placeholder or '' }}"
+                               autocomplete="off"
+                               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               oninput="handleActionAutocomplete('{{ action.id }}', {{ loop.index0 }}, '{{ plugin.id }}', this.value)">
+                    </div>
+                    {% else %}
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <h4 class="font-medium {{ text_class }} mb-1">
@@ -910,6 +924,7 @@
                             {% if action.icon %}<i class="{{ action.icon }} mr-2"></i>{% endif %}{{ action.button_text or action.title or action.id }}
                         </button>
                     </div>
+                    {% endif %}
                     <div id="{{ status_id }}" class="mt-3 hidden"></div>
                 </div>
                 {% endfor %}

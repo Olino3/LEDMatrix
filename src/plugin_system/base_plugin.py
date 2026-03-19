@@ -8,10 +8,11 @@ API Version: 1.0.0
 Stability: Stable - maintains backward compatibility
 """
 
+import logging
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, Any, Optional, List
-import logging
+from typing import Any, Dict, List, Optional
+
 from src.logging_config import get_logger
 
 
@@ -33,6 +34,7 @@ class VegasDisplayMode(Enum):
       resumes. Best for important alerts or detailed views that need attention.
       Plugin uses standard display() method during the pause.
     """
+
     SCROLL = "scroll"
     FIXED_SEGMENT = "fixed"
     STATIC = "static"
@@ -145,9 +147,9 @@ class BasePlugin(ABC):
             Duration in seconds to display this plugin's content
         """
         # Check for instance variable first (common pattern in scoreboard plugins)
-        if hasattr(self, 'display_duration'):
+        if hasattr(self, "display_duration"):
             try:
-                duration = getattr(self, 'display_duration')
+                duration = self.display_duration
                 # Handle None case
                 if duration is None:
                     pass  # Fall through to config
@@ -157,8 +159,7 @@ class BasePlugin(ABC):
                         return float(duration)
                     else:
                         self.logger.debug(
-                            "display_duration instance variable is non-positive (%s), using config fallback",
-                            duration
+                            "display_duration instance variable is non-positive (%s), using config fallback", duration
                         )
                 # Try converting string representations of numbers
                 elif isinstance(duration, str):
@@ -168,24 +169,21 @@ class BasePlugin(ABC):
                             return duration_float
                         else:
                             self.logger.debug(
-                                "display_duration string value is non-positive (%s), using config fallback",
-                                duration
+                                "display_duration string value is non-positive (%s), using config fallback", duration
                             )
                     except (ValueError, TypeError):
                         self.logger.warning(
                             "display_duration instance variable has invalid string value '%s', using config fallback",
-                            duration
+                            duration,
                         )
                 else:
                     self.logger.warning(
                         "display_duration instance variable has unexpected type %s (value: %s), using config fallback",
-                        type(duration).__name__, duration
+                        type(duration).__name__,
+                        duration,
                     )
             except (TypeError, ValueError, AttributeError) as e:
-                self.logger.warning(
-                    "Error reading display_duration instance variable: %s, using config fallback",
-                    e
-                )
+                self.logger.warning("Error reading display_duration instance variable: %s, using config fallback", e)
 
         # Fall back to config
         config_duration = self.config.get("display_duration", 15.0)
@@ -196,8 +194,7 @@ class BasePlugin(ABC):
                     return float(config_duration)
                 else:
                     self.logger.debug(
-                        "Config display_duration is non-positive (%s), using default 15.0",
-                        config_duration
+                        "Config display_duration is non-positive (%s), using default 15.0", config_duration
                     )
                     return 15.0
             elif isinstance(config_duration, str):
@@ -207,26 +204,22 @@ class BasePlugin(ABC):
                         return duration_float
                     else:
                         self.logger.debug(
-                            "Config display_duration string is non-positive (%s), using default 15.0",
-                            config_duration
+                            "Config display_duration string is non-positive (%s), using default 15.0", config_duration
                         )
                         return 15.0
                 except ValueError:
                     self.logger.warning(
-                        "Config display_duration has invalid string value '%s', using default 15.0",
-                        config_duration
+                        "Config display_duration has invalid string value '%s', using default 15.0", config_duration
                     )
                     return 15.0
             else:
                 self.logger.warning(
                     "Config display_duration has unexpected type %s (value: %s), using default 15.0",
-                    type(config_duration).__name__, config_duration
+                    type(config_duration).__name__,
+                    config_duration,
                 )
         except (ValueError, TypeError) as e:
-            self.logger.warning(
-                "Error processing config display_duration: %s, using default 15.0",
-                e
-            )
+            self.logger.warning("Error processing config display_duration: %s, using default 15.0", e)
 
         return 15.0
 
@@ -406,7 +399,7 @@ class BasePlugin(ABC):
             def get_vegas_content_type(self):
                 return 'multi'  # We have multiple games to scroll
         """
-        return 'static'
+        return "static"
 
     def get_vegas_display_mode(self) -> VegasDisplayMode:
         """
@@ -433,18 +426,15 @@ class BasePlugin(ABC):
             try:
                 return VegasDisplayMode(config_mode)
             except ValueError:
-                self.logger.warning(
-                    "Invalid vegas_mode '%s' for %s, using default",
-                    config_mode, self.plugin_id
-                )
+                self.logger.warning("Invalid vegas_mode '%s' for %s, using default", config_mode, self.plugin_id)
 
         # Fall back to mapping legacy content_type
         content_type = self.get_vegas_content_type()
-        if content_type == 'multi':
+        if content_type == "multi":
             return VegasDisplayMode.SCROLL
-        elif content_type == 'static':
+        elif content_type == "static":
             return VegasDisplayMode.FIXED_SEGMENT
-        elif content_type == 'none':
+        elif content_type == "none":
             # 'none' means excluded - return FIXED_SEGMENT as default
             # The exclusion is handled by checking get_vegas_content_type() separately
             return VegasDisplayMode.FIXED_SEGMENT
@@ -473,9 +463,9 @@ class BasePlugin(ABC):
         """
         content_type = self.get_vegas_content_type()
 
-        if content_type == 'none':
+        if content_type == "none":
             return []
-        elif content_type == 'multi':
+        elif content_type == "multi":
             return [VegasDisplayMode.SCROLL, VegasDisplayMode.FIXED_SEGMENT]
         else:  # 'static'
             return [VegasDisplayMode.FIXED_SEGMENT, VegasDisplayMode.STATIC]
@@ -510,16 +500,10 @@ class BasePlugin(ABC):
             if panel_count > 0:
                 return panel_count
             else:
-                self.logger.warning(
-                    "vegas_panel_count must be positive, got %s; using default",
-                    raw_value
-                )
+                self.logger.warning("vegas_panel_count must be positive, got %s; using default", raw_value)
                 return None
         except (ValueError, TypeError):
-            self.logger.warning(
-                "Invalid vegas_panel_count value '%s'; using default",
-                raw_value
-            )
+            self.logger.warning("Invalid vegas_panel_count value '%s'; using default", raw_value)
             return None
 
     def validate_config(self) -> bool:

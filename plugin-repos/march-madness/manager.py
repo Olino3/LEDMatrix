@@ -130,8 +130,8 @@ class MarchMadnessPlugin(BasePlugin):
         self._duration_cache_time: float = 0
 
         # Display dimensions
-        self.display_width: int = self.display_manager.matrix.width
-        self.display_height: int = self.display_manager.matrix.height
+        self.display_width: int = self.display_manager.width
+        self.display_height: int = self.display_manager.height
 
         # HTTP session with retry
         self.session = requests.Session()
@@ -636,7 +636,7 @@ class MarchMadnessPlugin(BasePlugin):
         # Score (bottom center of center block, for live/final)
         if score_text:
             score_x = center_mid - score_w // 2
-            score_y = height - 13
+            score_y = max(1, height - 13) if height >= 24 else height - 7
             # Upset highlighting
             if game["is_final"] and game["is_upset"] and self.highlight_upsets:
                 score_color = COLOR_GOLD
@@ -797,8 +797,8 @@ class MarchMadnessPlugin(BasePlugin):
 
             self.dynamic_duration = self.scroll_helper.get_dynamic_duration()
 
-            matrix_w = self.display_manager.matrix.width
-            matrix_h = self.display_manager.matrix.height
+            matrix_w = self.display_manager.width
+            matrix_h = self.display_manager.height
             if not hasattr(self.display_manager, "image") or self.display_manager.image is None:
                 self.display_manager.image = Image.new("RGB", (matrix_w, matrix_h), COLOR_BLACK)
             self.display_manager.image.paste(visible, (0, 0))
@@ -810,8 +810,8 @@ class MarchMadnessPlugin(BasePlugin):
             self._display_fallback()
 
     def _display_fallback(self) -> None:
-        w = self.display_manager.matrix.width
-        h = self.display_manager.matrix.height
+        w = self.display_manager.width
+        h = self.display_manager.height
         img = Image.new("RGB", (w, h), COLOR_BLACK)
         draw = ImageDraw.Draw(img)
 

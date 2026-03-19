@@ -6,8 +6,8 @@ plugin ordering, exclusions, scroll speed, and display settings.
 """
 
 import logging
-from typing import Dict, Any, List, Set, Optional
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Set
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class VegasModeConfig:
     max_cycle_duration: int = 600  # Maximum seconds per full cycle
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> 'VegasModeConfig':
+    def from_config(cls, config: Dict[str, Any]) -> "VegasModeConfig":
         """
         Create VegasModeConfig from main configuration dictionary.
 
@@ -49,38 +49,38 @@ class VegasModeConfig:
         Returns:
             VegasModeConfig instance
         """
-        vegas_config = config.get('display', {}).get('vegas_scroll', {})
+        vegas_config = config.get("display", {}).get("vegas_scroll", {})
 
         return cls(
-            enabled=vegas_config.get('enabled', False),
-            scroll_speed=float(vegas_config.get('scroll_speed', 50.0)),
-            separator_width=int(vegas_config.get('separator_width', 32)),
-            plugin_order=list(vegas_config.get('plugin_order', [])),
-            excluded_plugins=set(vegas_config.get('excluded_plugins', [])),
-            target_fps=int(vegas_config.get('target_fps', 125)),
-            buffer_ahead=int(vegas_config.get('buffer_ahead', 2)),
-            frame_based_scrolling=vegas_config.get('frame_based_scrolling', True),
-            scroll_delay=float(vegas_config.get('scroll_delay', 0.02)),
-            dynamic_duration_enabled=vegas_config.get('dynamic_duration_enabled', True),
-            min_cycle_duration=int(vegas_config.get('min_cycle_duration', 60)),
-            max_cycle_duration=int(vegas_config.get('max_cycle_duration', 600)),
+            enabled=vegas_config.get("enabled", False),
+            scroll_speed=float(vegas_config.get("scroll_speed", 50.0)),
+            separator_width=int(vegas_config.get("separator_width", 32)),
+            plugin_order=list(vegas_config.get("plugin_order", [])),
+            excluded_plugins=set(vegas_config.get("excluded_plugins", [])),
+            target_fps=int(vegas_config.get("target_fps", 125)),
+            buffer_ahead=int(vegas_config.get("buffer_ahead", 2)),
+            frame_based_scrolling=vegas_config.get("frame_based_scrolling", True),
+            scroll_delay=float(vegas_config.get("scroll_delay", 0.02)),
+            dynamic_duration_enabled=vegas_config.get("dynamic_duration_enabled", True),
+            min_cycle_duration=int(vegas_config.get("min_cycle_duration", 60)),
+            max_cycle_duration=int(vegas_config.get("max_cycle_duration", 600)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert config to dictionary for serialization."""
         return {
-            'enabled': self.enabled,
-            'scroll_speed': self.scroll_speed,
-            'separator_width': self.separator_width,
-            'plugin_order': self.plugin_order,
-            'excluded_plugins': list(self.excluded_plugins),
-            'target_fps': self.target_fps,
-            'buffer_ahead': self.buffer_ahead,
-            'frame_based_scrolling': self.frame_based_scrolling,
-            'scroll_delay': self.scroll_delay,
-            'dynamic_duration_enabled': self.dynamic_duration_enabled,
-            'min_cycle_duration': self.min_cycle_duration,
-            'max_cycle_duration': self.max_cycle_duration,
+            "enabled": self.enabled,
+            "scroll_speed": self.scroll_speed,
+            "separator_width": self.separator_width,
+            "plugin_order": self.plugin_order,
+            "excluded_plugins": list(self.excluded_plugins),
+            "target_fps": self.target_fps,
+            "buffer_ahead": self.buffer_ahead,
+            "frame_based_scrolling": self.frame_based_scrolling,
+            "scroll_delay": self.scroll_delay,
+            "dynamic_duration_enabled": self.dynamic_duration_enabled,
+            "min_cycle_duration": self.min_cycle_duration,
+            "max_cycle_duration": self.max_cycle_duration,
         }
 
     def get_frame_interval(self) -> float:
@@ -115,10 +115,7 @@ class VegasModeConfig:
         """
         if self.plugin_order:
             # Use explicit order, filter to only available and non-excluded
-            ordered = [
-                p for p in self.plugin_order
-                if p in available_plugins and p not in self.excluded_plugins
-            ]
+            ordered = [p for p in self.plugin_order if p in available_plugins and p not in self.excluded_plugins]
             # Add any available plugins not in the order list (at the end)
             for p in available_plugins:
                 if p not in ordered and p not in self.excluded_plugins:
@@ -166,35 +163,38 @@ class VegasModeConfig:
         Args:
             new_config: New configuration values to apply
         """
-        vegas_config = new_config.get('display', {}).get('vegas_scroll', {})
+        vegas_config = new_config.get("display", {}).get("vegas_scroll", {})
 
-        if 'enabled' in vegas_config:
-            self.enabled = vegas_config['enabled']
-        if 'scroll_speed' in vegas_config:
-            self.scroll_speed = float(vegas_config['scroll_speed'])
-        if 'separator_width' in vegas_config:
-            self.separator_width = int(vegas_config['separator_width'])
-        if 'plugin_order' in vegas_config:
-            self.plugin_order = list(vegas_config['plugin_order'])
-        if 'excluded_plugins' in vegas_config:
-            self.excluded_plugins = set(vegas_config['excluded_plugins'])
-        if 'target_fps' in vegas_config:
-            self.target_fps = int(vegas_config['target_fps'])
-        if 'buffer_ahead' in vegas_config:
-            self.buffer_ahead = int(vegas_config['buffer_ahead'])
-        if 'frame_based_scrolling' in vegas_config:
-            self.frame_based_scrolling = vegas_config['frame_based_scrolling']
-        if 'scroll_delay' in vegas_config:
-            self.scroll_delay = float(vegas_config['scroll_delay'])
-        if 'dynamic_duration_enabled' in vegas_config:
-            self.dynamic_duration_enabled = vegas_config['dynamic_duration_enabled']
-        if 'min_cycle_duration' in vegas_config:
-            self.min_cycle_duration = int(vegas_config['min_cycle_duration'])
-        if 'max_cycle_duration' in vegas_config:
-            self.max_cycle_duration = int(vegas_config['max_cycle_duration'])
+        if "enabled" in vegas_config:
+            self.enabled = vegas_config["enabled"]
+        if "scroll_speed" in vegas_config:
+            self.scroll_speed = float(vegas_config["scroll_speed"])
+        if "separator_width" in vegas_config:
+            self.separator_width = int(vegas_config["separator_width"])
+        if "plugin_order" in vegas_config:
+            self.plugin_order = list(vegas_config["plugin_order"])
+        if "excluded_plugins" in vegas_config:
+            self.excluded_plugins = set(vegas_config["excluded_plugins"])
+        if "target_fps" in vegas_config:
+            self.target_fps = int(vegas_config["target_fps"])
+        if "buffer_ahead" in vegas_config:
+            self.buffer_ahead = int(vegas_config["buffer_ahead"])
+        if "frame_based_scrolling" in vegas_config:
+            self.frame_based_scrolling = vegas_config["frame_based_scrolling"]
+        if "scroll_delay" in vegas_config:
+            self.scroll_delay = float(vegas_config["scroll_delay"])
+        if "dynamic_duration_enabled" in vegas_config:
+            self.dynamic_duration_enabled = vegas_config["dynamic_duration_enabled"]
+        if "min_cycle_duration" in vegas_config:
+            self.min_cycle_duration = int(vegas_config["min_cycle_duration"])
+        if "max_cycle_duration" in vegas_config:
+            self.max_cycle_duration = int(vegas_config["max_cycle_duration"])
 
         # Log config update
         logger.info(
             "Vegas mode config updated: enabled=%s, speed=%.1f, fps=%d, buffer=%d",
-            self.enabled, self.scroll_speed, self.target_fps, self.buffer_ahead
+            self.enabled,
+            self.scroll_speed,
+            self.target_fps,
+            self.buffer_ahead,
         )

@@ -12,20 +12,20 @@ Supports three display modes per plugin:
 """
 
 import logging
-import time
 import threading
-from typing import Optional, Dict, Any, List, Callable, TYPE_CHECKING
+import time
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from src.plugin_system.base_plugin import VegasDisplayMode
 from src.vegas_mode.config import VegasModeConfig
 from src.vegas_mode.plugin_adapter import PluginAdapter
-from src.vegas_mode.stream_manager import StreamManager
 from src.vegas_mode.render_pipeline import RenderPipeline
-from src.plugin_system.base_plugin import VegasDisplayMode
+from src.vegas_mode.stream_manager import StreamManager
 
 if TYPE_CHECKING:
-    from src.plugin_system.plugin_manager import PluginManager
-    from src.plugin_system.base_plugin import BasePlugin
     from src.display_manager import DisplayManager
+    from src.plugin_system.base_plugin import BasePlugin
+    from src.plugin_system.plugin_manager import PluginManager
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +42,7 @@ class VegasModeCoordinator:
     - Provide status and control interface
     """
 
-    def __init__(
-        self,
-        config: Dict[str, Any],
-        display_manager: 'DisplayManager',
-        plugin_manager: 'PluginManager'
-    ):
+    def __init__(self, config: Dict[str, Any], display_manager: "DisplayManager", plugin_manager: "PluginManager"):
         """
         Initialize the Vegas mode coordinator.
 
@@ -65,16 +60,8 @@ class VegasModeCoordinator:
 
         # Initialize components
         self.plugin_adapter = PluginAdapter(display_manager)
-        self.stream_manager = StreamManager(
-            self.vegas_config,
-            plugin_manager,
-            self.plugin_adapter
-        )
-        self.render_pipeline = RenderPipeline(
-            self.vegas_config,
-            display_manager,
-            self.stream_manager
-        )
+        self.stream_manager = StreamManager(self.vegas_config, plugin_manager, self.plugin_adapter)
+        self.render_pipeline = RenderPipeline(self.vegas_config, display_manager, self.stream_manager)
 
         # State management
         self._is_active = False
@@ -97,7 +84,7 @@ class VegasModeCoordinator:
 
         # Static pause handling
         self._static_pause_active = False
-        self._static_pause_plugin: Optional['BasePlugin'] = None
+        self._static_pause_plugin: Optional["BasePlugin"] = None
         self._static_pause_start: Optional[float] = None
         self._saved_scroll_position: Optional[int] = None
 
@@ -106,11 +93,11 @@ class VegasModeCoordinator:
 
         # Statistics
         self.stats = {
-            'total_runtime_seconds': 0.0,
-            'cycles_completed': 0,
-            'interruptions': 0,
-            'config_updates': 0,
-            'static_pauses': 0,
+            "total_runtime_seconds": 0.0,
+            "cycles_completed": 0,
+            "interruptions": 0,
+            "config_updates": 0,
+            "static_pauses": 0,
         }
         self._start_time: Optional[float] = None
 
@@ -118,7 +105,7 @@ class VegasModeCoordinator:
             "VegasModeCoordinator initialized: enabled=%s, fps=%d, buffer_ahead=%d",
             self.vegas_config.enabled,
             self.vegas_config.target_fps,
-            self.vegas_config.buffer_ahead
+            self.vegas_config.buffer_ahead,
         )
 
     @property
@@ -140,11 +127,7 @@ class VegasModeCoordinator:
         """
         self._live_priority_check = checker
 
-    def set_interrupt_checker(
-        self,
-        checker: Callable[[], bool],
-        check_interval: int = 10
-    ) -> None:
+    def set_interrupt_checker(self, checker: Callable[[], bool], check_interval: int = 10) -> None:
         """
         Set the callback for checking if Vegas should yield control.
 
@@ -207,7 +190,7 @@ class VegasModeCoordinator:
             self._is_active = False
 
             if self._start_time:
-                self.stats['total_runtime_seconds'] += time.time() - self._start_time
+                self.stats["total_runtime_seconds"] += time.time() - self._start_time
                 self._start_time = None
 
         # Cleanup components
@@ -223,7 +206,7 @@ class VegasModeCoordinator:
             if not self._is_active:
                 return
             self._is_paused = True
-            self.stats['interruptions'] += 1
+            self.stats["interruptions"] += 1
 
         self.display_manager.set_scrolling_state(False)
         logger.info("Vegas mode paused")
@@ -267,7 +250,7 @@ class VegasModeCoordinator:
             if not self.render_pipeline.start_new_cycle():
                 logger.warning("Failed to start new Vegas cycle")
                 return False
-            self.stats['cycles_completed'] += 1
+            self.stats["cycles_completed"] += 1
 
         # Check for hot-swap opportunities
         if self.render_pipeline.should_recompose():
@@ -340,20 +323,15 @@ class VegasModeCoordinator:
             if current_time - last_fps_log_time >= fps_log_interval:
                 fps = fps_frame_count / (current_time - last_fps_log_time)
                 logger.info(
-                    "Vegas FPS: %.1f (target: %d, frames: %d)",
-                    fps, self.vegas_config.target_fps, fps_frame_count
+                    "Vegas FPS: %.1f (target: %d, frames: %d)", fps, self.vegas_config.target_fps, fps_frame_count
                 )
                 last_fps_log_time = current_time
                 fps_frame_count = 0
 
-            if (self._interrupt_check and
-                    frame_count % self._interrupt_check_interval == 0):
+            if self._interrupt_check and frame_count % self._interrupt_check_interval == 0:
                 try:
                     if self._interrupt_check():
-                        logger.debug(
-                            "Vegas interrupted by callback after %d frames",
-                            frame_count
-                        )
+                        logger.debug("Vegas interrupted by callback after %d frames", frame_count)
                         return False
                 except Exception:
                     # Log but don't let interrupt check errors stop Vegas
@@ -412,7 +390,7 @@ class VegasModeCoordinator:
             self._pending_config_update = True
             self._pending_config = new_config
             self._config_version += 1
-            self.stats['config_updates'] += 1
+            self.stats["config_updates"] += 1
 
         logger.debug("Config update queued (version %d)", self._config_version)
 
@@ -472,23 +450,23 @@ class VegasModeCoordinator:
     def get_status(self) -> Dict[str, Any]:
         """Get comprehensive Vegas mode status."""
         status = {
-            'enabled': self.vegas_config.enabled,
-            'active': self._is_active,
-            'paused': self._is_paused,
-            'live_priority_active': self._live_priority_active,
-            'config': self.vegas_config.to_dict(),
-            'stats': self.stats.copy(),
+            "enabled": self.vegas_config.enabled,
+            "active": self._is_active,
+            "paused": self._is_paused,
+            "live_priority_active": self._live_priority_active,
+            "config": self.vegas_config.to_dict(),
+            "stats": self.stats.copy(),
         }
 
         if self._is_active:
-            status['render_info'] = self.render_pipeline.get_current_scroll_info()
-            status['stream_status'] = self.stream_manager.get_buffer_status()
+            status["render_info"] = self.render_pipeline.get_current_scroll_info()
+            status["stream_status"] = self.stream_manager.get_buffer_status()
 
         return status
 
     def get_ordered_plugins(self) -> List[str]:
         """Get the current ordered list of plugins in Vegas scroll."""
-        if hasattr(self.plugin_manager, 'plugins'):
+        if hasattr(self.plugin_manager, "plugins"):
             available = list(self.plugin_manager.plugins.keys())
             return self.vegas_config.get_ordered_plugins(available)
         return []
@@ -497,7 +475,7 @@ class VegasModeCoordinator:
     # Static pause handling (for STATIC display mode)
     # -------------------------------------------------------------------------
 
-    def _check_static_plugin_trigger(self) -> Optional['BasePlugin']:
+    def _check_static_plugin_trigger(self) -> Optional["BasePlugin"]:
         """
         Check if a STATIC mode plugin should take over display.
 
@@ -528,7 +506,7 @@ class VegasModeCoordinator:
 
         return None
 
-    def _handle_static_pause(self, plugin: 'BasePlugin') -> bool:
+    def _handle_static_pause(self, plugin: "BasePlugin") -> bool:
         """
         Handle a static pause - scroll pauses while plugin displays.
 
@@ -550,7 +528,7 @@ class VegasModeCoordinator:
             self._static_pause_active = True
             self._static_pause_plugin = plugin
             self._static_pause_start = time.time()
-            self.stats['static_pauses'] += 1
+            self.stats["static_pauses"] += 1
 
         logger.info("Static pause started for plugin: %s", plugin_id)
 
@@ -579,10 +557,7 @@ class VegasModeCoordinator:
                 # Sleep in small increments to remain responsive
                 time.sleep(0.1)
 
-            logger.info(
-                "Static pause completed for %s after %.1fs",
-                plugin_id, time.time() - start
-            )
+            logger.info("Static pause completed for %s after %.1fs", plugin_id, time.time() - start)
 
         except Exception:
             logger.exception("Error during static pause for %s", plugin_id)
@@ -600,11 +575,7 @@ class VegasModeCoordinator:
         with self._state_lock:
             # Only resume scrolling if we weren't interrupted
             was_active = self._static_pause_active
-            should_resume_scrolling = (
-                was_active and
-                not self._should_stop and
-                not self._live_priority_active
-            )
+            should_resume_scrolling = was_active and not self._should_stop and not self._live_priority_active
 
             # Clear pause state
             self._static_pause_active = False
@@ -635,16 +606,10 @@ class VegasModeCoordinator:
                     if mode == VegasDisplayMode.STATIC:
                         self._static_mode_plugins.add(plugin_id)
                 except Exception:
-                    logger.exception(
-                        "Error getting vegas display mode for plugin %s",
-                        plugin_id
-                    )
+                    logger.exception("Error getting vegas display mode for plugin %s", plugin_id)
 
         if self._static_mode_plugins:
-            logger.info(
-                "Static mode plugins: %s",
-                ', '.join(self._static_mode_plugins)
-            )
+            logger.info("Static mode plugins: %s", ", ".join(self._static_mode_plugins))
 
     def cleanup(self) -> None:
         """Clean up all resources."""

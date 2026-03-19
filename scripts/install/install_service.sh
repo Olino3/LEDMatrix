@@ -16,14 +16,31 @@ USER_HOME=$(eval echo ~$ACTUAL_USER)
 # Determine the Project Root Directory (parent of scripts/install/)
 PROJECT_ROOT_DIR=$(cd "$(dirname "$0")/../.." && pwd)
 
+VENV_PYTHON="${PROJECT_ROOT_DIR}/.venv/bin/python3"
+
 echo "Installing LED Matrix Display Service for user: $ACTUAL_USER"
 echo "Using home directory: $USER_HOME"
 echo "Project root directory: $PROJECT_ROOT_DIR"
 
+# Bootstrap venv if it does not exist
+if [ ! -x "$VENV_PYTHON" ]; then
+    echo "No .venv found — bootstrapping with uv..."
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "ERROR: 'uv' is not installed. Run: curl -LsSf https://astral.sh/uv/install.sh | sh"
+        exit 1
+    fi
+    uv sync --project "$PROJECT_ROOT_DIR"
+    if [ ! -x "$VENV_PYTHON" ]; then
+        echo "ERROR: uv sync completed but $VENV_PYTHON not found."
+        exit 1
+    fi
+    echo "Venv bootstrapped successfully."
+fi
+
 # Create a temporary service file for the main display with the correct paths
 # Assuming ledmatrix.service template exists and uses /home/ledpi as a placeholder for user home
 if [ -f "$PROJECT_ROOT_DIR/systemd/ledmatrix.service" ]; then
-    sed "s|/home/ledpi|$USER_HOME|g; s|__PROJECT_ROOT_DIR__|$PROJECT_ROOT_DIR|g; s|__USER__|root|g" "$PROJECT_ROOT_DIR/systemd/ledmatrix.service" > /tmp/ledmatrix.service.tmp
+    sed "s|/home/ledpi|$USER_HOME|g; s|__PROJECT_ROOT_DIR__|$PROJECT_ROOT_DIR|g; s|__VENV_PYTHON__|$VENV_PYTHON|g; s|__USER__|root|g" "$PROJECT_ROOT_DIR/systemd/ledmatrix.service" > /tmp/ledmatrix.service.tmp
     # Copy the service file to the systemd directory
     sudo cp /tmp/ledmatrix.service.tmp /etc/systemd/system/ledmatrix.service
     # Clean up
@@ -57,7 +74,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 ${PROJECT_ROOT_DIR}/scripts/utils/start_web_conditionally.py
+ExecStart=${VENV_PYTHON} ${PROJECT_ROOT_DIR}/scripts/utils/start_web_conditionally.py
 WorkingDirectory=${PROJECT_ROOT_DIR}
 StandardOutput=journal
 StandardError=journal

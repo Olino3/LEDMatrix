@@ -3683,13 +3683,20 @@ def _parse_form_value_with_schema(value, key_path, schema):
                 except ValueError:
                     return prop.get('default', 0.0)
 
-        # Try parsing as number (fallback)
-        try:
-            if '.' in stripped:
-                return float(stripped)
-            return int(stripped)
-        except ValueError:
-            pass
+        # Try parsing as number (fallback) — skip when schema explicitly says string
+        # Handles both scalar ("string") and union (["string", "null"]) type declarations
+        prop_type = prop.get('type') if prop else None
+        is_string_field = (
+            prop_type == 'string'
+            or (isinstance(prop_type, list) and 'string' in prop_type)
+        )
+        if not is_string_field:
+            try:
+                if '.' in stripped:
+                    return float(stripped)
+                return int(stripped)
+            except ValueError:
+                pass
 
         # Return as string
         return value

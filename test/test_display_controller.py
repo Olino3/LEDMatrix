@@ -206,52 +206,54 @@ class TestDisplayControllerDynamicDuration:
 class TestDisplayControllerSchedule:
     """Test schedule management."""
     
+    def _set_schedule_config(self, controller, config):
+        """Helper to set config on the controller's config_service."""
+        controller.config_service._current_config = config
+
     def test_schedule_disabled(self, test_display_controller):
         """Test when schedule is disabled."""
         controller = test_display_controller
-        controller.config = {"schedule": {"enabled": False}}
-        
+        self._set_schedule_config(controller, {"schedule": {"enabled": False}})
+
         controller._check_schedule()
         assert controller.is_display_active is True
-        
+
     def test_active_hours(self, test_display_controller):
         """Test active hours check."""
         controller = test_display_controller
+        self._set_schedule_config(controller, {
+            "schedule": {
+                "enabled": True,
+                "start_time": "09:00",
+                "end_time": "17:00"
+            }
+        })
         # Mock datetime to be within active hours
         with patch('src.display_controller.datetime') as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value.lower.return_value = "monday"
             mock_datetime.now.return_value.time.return_value = datetime.strptime("12:00", "%H:%M").time()
             mock_datetime.strptime = datetime.strptime
-            
-            controller.config = {
-                "schedule": {
-                    "enabled": True,
-                    "start_time": "09:00",
-                    "end_time": "17:00"
-                }
-            }
-            
+
             controller._check_schedule()
             assert controller.is_display_active is True
 
     def test_inactive_hours(self, test_display_controller):
         """Test inactive hours check."""
         controller = test_display_controller
+        self._set_schedule_config(controller, {
+            "schedule": {
+                "enabled": True,
+                "start_time": "09:00",
+                "end_time": "17:00"
+            }
+        })
         # Mock datetime to be outside active hours
         with patch('src.display_controller.datetime') as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value.lower.return_value = "monday"
             mock_datetime.now.return_value.time.return_value = datetime.strptime("20:00", "%H:%M").time()
             mock_datetime.strptime = datetime.strptime
-            
-            controller.config = {
-                "schedule": {
-                    "enabled": True,
-                    "start_time": "09:00",
-                    "end_time": "17:00"
-                }
-            }
-            
+
             controller._check_schedule()
             assert controller.is_display_active is False
-            
+
 from datetime import datetime

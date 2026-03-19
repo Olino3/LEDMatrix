@@ -137,8 +137,7 @@ sudo systemctl restart ledmatrix-web
 
 1. **Install dependencies:**
    ```bash
-   pip3 install --break-system-packages -r requirements.txt
-   pip3 install --break-system-packages -r web_interface/requirements.txt
+   uv sync
    ```
 
 2. **Test imports step-by-step:**
@@ -429,7 +428,7 @@ sudo systemctl cat ledmatrix-web | grep User
 3. **Check dependencies installed:**
    ```bash
    if [ -f plugins/plugin-id/requirements.txt ]; then
-     pip3 install --break-system-packages -r plugins/plugin-id/requirements.txt
+     uv pip install -r plugins/plugin-id/requirements.txt
    fi
    ```
 

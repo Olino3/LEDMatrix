@@ -306,7 +306,7 @@ This one-shot installer will automatically:
 - Check system prerequisites (network, disk space, sudo access)
 - Install required system packages (git, python3, build tools, etc.)
 - Clone or update the LEDMatrix repository
-- Run the complete first-time installation script
+- Run `matrix install` to set up the project
 
 The installation process typically takes 10-30 minutes depending on your internet connection and Pi model. All errors are reported explicitly with actionable fixes.
 
@@ -337,13 +337,17 @@ git clone https://github.com/ChuckBuilds/LEDMatrix.git
 cd LEDMatrix
 ```
 
-4. Run the first-time installation script:
+4. Install using the `matrix` CLI:
 ```bash
-chmod +x first_time_install.sh
-sudo bash ./first_time_install.sh
-```
+# Install uv (Python package manager) if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-This single script installs services, dependencies, configures permissions and sudoers, and validates the setup.
+# Run the installer (syncs venv, creates config, installs services)
+python3 scripts/matrix_cli.py install
+
+# Verify the installation
+python3 scripts/matrix_cli.py doctor
+```
 
 </details>
 
@@ -704,22 +708,17 @@ sudo python3 display_controller.py
 
 This will start the display cycle but only stays active as long as your ssh session is active.
 
-### Convenience Scripts
+### Service Management
 
-Two convenience scripts are provided for easy service management:
+Use the `matrix` CLI or `systemctl` directly to manage the display service:
 
-- `start_display.sh` - Starts the LED matrix display service
-- `stop_display.sh` - Stops the LED matrix display service
-
-Make them executable with:
 ```bash
-chmod +x start_display.sh stop_display.sh
-```
+matrix service start    # start the LED matrix display service
+matrix service stop     # stop the LED matrix display service
 
-Then use them to control the service:
-```bash
-sudo ./start_display.sh
-sudo ./stop_display.sh
+# Or directly via systemctl:
+sudo systemctl start ledmatrix.service
+sudo systemctl stop ledmatrix.service
 ```
 
 </details>
@@ -730,7 +729,7 @@ sudo ./stop_display.sh
 The first time install will handle this:
 The LEDMatrix can be installed as a systemd service to run automatically at boot and be managed easily. The service runs as root to ensure proper hardware timing access for the LED matrix.
 
-### Installing the Service (this is included in the first_time_install.sh)
+### Installing the Service
 
 1. Make the install script executable:
 ```bash
@@ -873,4 +872,33 @@ sudo systemctl enable ledmatrix-web.service
 </details>
 
 
-### If you've read this far — thanks!  
+## For Plugin Developers
+
+<details>
+<summary>Matrix CLI — developer workflow tool</summary>
+
+The `matrix` CLI wraps common development tasks into a single ergonomic command: running the emulator, scaffolding plugins, managing symlinks, rendering plugin output, and interacting with the plugin store.
+
+**Quick install** (from the project root):
+```bash
+sudo make install-matrix
+```
+
+**Remove**:
+```bash
+sudo make remove-matrix
+```
+
+**Common commands:**
+```bash
+matrix run                      # start display in emulator mode
+matrix plugin new my-plugin     # scaffold a new plugin
+matrix plugin list              # list installed plugins
+matrix plugin store             # browse the plugin registry
+```
+
+See [docs/MATRIX_CLI.md](docs/MATRIX_CLI.md) for the complete command reference.
+
+</details>
+
+### If you've read this far — thanks!

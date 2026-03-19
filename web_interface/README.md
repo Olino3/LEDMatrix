@@ -18,7 +18,6 @@ web_interface/
 ├── app.py                    # Main Flask application
 ├── start.py                  # Startup script
 ├── run.sh                    # Shell runner script
-├── requirements.txt          # Python dependencies
 ├── blueprints/               # Flask blueprints
 │   ├── api_v3.py            # API endpoints
 │   └── pages_v3.py          # Page routes
@@ -33,6 +32,8 @@ web_interface/
         └── app.js
 ```
 
+> **Note:** Web interface dependencies are managed in the root `pyproject.toml` — there is no separate `requirements.txt` for this directory.
+
 ## Running the Web Interface
 
 ### Standalone (Development)
@@ -42,9 +43,9 @@ From the project root:
 python3 web_interface/start.py
 ```
 
-Or using the shell script:
+Or using the `matrix` CLI:
 ```bash
-./web_interface/run.sh
+matrix web
 ```
 
 ### As a Service (Production)

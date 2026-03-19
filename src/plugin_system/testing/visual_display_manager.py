@@ -16,7 +16,7 @@ import math
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -44,11 +44,11 @@ class VisualTestDisplayManager:
 
     # Weather icon color constants (same as DisplayManager)
     WEATHER_COLORS = {
-        'sun': (255, 200, 0),
-        'cloud': (200, 200, 200),
-        'rain': (0, 100, 255),
-        'snow': (220, 220, 255),
-        'storm': (255, 255, 0),
+        "sun": (255, 200, 0),
+        "cloud": (200, 200, 200),
+        "rain": (0, 100, 255),
+        "snow": (220, 220, 255),
+        "storm": (255, 255, 0),
     }
 
     def __init__(self, width: int = 128, height: int = 32):
@@ -56,7 +56,7 @@ class VisualTestDisplayManager:
         self._height = height
 
         # Canvas
-        self.image = Image.new('RGB', (width, height), (0, 0, 0))
+        self.image = Image.new("RGB", (width, height), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
 
         # Matrix proxy (plugins access display_manager.matrix.width/height)
@@ -64,12 +64,12 @@ class VisualTestDisplayManager:
 
         # Scrolling state (interface compat, no-op)
         self._scrolling_state = {
-            'is_scrolling': False,
-            'last_scroll_activity': 0,
-            'scroll_inactivity_threshold': 2.0,
-            'deferred_updates': [],
-            'max_deferred_updates': 50,
-            'deferred_update_ttl': 300.0,
+            "is_scrolling": False,
+            "last_scroll_activity": 0,
+            "scroll_inactivity_threshold": 2.0,
+            "deferred_updates": [],
+            "max_deferred_updates": 50,
+            "deferred_update_ttl": 300.0,
         }
 
         # Call tracking (preserves MockDisplayManager capabilities)
@@ -108,7 +108,7 @@ class VisualTestDisplayManager:
         """Walk up from this file to find the project root (contains assets/fonts)."""
         current = Path(__file__).resolve().parent
         for _ in range(10):
-            if (current / 'assets' / 'fonts').exists():
+            if (current / "assets" / "fonts").exists():
                 return current
             current = current.parent
         return None
@@ -121,10 +121,10 @@ class VisualTestDisplayManager:
             if project_root is None:
                 raise FileNotFoundError("Could not find project root with assets/fonts")
 
-            fonts_dir = project_root / 'assets' / 'fonts'
+            fonts_dir = project_root / "assets" / "fonts"
 
             # Press Start 2P — regular and small (both 8px)
-            ttf_path = str(fonts_dir / 'PressStart2P-Regular.ttf')
+            ttf_path = str(fonts_dir / "PressStart2P-Regular.ttf")
             self.regular_font = ImageFont.truetype(ttf_path, 8)
             self.small_font = ImageFont.truetype(ttf_path, 8)
             self.font = self.regular_font  # alias used by some code paths
@@ -132,7 +132,8 @@ class VisualTestDisplayManager:
             # 5x7 BDF font via freetype
             try:
                 import freetype
-                bdf_path = str(fonts_dir / '5x7.bdf')
+
+                bdf_path = str(fonts_dir / "5x7.bdf")
                 if not os.path.exists(bdf_path):
                     raise FileNotFoundError(f"BDF font not found: {bdf_path}")
                 face = freetype.Face(bdf_path)
@@ -145,7 +146,7 @@ class VisualTestDisplayManager:
 
             # 4x6 extra small TTF
             try:
-                xs_path = str(fonts_dir / '4x6-font.ttf')
+                xs_path = str(fonts_dir / "4x6-font.ttf")
                 self.extra_small_font = ImageFont.truetype(xs_path, 6)
             except (FileNotFoundError, OSError) as e:
                 logger.debug("Extra small font not available, using fallback: %s", e)
@@ -167,22 +168,35 @@ class VisualTestDisplayManager:
     def clear(self):
         """Clear the display to black."""
         self.clear_called = True
-        self.image = Image.new('RGB', (self._width, self._height), (0, 0, 0))
+        self.image = Image.new("RGB", (self._width, self._height), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
 
     def update_display(self):
         """No-op for hardware; marks that display was updated."""
         self.update_called = True
 
-    def draw_text(self, text: str, x: Optional[int] = None, y: Optional[int] = None,
-                  color: Tuple[int, int, int] = (255, 255, 255), small_font: bool = False,
-                  font: Optional[Any] = None, centered: bool = False) -> None:
+    def draw_text(
+        self,
+        text: str,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        color: Tuple[int, int, int] = (255, 255, 255),
+        small_font: bool = False,
+        font: Optional[Any] = None,
+        centered: bool = False,
+    ) -> None:
         """Draw text on the canvas, matching DisplayManager.draw_text() signature."""
         # Track the call
-        self.draw_calls.append({
-            'type': 'text', 'text': text, 'x': x, 'y': y,
-            'color': color, 'font': font,
-        })
+        self.draw_calls.append(
+            {
+                "type": "text",
+                "text": text,
+                "x": x,
+                "y": y,
+                "color": color,
+                "font": font,
+            }
+        )
 
         try:
             # Normalize color to tuple (plugins may pass lists from JSON config)
@@ -209,6 +223,7 @@ class VisualTestDisplayManager:
             # Draw
             try:
                 import freetype
+
                 is_bdf = isinstance(current_font, freetype.Face)
             except ImportError:
                 is_bdf = False
@@ -222,9 +237,14 @@ class VisualTestDisplayManager:
 
     def draw_image(self, image: Image.Image, x: int, y: int):
         """Draw an image on the display."""
-        self.draw_calls.append({
-            'type': 'image', 'image': image, 'x': x, 'y': y,
-        })
+        self.draw_calls.append(
+            {
+                "type": "image",
+                "image": image,
+                "x": x,
+                "y": y,
+            }
+        )
         try:
             self.image.paste(image, (x, y))
         except Exception as e:
@@ -236,7 +256,6 @@ class VisualTestDisplayManager:
         Replicated from DisplayManager._draw_bdf_text().
         """
         try:
-            import freetype
             if isinstance(color, list):
                 color = tuple(color)
             face = font if font else self.calendar_font
@@ -281,6 +300,7 @@ class VisualTestDisplayManager:
         try:
             try:
                 import freetype
+
                 is_bdf = isinstance(font, freetype.Face)
             except ImportError:
                 is_bdf = False
@@ -304,6 +324,7 @@ class VisualTestDisplayManager:
         try:
             try:
                 import freetype
+
                 is_bdf = isinstance(font, freetype.Face)
             except ImportError:
                 is_bdf = False
@@ -314,7 +335,7 @@ class VisualTestDisplayManager:
                 ascent, descent = font.getmetrics()
                 return ascent + descent
         except Exception:
-            if hasattr(font, 'size'):
+            if hasattr(font, "size"):
                 return font.size
             return 8
 
@@ -344,9 +365,8 @@ class VisualTestDisplayManager:
         radius = size // 4
         ray_length = size // 3
         self.draw.ellipse(
-            [center_x - radius, center_y - radius,
-             center_x + radius, center_y + radius],
-            fill=self.WEATHER_COLORS['sun'],
+            [center_x - radius, center_y - radius, center_x + radius, center_y + radius],
+            fill=self.WEATHER_COLORS["sun"],
         )
         for angle in range(0, 360, 45):
             rad = math.radians(angle)
@@ -354,11 +374,11 @@ class VisualTestDisplayManager:
             start_y = center_y + int((radius + 2) * math.sin(rad))
             end_x = center_x + int((radius + ray_length) * math.cos(rad))
             end_y = center_y + int((radius + ray_length) * math.sin(rad))
-            self.draw.line([start_x, start_y, end_x, end_y], fill=self.WEATHER_COLORS['sun'], width=2)
+            self.draw.line([start_x, start_y, end_x, end_y], fill=self.WEATHER_COLORS["sun"], width=2)
 
     def _draw_cloud(self, x: int, y: int, size: int, color: Optional[Tuple[int, int, int]] = None) -> None:
         """Draw a cloud using multiple circles (internal weather icon version)."""
-        cloud_color = color if color is not None else self.WEATHER_COLORS['cloud']
+        cloud_color = color if color is not None else self.WEATHER_COLORS["cloud"]
         base_y = y + size // 2
         circle_radius = size // 4
         positions = [
@@ -368,15 +388,14 @@ class VisualTestDisplayManager:
         ]
         for cx, cy in positions:
             self.draw.ellipse(
-                [cx - circle_radius, cy - circle_radius,
-                 cx + circle_radius, cy + circle_radius],
+                [cx - circle_radius, cy - circle_radius, cx + circle_radius, cy + circle_radius],
                 fill=cloud_color,
             )
 
     def _draw_rain(self, x: int, y: int, size: int) -> None:
         """Draw rain drops falling from a cloud."""
         self._draw_cloud(x, y, size)
-        rain_color = self.WEATHER_COLORS['rain']
+        rain_color = self.WEATHER_COLORS["rain"]
         drop_size = size // 8
         drops = [
             (x + size // 4, y + 2 * size // 3),
@@ -389,7 +408,7 @@ class VisualTestDisplayManager:
     def _draw_snow(self, x: int, y: int, size: int) -> None:
         """Draw snowflakes falling from a cloud."""
         self._draw_cloud(x, y, size)
-        snow_color = self.WEATHER_COLORS['snow']
+        snow_color = self.WEATHER_COLORS["snow"]
         flake_size = size // 6
         flakes = [
             (x + size // 4, y + 2 * size // 3),
@@ -406,7 +425,7 @@ class VisualTestDisplayManager:
     def _draw_storm(self, x: int, y: int, size: int) -> None:
         """Draw a storm cloud with lightning bolt."""
         self._draw_cloud(x, y, size)
-        bolt_color = self.WEATHER_COLORS['storm']
+        bolt_color = self.WEATHER_COLORS["storm"]
         bolt_points = [
             (x + size // 2, y + size // 2),
             (x + 3 * size // 5, y + 2 * size // 3),
@@ -418,22 +437,22 @@ class VisualTestDisplayManager:
     def draw_weather_icon(self, condition: str, x: int, y: int, size: int = 16) -> None:
         """Draw a weather icon based on the condition."""
         cond = condition.lower()
-        if cond in ('clear', 'sunny'):
+        if cond in ("clear", "sunny"):
             self._draw_sun(x, y, size)
-        elif cond in ('clouds', 'cloudy', 'partly cloudy'):
+        elif cond in ("clouds", "cloudy", "partly cloudy"):
             self._draw_cloud(x, y, size)
-        elif cond in ('rain', 'drizzle', 'shower'):
+        elif cond in ("rain", "drizzle", "shower"):
             self._draw_rain(x, y, size)
-        elif cond in ('snow', 'sleet', 'hail'):
+        elif cond in ("snow", "sleet", "hail"):
             self._draw_snow(x, y, size)
-        elif cond in ('thunderstorm', 'storm'):
+        elif cond in ("thunderstorm", "storm"):
             self._draw_storm(x, y, size)
         else:
             self._draw_sun(x, y, size)
 
-    def draw_text_with_icons(self, text: str, icons: List[tuple] = None,
-                             x: int = None, y: int = None,
-                             color: tuple = (255, 255, 255)):
+    def draw_text_with_icons(
+        self, text: str, icons: List[tuple] = None, x: int = None, y: int = None, color: tuple = (255, 255, 255)
+    ):
         """Draw text with weather icons at specified positions."""
         self.draw_text(text, x, y, color)
         if icons:
@@ -447,13 +466,13 @@ class VisualTestDisplayManager:
 
     def set_scrolling_state(self, is_scrolling: bool):
         """Set the current scrolling state (no-op for testing)."""
-        self._scrolling_state['is_scrolling'] = is_scrolling
+        self._scrolling_state["is_scrolling"] = is_scrolling
         if is_scrolling:
-            self._scrolling_state['last_scroll_activity'] = time.time()
+            self._scrolling_state["last_scroll_activity"] = time.time()
 
     def is_currently_scrolling(self) -> bool:
         """Check if display is currently scrolling."""
-        return self._scrolling_state['is_scrolling']
+        return self._scrolling_state["is_scrolling"]
 
     # ------------------------------------------------------------------
     # Utility methods
@@ -463,9 +482,9 @@ class VisualTestDisplayManager:
         """Formats a datetime object into 'Mon Aug 30th' style."""
         day = dt.day
         if 11 <= day <= 13:
-            suffix = 'th'
+            suffix = "th"
         else:
-            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
         return dt.strftime(f"%b %-d{suffix}")
 
     # ------------------------------------------------------------------
@@ -474,7 +493,7 @@ class VisualTestDisplayManager:
 
     def save_snapshot(self, path: str) -> None:
         """Save the current display as a PNG image."""
-        self.image.save(path, format='PNG')
+        self.image.save(path, format="PNG")
 
     def get_image(self) -> Image.Image:
         """Return the current display image."""
@@ -484,9 +503,10 @@ class VisualTestDisplayManager:
         """Return the current display as a base64-encoded PNG string."""
         import base64
         import io
+
         buffer = io.BytesIO()
-        self.image.save(buffer, format='PNG')
-        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+        self.image.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     # ------------------------------------------------------------------
     # Cleanup / reset
@@ -497,18 +517,18 @@ class VisualTestDisplayManager:
         self.clear_called = False
         self.update_called = False
         self.draw_calls = []
-        self.image = Image.new('RGB', (self._width, self._height), (0, 0, 0))
+        self.image = Image.new("RGB", (self._width, self._height), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
         self._scrolling_state = {
-            'is_scrolling': False,
-            'last_scroll_activity': 0,
-            'scroll_inactivity_threshold': 2.0,
-            'deferred_updates': [],
-            'max_deferred_updates': 50,
-            'deferred_update_ttl': 300.0,
+            "is_scrolling": False,
+            "last_scroll_activity": 0,
+            "scroll_inactivity_threshold": 2.0,
+            "deferred_updates": [],
+            "max_deferred_updates": 50,
+            "deferred_update_ttl": 300.0,
         }
 
     def cleanup(self):
         """Clean up resources."""
-        self.image = Image.new('RGB', (self._width, self._height), (0, 0, 0))
+        self.image = Image.new("RGB", (self._width, self._height), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)

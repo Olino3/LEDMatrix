@@ -8,11 +8,11 @@ enabling better error handling and debugging.
 
 class LEDMatrixError(Exception):
     """Base exception for all LEDMatrix errors."""
-    
+
     def __init__(self, message: str, context: dict = None):
         """
         Initialize the exception.
-        
+
         Args:
             message: Error message
             context: Optional context dictionary with additional error details
@@ -20,7 +20,7 @@ class LEDMatrixError(Exception):
         super().__init__(message)
         self.message = message
         self.context = context or {}
-    
+
     def __str__(self) -> str:
         """Return formatted error message with context."""
         if self.context:
@@ -31,11 +31,11 @@ class LEDMatrixError(Exception):
 
 class CacheError(LEDMatrixError):
     """Exception raised for cache-related errors."""
-    
+
     def __init__(self, message: str, cache_key: str = None, context: dict = None):
         """
         Initialize cache error.
-        
+
         Args:
             message: Error message
             cache_key: Optional cache key that caused the error
@@ -43,18 +43,18 @@ class CacheError(LEDMatrixError):
         """
         if cache_key:
             context = context or {}
-            context['cache_key'] = cache_key
+            context["cache_key"] = cache_key
         super().__init__(message, context)
         self.cache_key = cache_key
 
 
 class ConfigError(LEDMatrixError):
     """Exception raised for configuration-related errors."""
-    
+
     def __init__(self, message: str, config_path: str = None, field: str = None, context: dict = None):
         """
         Initialize config error.
-        
+
         Args:
             message: Error message
             config_path: Optional path to config file
@@ -64,9 +64,9 @@ class ConfigError(LEDMatrixError):
         if config_path or field:
             context = context or {}
             if config_path:
-                context['config_path'] = config_path
+                context["config_path"] = config_path
             if field:
-                context['field'] = field
+                context["field"] = field
         super().__init__(message, context)
         self.config_path = config_path
         self.field = field
@@ -74,11 +74,11 @@ class ConfigError(LEDMatrixError):
 
 class PluginError(LEDMatrixError):
     """Exception raised for plugin-related errors."""
-    
+
     def __init__(self, message: str, plugin_id: str = None, context: dict = None):
         """
         Initialize plugin error.
-        
+
         Args:
             message: Error message
             plugin_id: Optional plugin ID that caused the error
@@ -86,18 +86,18 @@ class PluginError(LEDMatrixError):
         """
         if plugin_id:
             context = context or {}
-            context['plugin_id'] = plugin_id
+            context["plugin_id"] = plugin_id
         super().__init__(message, context)
         self.plugin_id = plugin_id
 
 
 class DisplayError(LEDMatrixError):
     """Exception raised for display-related errors."""
-    
+
     def __init__(self, message: str, display_mode: str = None, context: dict = None):
         """
         Initialize display error.
-        
+
         Args:
             message: Error message
             display_mode: Optional display mode that caused the error
@@ -105,7 +105,6 @@ class DisplayError(LEDMatrixError):
         """
         if display_mode:
             context = context or {}
-            context['display_mode'] = display_mode
+            context["display_mode"] = display_mode
         super().__init__(message, context)
         self.display_mode = display_mode
-

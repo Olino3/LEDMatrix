@@ -1,3 +1,6 @@
 [submodule "rpi-rgb-led-matrix-master"]
 	path = rpi-rgb-led-matrix-master
 	url = https://github.com/hzeller/rpi-rgb-led-matrix.git
+[submodule "plugin-repos/transit-board"]
+	path = plugin-repos/transit-board
+	url = https://github.com/Olino3/ledmatrix-transit-board.git

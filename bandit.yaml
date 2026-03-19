@@ -1,0 +1,15 @@
+# Bandit security linter configuration for LEDMatrix
+# This project runs on a Raspberry Pi as a single-user embedded device.
+# Several bandit rules produce false positives in this context.
+
+skips:
+  # B103: Permissive chmod (0o660, 0o755) is intentional for cache files and scripts
+  - B103
+  # B104: Binding 0.0.0.0 is intentional — the web UI must be LAN-accessible on the Pi
+  - B104
+  # B108: Hardcoded /tmp paths are acceptable on a single-user embedded device
+  - B108
+  # B201: Flask debug=True only appears inside if __name__ == '__main__' guards
+  - B201
+  # B324: MD5 is used for non-security purposes (config change detection, filename hashing)
+  - B324

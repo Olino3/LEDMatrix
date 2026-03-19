@@ -6,8 +6,8 @@ across the LEDMatrix codebase. Ensures consistent permission handling for
 files that need to be accessible by both root service and web user.
 """
 
-import os
 import logging
+import os
 import shutil as _shutil
 import subprocess
 from pathlib import Path
@@ -18,21 +18,21 @@ logger = logging.getLogger(__name__)
 # System directories that should never have their permissions modified
 # These directories have special system-level permissions that must be preserved
 PROTECTED_SYSTEM_DIRECTORIES = {
-    '/tmp',
-    '/var/tmp',
-    '/dev',
-    '/proc',
-    '/sys',
-    '/run',
-    '/var/run',
-    '/etc',
-    '/boot',
-    '/var',
-    '/usr',
-    '/lib',
-    '/lib64',
-    '/bin',
-    '/sbin',
+    "/tmp",
+    "/var/tmp",
+    "/dev",
+    "/proc",
+    "/sys",
+    "/run",
+    "/var/run",
+    "/etc",
+    "/boot",
+    "/var",
+    "/usr",
+    "/lib",
+    "/lib64",
+    "/bin",
+    "/sbin",
 }
 
 
@@ -89,12 +89,9 @@ def ensure_directory_permissions(path: Path, mode: int = 0o775) -> None:
                 else:
                     # Directory exists but is not usable
                     logger.error(
-                        f"Directory {path} exists but is not readable/writable. "
-                        f"Permission change failed: {perm_error}"
+                        f"Directory {path} exists but is not readable/writable. Permission change failed: {perm_error}"
                     )
-                    raise OSError(
-                        f"Directory {path} exists but is not usable: {perm_error}"
-                    ) from perm_error
+                    raise OSError(f"Directory {path} exists but is not usable: {perm_error}") from perm_error
             else:
                 # Directory doesn't exist and we couldn't create it
                 raise
@@ -106,11 +103,11 @@ def ensure_directory_permissions(path: Path, mode: int = 0o775) -> None:
 def ensure_file_permissions(path: Path, mode: int = 0o644) -> None:
     """
     Set file permissions after creation.
-    
+
     Args:
         path: File path to set permissions on
         mode: Permission mode (default: 0o644 for readable files)
-    
+
     Raises:
         OSError: If permission setting fails
     """
@@ -128,14 +125,14 @@ def ensure_file_permissions(path: Path, mode: int = 0o644) -> None:
 def get_config_file_mode(file_path: Path) -> int:
     """
     Return appropriate permission mode for config files.
-    
+
     Args:
         file_path: Path to config file
-        
+
     Returns:
         Permission mode: 0o640 for secrets files, 0o644 for regular config
     """
-    if 'secrets' in str(file_path):
+    if "secrets" in str(file_path):
         return 0o640  # rw-r-----
     else:
         return 0o644  # rw-r--r--
@@ -144,7 +141,7 @@ def get_config_file_mode(file_path: Path) -> int:
 def get_assets_file_mode() -> int:
     """
     Return permission mode for asset files (logos, images, etc.).
-    
+
     Returns:
         Permission mode: 0o664 (rw-rw-r--) for group-writable assets
     """
@@ -154,7 +151,7 @@ def get_assets_file_mode() -> int:
 def get_assets_dir_mode() -> int:
     """
     Return permission mode for asset directories.
-    
+
     Returns:
         Permission mode: 0o2775 (rwxrwxr-x + sticky bit) for group-writable directories
     """
@@ -164,7 +161,7 @@ def get_assets_dir_mode() -> int:
 def get_config_dir_mode() -> int:
     """
     Return permission mode for config directory.
-    
+
     Returns:
         Permission mode: 0o2775 (rwxrwxr-x + sticky bit) for group-writable directories
     """
@@ -174,7 +171,7 @@ def get_config_dir_mode() -> int:
 def get_plugin_file_mode() -> int:
     """
     Return permission mode for plugin files.
-    
+
     Returns:
         Permission mode: 0o664 (rw-rw-r--) for group-writable plugin files
     """
@@ -184,7 +181,7 @@ def get_plugin_file_mode() -> int:
 def get_plugin_dir_mode() -> int:
     """
     Return permission mode for plugin directories.
-    
+
     Returns:
         Permission mode: 0o2775 (rwxrwxr-x + sticky bit) for group-writable directories
     """
@@ -250,8 +247,7 @@ def sudo_remove_directory(path: Path, allowed_bases: Optional[list] = None) -> b
 
     if not is_allowed:
         logger.error(
-            f"sudo_remove_directory DENIED: {resolved} is not inside "
-            f"allowed bases {[str(b) for b in allowed_bases]}"
+            f"sudo_remove_directory DENIED: {resolved} is not inside allowed bases {[str(b) for b in allowed_bases]}"
         )
         return False
 
@@ -261,14 +257,11 @@ def sudo_remove_directory(path: Path, allowed_bases: Optional[list] = None) -> b
         logger.error(f"Safe removal helper not found: {helper_script}")
         return False
 
-    bash_path = _shutil.which('bash') or '/bin/bash'
+    bash_path = _shutil.which("bash") or "/bin/bash"
 
     try:
         result = subprocess.run(
-            ['sudo', '-n', bash_path, str(helper_script), str(resolved)],
-            capture_output=True,
-            text=True,
-            timeout=30
+            ["sudo", "-n", bash_path, str(helper_script), str(resolved)], capture_output=True, text=True, timeout=30
         )
         if result.returncode == 0 and not resolved.exists():
             logger.info(f"Successfully removed {path} via sudo helper")
@@ -286,4 +279,3 @@ def sudo_remove_directory(path: Path, allowed_bases: Optional[list] = None) -> b
     except Exception as e:
         logger.error(f"Unexpected error during sudo helper for {path}: {e}")
         return False
-
