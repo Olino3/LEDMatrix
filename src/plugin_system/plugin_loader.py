@@ -9,7 +9,6 @@ import importlib
 import importlib.util
 import json
 import logging
-import subprocess
 import sys
 import threading
 from pathlib import Path
