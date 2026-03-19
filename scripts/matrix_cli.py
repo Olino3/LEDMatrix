@@ -1573,6 +1573,233 @@ def diagnose_plugins() -> None:
 
 
 # ---------------------------------------------------------------------------
+# fix — permission repair commands
+# ---------------------------------------------------------------------------
+
+ASSETS_DIR = LEDMATRIX_ROOT / "assets"
+CACHE_DIRS = [
+    Path("/var/cache/ledmatrix"),
+    Path.home() / ".ledmatrix_cache",
+    Path.home() / ".cache" / "ledmatrix",
+]
+PLUGIN_REPOS_DIR = LEDMATRIX_ROOT / "plugin-repos"
+WEB_DIR = LEDMATRIX_ROOT / "web_interface"
+
+
+def _fix_dir_permissions(target: Path, dir_mode: int, file_mode: int, label: str) -> int:
+    """Recursively set *dir_mode* on directories and *file_mode* on files under *target*.
+
+    Returns the number of items whose permissions were changed.
+    """
+    changed = 0
+    if not target.exists():
+        console.print(f"  [yellow]Skipped[/yellow] {target} (does not exist)")
+        return changed
+
+    for item in target.rglob("*"):
+        try:
+            current = item.stat().st_mode & 0o7777
+            if item.is_dir():
+                if current != dir_mode:
+                    os.chmod(item, dir_mode)
+                    changed += 1
+            elif item.is_file():
+                if current != file_mode:
+                    os.chmod(item, file_mode)
+                    changed += 1
+        except OSError as exc:
+            console.print(f"  [red]Error[/red] {item}: {exc}")
+
+    # Also fix the root directory itself
+    try:
+        current = target.stat().st_mode & 0o7777
+        if current != dir_mode:
+            os.chmod(target, dir_mode)
+            changed += 1
+    except OSError as exc:
+        console.print(f"  [red]Error[/red] {target}: {exc}")
+
+    console.print(f"  [green]✓[/green] {label}: {changed} item(s) updated")
+    return changed
+
+
+def _fix_assets_permissions() -> int:
+    """Fix assets/ directory permissions (755 dirs, 644 files)."""
+    return _fix_dir_permissions(ASSETS_DIR, 0o755, 0o644, "assets/")
+
+
+def _fix_cache_permissions() -> int:
+    """Fix cache directory permissions (775 dirs, 664 files)."""
+    changed = 0
+    for cache_dir in CACHE_DIRS:
+        if cache_dir.exists():
+            changed += _fix_dir_permissions(cache_dir, 0o775, 0o664, str(cache_dir))
+    if changed == 0:
+        console.print("  [dim]No cache directories found[/dim]")
+    return changed
+
+
+def _fix_plugin_permissions() -> int:
+    """Fix plugins/ and plugin-repos/ permissions (755 dirs, 644 files)."""
+    changed = 0
+    for target, label in [(PLUGINS_DIR, "plugins/"), (PLUGIN_REPOS_DIR, "plugin-repos/")]:
+        changed += _fix_dir_permissions(target, 0o755, 0o644, label)
+    return changed
+
+
+def _fix_web_permissions() -> int:
+    """Fix web_interface/ permissions (755 dirs, 644 files)."""
+    return _fix_dir_permissions(WEB_DIR, 0o755, 0o644, "web_interface/")
+
+
+@cli.group()
+def fix():
+    """Fix permissions and common issues."""
+    pass
+
+
+@fix.command()
+@click.option("--assets", is_flag=True, help="Fix assets/ permissions")
+@click.option("--cache", is_flag=True, help="Fix cache/ permissions")
+@click.option("--plugins", is_flag=True, help="Fix plugins/ permissions")
+@click.option("--web", is_flag=True, help="Fix web_interface/ permissions")
+def permissions(assets, cache, plugins, web):
+    """Fix file and directory permissions."""
+    run_all = not any([assets, cache, plugins, web])
+
+    console.print(Rule("[bold]Fix Permissions[/bold]"))
+
+    total = 0
+    if run_all or assets:
+        total += _fix_assets_permissions()
+    if run_all or cache:
+        total += _fix_cache_permissions()
+    if run_all or plugins:
+        total += _fix_plugin_permissions()
+    if run_all or web:
+        total += _fix_web_permissions()
+
+    console.print()
+    if total:
+        console.print(f"[green]Done.[/green] {total} permission(s) updated.")
+    else:
+        console.print("[green]Done.[/green] All permissions already correct.")
+
+
+# ---------------------------------------------------------------------------
+# clean — housekeeping commands
+# ---------------------------------------------------------------------------
+
+@cli.group()
+def clean():
+    """Remove caches, markers, and backup files."""
+    pass
+
+
+@clean.command()
+def cache():
+    """Delete __pycache__ dirs, .pyc files, and Flask .webassets-cache."""
+    console.print(Rule("[bold]Clean Python Cache[/bold]"))
+
+    removed_dirs = 0
+    removed_files = 0
+
+    # Remove __pycache__ directories
+    for pycache in list(LEDMATRIX_ROOT.rglob("__pycache__")):
+        try:
+            shutil.rmtree(pycache)
+            removed_dirs += 1
+        except OSError as exc:
+            console.print(f"  [red]Error[/red] {pycache}: {exc}")
+
+    # Remove .pyc files
+    for pyc in list(LEDMATRIX_ROOT.rglob("*.pyc")):
+        try:
+            pyc.unlink()
+            removed_files += 1
+        except OSError as exc:
+            console.print(f"  [red]Error[/red] {pyc}: {exc}")
+
+    # Remove Flask webassets cache
+    webassets = LEDMATRIX_ROOT / "web_interface" / ".webassets-cache"
+    if webassets.exists():
+        try:
+            shutil.rmtree(webassets)
+            removed_dirs += 1
+        except OSError as exc:
+            console.print(f"  [red]Error[/red] {webassets}: {exc}")
+
+    console.print(f"  [green]✓[/green] Removed {removed_dirs} cache dir(s) and {removed_files} .pyc file(s)")
+
+
+@clean.command()
+def deps():
+    """Remove .dependencies_installed marker files from plugins."""
+    console.print(Rule("[bold]Clean Dependency Markers[/bold]"))
+
+    removed = 0
+    search_dirs = [
+        Path("/var/cache/ledmatrix"),
+        Path.home() / ".cache" / "ledmatrix",
+    ]
+
+    for search_dir in search_dirs:
+        if not search_dir.exists():
+            continue
+        for marker in list(search_dir.glob("plugin_*_deps_installed")):
+            try:
+                marker.unlink()
+                removed += 1
+            except OSError as exc:
+                console.print(f"  [red]Error[/red] {marker}: {exc}")
+
+    # Also check inside plugin directories
+    if PLUGINS_DIR.exists():
+        for marker in list(PLUGINS_DIR.rglob(".dependencies_installed")):
+            try:
+                marker.unlink()
+                removed += 1
+            except OSError as exc:
+                console.print(f"  [red]Error[/red] {marker}: {exc}")
+
+    console.print(f"  [green]✓[/green] Removed {removed} dependency marker(s)")
+
+
+@clean.command()
+def backups():
+    """Remove *_backup dirs and *.bak files from plugins/."""
+    console.print(Rule("[bold]Clean Plugin Backups[/bold]"))
+
+    removed = 0
+
+    if not PLUGINS_DIR.exists():
+        console.print("  [yellow]Skipped[/yellow] plugins/ does not exist")
+        return
+
+    # Remove *_backup and *.backup* directories
+    for pattern in ["*_backup", "*.backup*"]:
+        for backup in list(PLUGINS_DIR.glob(pattern)):
+            if backup.is_dir():
+                try:
+                    shutil.rmtree(backup)
+                    removed += 1
+                    console.print(f"  Removed dir  {backup.name}")
+                except OSError as exc:
+                    console.print(f"  [red]Error[/red] {backup}: {exc}")
+
+    # Remove *.bak files
+    for bak in list(PLUGINS_DIR.rglob("*.bak")):
+        try:
+            bak.unlink()
+            removed += 1
+            console.print(f"  Removed file {bak.name}")
+        except OSError as exc:
+            console.print(f"  [red]Error[/red] {bak}: {exc}")
+
+    console.print(f"  [green]✓[/green] Removed {removed} backup item(s)")
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
