@@ -3,7 +3,7 @@
 This document tracks planned improvements, features, and large-scale refactors for the LEDMatrix project.
 Items are organized into versioned phases. Each phase delivers a cohesive set of changes before the next begins.
 
-Current version: **v1.0.0**
+Current version: **v1.1.0**
 
 ---
 
