@@ -27,7 +27,7 @@ The following `first_time_install.sh` functionality is **NOT** covered by `matri
 ### System Prerequisites
 - [ ] OS validation (Raspberry Pi OS Lite, Debian 13/Trixie, no desktop)
 - [ ] Network connectivity check
-- [ ] `apt` package installation (python3-pip, python3-venv, build-essential, cython3, scons, cmake, etc.)
+- [x] `apt` package installation (python3-pip, python3-venv, build-essential, cython3, scons, cmake, etc.) — via `matrix install --prerequisites`
 
 ### Hardware Setup
 - [ ] Git submodule init for `rpi-rgb-led-matrix-master`
@@ -38,23 +38,38 @@ The following `first_time_install.sh` functionality is **NOT** covered by `matri
 - [ ] Removal of conflicting services (bluetooth, triggerhappy, pigpio)
 
 ### Permissions & Security
-- [ ] Cache directory setup (`/var/cache/ledmatrix` with `ledmatrix` group)
+- [x] Cache directory setup (`/var/cache/ledmatrix` with `ledmatrix` group) — via `matrix install --permissions`
 - [ ] Assets directory permissions (sports logos, etc.)
 - [ ] Plugin and plugin-repos directory permissions
 - [ ] Config directory permissions (`config_secrets.json` with 640)
-- [ ] Passwordless sudo for web interface (`/etc/sudoers.d/ledmatrix_web`)
+- [x] Passwordless sudo for web interface (`/etc/sudoers.d/ledmatrix_web`) — via `matrix install --permissions`
 - [ ] User group membership (`systemd-journal`, `adm`, `ledmatrix`)
 
 ### Services
-- [ ] Web service installation (`install_web_service.sh`)
-- [ ] WiFi monitor service installation (`install_wifi_monitor.sh`)
+- [x] Web service installation (`install_web_service.sh`) — via `matrix install --services`
+- [x] WiFi monitor service installation (`install_wifi_monitor.sh`) — via `matrix install --services`
 - [ ] Systemd unit file permission hardening
-- [ ] WiFi management permissions (PolicyKit)
+- [x] WiFi management permissions (PolicyKit) — via `matrix install --permissions`
 
 ### Post-Install
 - [ ] Installation verification tests
 - [ ] Network diagnostics / IP address display
 - [ ] Reboot prompt
+
+---
+
+## Implementation Notes (SPIKE-010)
+
+The following flags were added to `matrix install` and are no-ops on non-Pi platforms:
+
+- `--prerequisites`: runs `apt-get install` for required system packages
+- `--permissions`: runs `setup_cache.sh` (with sudo), `configure_web_sudo.sh` and
+  `configure_wifi_permissions.sh` (both without sudo, as they invoke sudo internally)
+- `--services`: installs the web interface and WiFi monitor systemd services
+
+Pi detection now requires an ARM/AArch64 architecture **and** a device-tree model
+containing "raspberry" (`/proc/device-tree/model`). The `/dev/mem` shortcut was removed
+because that file exists on non-Pi Linux hosts.
 
 ---
 

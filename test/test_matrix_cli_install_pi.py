@@ -14,11 +14,10 @@ Tests cover:
 import sys
 import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import matrix_cli
 from matrix_cli import (
     cli,
     _is_raspberry_pi,
@@ -36,34 +35,30 @@ from matrix_cli import (
 class TestIsRaspberryPi:
     """Tests for Pi hardware detection helper."""
 
-    def test_returns_true_when_dev_mem_exists(self):
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
+    def test_returns_false_on_non_arm_arch(self):
+        with patch("platform.machine", return_value="x86_64"), \
              patch("matrix_cli._PI_MODEL_PATH") as mock_model:
-            mock_dev_mem.exists.return_value = True
             mock_model.exists.return_value = False
-            assert _is_raspberry_pi() is True
+            assert _is_raspberry_pi() is False
 
     def test_returns_false_when_nothing_present(self):
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
+        with patch("platform.machine", return_value="aarch64"), \
              patch("matrix_cli._PI_MODEL_PATH") as mock_model:
-            mock_dev_mem.exists.return_value = False
             mock_model.exists.return_value = False
             assert _is_raspberry_pi() is False
 
     def test_returns_true_when_model_file_contains_raspberry(self, tmp_path):
         model_file = tmp_path / "model"
         model_file.write_text("Raspberry Pi 4 Model B Rev 1.4\n")
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
+        with patch("platform.machine", return_value="aarch64"), \
              patch("matrix_cli._PI_MODEL_PATH", model_file):
-            mock_dev_mem.exists.return_value = False
             assert _is_raspberry_pi() is True
 
     def test_returns_false_when_model_file_not_raspberry(self, tmp_path):
         model_file = tmp_path / "model"
         model_file.write_text("Some Other Board\n")
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
+        with patch("platform.machine", return_value="armv7l"), \
              patch("matrix_cli._PI_MODEL_PATH", model_file):
-            mock_dev_mem.exists.return_value = False
             assert _is_raspberry_pi() is False
 
 

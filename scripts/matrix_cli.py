@@ -35,7 +35,6 @@ LEDMATRIX_ROOT = Path(__file__).resolve().parent.parent
 console = Console()
 
 # Pi detection paths
-_PI_DEV_MEM = Path("/dev/mem")
 _PI_MODEL_PATH = Path("/proc/device-tree/model")
 
 _venv_python = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
@@ -155,14 +154,16 @@ def _require_web() -> bool:
 
 def _is_raspberry_pi() -> bool:
     """Detect whether we are running on a Raspberry Pi."""
-    if _PI_DEV_MEM.exists():
-        return True
+    # Require an ARM-based architecture and a Raspberry Pi device-tree model.
+    arch = platform.machine().lower()
+    if not (arch.startswith("arm") or arch.startswith("aarch64")):
+        return False
     if _PI_MODEL_PATH.exists():
         try:
             model = _PI_MODEL_PATH.read_text(errors="replace").lower()
             return "raspberry" in model
         except OSError:
-            pass
+            return False
     return False
 
 
@@ -375,8 +376,8 @@ def install(no_services: bool, emulator: bool, permissions: bool,
     """
     console.print(Rule("[green]install[/green]"))
 
-    is_pi = _is_raspberry_pi()
     pi_flags_requested = permissions or extra_services or prerequisites
+    is_pi = _is_raspberry_pi() if pi_flags_requested else False
 
     # Step 0: Prerequisites (apt packages, Pi only)
     if prerequisites:
@@ -431,12 +432,12 @@ def install(no_services: bool, emulator: bool, permissions: bool,
         if is_pi:
             console.print("  Setting up permissions (may prompt for sudo)...")
             perm_scripts = [
-                ("setup_cache.sh", "Cache directory"),
-                ("configure_web_sudo.sh", "Web sudoers"),
-                ("configure_wifi_permissions.sh", "WiFi permissions"),
+                ("setup_cache.sh", "Cache directory", True),
+                ("configure_web_sudo.sh", "Web sudoers", False),
+                ("configure_wifi_permissions.sh", "WiFi permissions", False),
             ]
-            for script, label in perm_scripts:
-                rc = _run_install_script(script)
+            for script, label, use_sudo in perm_scripts:
+                rc = _run_install_script(script, use_sudo=use_sudo)
                 if rc == 0:
                     console.print(f"[green]\u2713 {label} configured[/green]")
                 else:
