@@ -101,6 +101,20 @@ Flask app at `web_interface/app.py` with blueprints: `api_v3.py` (REST API) and 
 - When modifying a plugin in the monorepo, bump `version` in `manifest.json` AND run `python update_registry.py`
 - `EMULATOR=true` switches the `rgbmatrix` import to `RGBMatrixEmulator` in `src/display_manager.py`
 - 7 pre-existing test failures (mock attribute, tkinter, web API 503) are known — do not fix unrelated tests
+- Click 8.x: `CliRunner(mix_stderr=False)` is NOT supported — use `CliRunner()` without that parameter
+- CLI tests that invoke destructive commands (`uninstall`, `clean`) MUST mock all filesystem operations (`shutil.rmtree`, `Path.unlink`, `subprocess.run`) to prevent damage to the real environment (e.g. deleting `.venv`)
+- The default branch is `develop` — worktrees and feature branches MUST branch from `develop`, not `main`
+
+## External Repositories
+
+The user (Olino3) owns these related repos:
+
+| Repo | Local path | Purpose |
+|------|-----------|---------|
+| `git@github.com:Olino3/ledmatrix-plugins.git` | `~/git/ledmatrix-plugins` | Plugin monorepo (fork of ChuckBuilds/ledmatrix-plugins) |
+| `git@github.com:Olino3/ledmatrix-transit-board.git` | `~/git/ledmatrix-transit-board` | Transit board plugin |
+
+**IMPORTANT:** When opening PRs for plugin repos, open them on `Olino3/*` — NOT on `ChuckBuilds/*` (upstream). The user controls their own fork.
 
 ## Development Setup for Plugins
 ```bash

@@ -12,6 +12,15 @@ Applies to: `test/**/*`
 - Do not write tests that pass without asserting anything meaningful.
 - Coverage must not drop below the current baseline; raise it for modules you touch.
 
+## CLI Test Safety (CRITICAL)
+
+- CLI tests that invoke destructive commands (`uninstall`, `clean`, `fix permissions`) **MUST** mock all filesystem and subprocess operations to prevent real-world damage
+- Specifically mock: `shutil.rmtree`, `Path.unlink`, `Path.mkdir`, `os.chmod`, `os.chown`, `subprocess.run` for any command that modifies the system
+- Use `tmp_path` fixture for any test that creates/deletes files — NEVER operate on real project paths
+- `CliRunner(mix_stderr=False)` is NOT supported in Click 8.x — use `CliRunner()` instead
+- When testing commands that call `click.confirm()`, pass `input="y\n"` or `input="n\n"` to CliRunner
+- When testing commands with `sys.exit()`, use `catch_exceptions=True` (default) and check `result.exit_code`
+
 ## Known Pre-existing Failures (do not fix unless explicitly tasked)
 
 7 failures exist in the baseline: mock attribute errors, tkinter import issues, web API 503 responses. These are unrelated to display logic.
