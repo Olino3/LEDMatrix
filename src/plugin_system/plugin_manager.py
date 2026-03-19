@@ -9,7 +9,6 @@ API Version: 1.0.0
 
 import json
 import logging
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,7 +17,6 @@ from typing import Any, Dict, List, Optional
 from src.common.permission_utils import ensure_directory_permissions, get_plugin_dir_mode
 from src.exceptions import PluginError
 from src.logging_config import get_logger
-from src.plugin_system.dep_installer import install_plugin_dependencies
 from src.plugin_system.plugin_executor import PluginExecutor
 from src.plugin_system.plugin_loader import PluginLoader
 from src.plugin_system.plugin_state import PluginState, PluginStateManager
@@ -187,18 +185,6 @@ class PluginManager:
                 marker_path.unlink()
         except (OSError, PermissionError) as e:
             self.logger.warning("Could not remove dependency marker for %s: %s", plugin_id, e)
-
-    def _install_plugin_dependencies(self, requirements_file: Path) -> bool:
-        """
-        Install plugin dependencies from requirements.txt via uv (or pip fallback).
-
-        Args:
-            requirements_file: Path to requirements.txt
-
-        Returns:
-            True if installation succeeded or not needed, False on error
-        """
-        return install_plugin_dependencies(requirements_file)
 
     def load_plugin(self, plugin_id: str) -> bool:
         """

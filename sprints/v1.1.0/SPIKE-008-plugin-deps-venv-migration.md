@@ -4,7 +4,7 @@
 **Phase:** v1.1.0 — Foundation
 **Type:** Spike
 **Depends on:** [FOUND-002](FOUND-002-venv-bootstrap.md)
-**Blocks:** _(none)_
+**Blocks:** [SPIKE-019](SPIKE-019-plugin-pyproject-migration.md)
 
 ---
 
