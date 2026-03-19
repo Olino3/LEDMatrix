@@ -974,6 +974,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "rich" },
 ]
 
 [package.metadata]
@@ -1006,6 +1007,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.0,<3.0.0" },
     { name = "rgbmatrixemulator", marker = "extra == 'emulator'" },
     { name = "rich", marker = "extra == 'dev'", specifier = ">=13.0.0" },
+    { name = "rich", marker = "extra == 'test'", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.0" },
     { name = "spotipy", specifier = ">=2.24.0,<3.0.0" },
     { name = "timezonefinder", specifier = ">=6.5.0,<7.0.0" },
