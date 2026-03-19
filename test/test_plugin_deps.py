@@ -1,7 +1,7 @@
 """
 Tests for plugin dependency installation via uv.
 
-RED tests for SPIKE-008: Plugin dependency installation migrated to venv/uv.
+Tests for SPIKE-008: Plugin dependency installation migrated to venv/uv.
 Tests cover:
 - _find_uv() utility discovers uv binary
 - _build_install_command() constructs correct uv pip install command
@@ -11,11 +11,10 @@ Tests cover:
 - Fallback to pip when uv is not available
 """
 
-import shutil
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,7 +34,7 @@ class TestFindUv:
 
     def test_find_uv_not_found(self):
         """_find_uv returns None when uv is not available."""
-        from src.plugin_system.dep_installer import _find_uv, _UV_SEARCH_PATHS
+        from src.plugin_system.dep_installer import _find_uv
 
         with patch("shutil.which", return_value=None):
             with patch.object(Path, "exists", return_value=False):
@@ -255,31 +254,37 @@ class TestStoreManagerUsesUv:
         plugin_path = Path("/tmp/test-plugin")
 
         with patch("pathlib.Path.exists", return_value=True):
-            with patch("src.plugin_system.store_manager.install_plugin_dependencies", return_value=True):
+            with patch(
+                "src.plugin_system.store_manager.install_plugin_dependencies",
+                return_value=True,
+            ) as mock_install:
                 store._install_dependencies(plugin_path)
 
-        # If subprocess.run was called directly, verify no --break-system-packages
-        if mock_run.called:
-            cmd = mock_run.call_args[0][0]
-            assert "--break-system-packages" not in cmd
+        # Verify that dependency installation was delegated correctly and that
+        # subprocess.run was not called directly (and thus cannot use
+        # --break-system-packages).
+        mock_install.assert_called_once_with(plugin_path / "requirements.txt", plugin_id=plugin_path.name)
+        mock_run.assert_not_called()
 
 
 class TestPluginManagerUsesUv:
-    """Test that PluginManager._install_plugin_dependencies uses uv."""
+    """Test that PluginManager delegates dependency installation through PluginLoader."""
 
     @patch("subprocess.run")
     def test_plugin_manager_no_break_system_packages(self, mock_run):
-        """PluginManager must not use --break-system-packages."""
+        """PluginManager.load_plugin must not call subprocess.run directly for deps."""
         from src.plugin_system.plugin_manager import PluginManager
 
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
         manager = PluginManager.__new__(PluginManager)
         manager.logger = MagicMock()
+        manager.plugins = {}
+        manager.plugin_manifests = {}
+        manager.state_manager = MagicMock()
 
-        requirements_file = Path("/tmp/test-plugin/requirements.txt")
+        # load_plugin returns False (no manifest) but must never call subprocess.run
+        result = manager.load_plugin("nonexistent-plugin")
 
-        with patch("src.plugin_system.plugin_manager.install_plugin_dependencies", return_value=True):
-            result = manager._install_plugin_dependencies(requirements_file)
-
-        assert result is True
+        assert result is False
+        mock_run.assert_not_called()

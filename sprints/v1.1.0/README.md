@@ -40,8 +40,8 @@
 
 | Status | Count | Tickets |
 |---|---|---|
-| Done | 13 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-009 |
-| Open | 12 | SPIKE-003, SPIKE-010 through SPIKE-019 |
+| Done | 14 | FOUND-001 through FOUND-006, SPIKE-001, SPIKE-002, SPIKE-004 through SPIKE-009 |
+| Open | 11 | SPIKE-003, SPIKE-010 through SPIKE-019 |
 | In Progress | 0 | -- |
 | Blocked | 0 | -- |
 
