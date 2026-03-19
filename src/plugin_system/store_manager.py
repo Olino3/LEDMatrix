@@ -1524,9 +1524,7 @@ class PluginStoreManager:
             self.logger.debug(f"No requirements.txt found in {plugin_path.name}")
             return True
 
-        return install_plugin_dependencies(
-            requirements_file, plugin_id=plugin_path.name
-        )
+        return install_plugin_dependencies(requirements_file, plugin_id=plugin_path.name)
 
     def _get_local_git_info(self, plugin_path: Path) -> Optional[Dict[str, str]]:
         """Return local git branch, commit hash, and commit date if the plugin is a git checkout."""

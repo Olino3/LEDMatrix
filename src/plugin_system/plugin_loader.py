@@ -140,9 +140,7 @@ class PluginLoader:
             self.logger.debug("Dependencies already installed for %s", plugin_id)
             return True
 
-        success = install_plugin_dependencies(
-            requirements_file, plugin_id=plugin_id, timeout=timeout
-        )
+        success = install_plugin_dependencies(requirements_file, plugin_id=plugin_id, timeout=timeout)
 
         if success:
             marker_path.touch()

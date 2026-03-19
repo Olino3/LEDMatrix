@@ -97,9 +97,7 @@ def install_plugin_dependencies(
         ``True`` on success, ``False`` on failure.
     """
     uv_path = _find_uv()
-    cmd = _build_install_command(
-        requirements_file, uv_path=uv_path, python_path=python_path
-    )
+    cmd = _build_install_command(requirements_file, uv_path=uv_path, python_path=python_path)
 
     tool_name = "uv" if uv_path else "pip"
     log_id = plugin_id or requirements_file.parent.name
@@ -144,9 +142,7 @@ def install_plugin_dependencies(
                 log_id,
             )
         else:
-            logger.error(
-                "OS error during dependency installation for %s: %s", log_id, e
-            )
+            logger.error("OS error during dependency installation for %s: %s", log_id, e)
         return False
     except Exception as e:
         logger.error(
