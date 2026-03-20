@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [SPIKE-002](SPIKE-002-pages-v3-transition.md)
@@ -20,10 +20,10 @@ The pages router (`src/api/routers/pages.py`) maps `weather` and `stocks` as sim
 
 ## Acceptance Criteria
 
-- [ ] `web_interface/templates/v3/partials/weather.html` exists with a functional config form
-- [ ] `web_interface/templates/v3/partials/stocks.html` exists with a functional config form
-- [ ] Both partials render without errors via `GET /v3/partials/weather` and `GET /v3/partials/stocks`
-- [ ] Tests added for both partials
+- [x] `web_interface/templates/v3/partials/weather.html` exists with a functional config form
+- [x] `web_interface/templates/v3/partials/stocks.html` exists with a functional config form
+- [x] Both partials render without errors via `GET /v3/partials/weather` and `GET /v3/partials/stocks`
+- [x] Tests added for both partials (added to parametrized test_all_partials_return_200)
 
 ---
 
