@@ -13,6 +13,7 @@ from src.api.routers import (
     assets_router,
     config_router,
     fonts_router,
+    pages_router,
     plugins_router,
     starlark_router,
     store_router,
@@ -57,6 +58,9 @@ def create_app() -> FastAPI:
     app.include_router(assets_router, prefix="/api/v3")
     app.include_router(starlark_router, prefix="/api/v3")
     app.include_router(streams_router, prefix="/api/v3")
+
+    # HTMX page routes (no /api/v3 prefix — served at /v3/)
+    app.include_router(pages_router)
 
     # Mount static files from web_interface (kept during Phase 2-3 transition)
     static_dir = WEB_INTERFACE_DIR / "static"
