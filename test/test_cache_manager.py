@@ -22,17 +22,17 @@ class TestCacheManager:
 
     def test_init(self, tmp_path):
         """Test CacheManager initialization."""
-        with patch('src.cache_manager.CacheManager._get_writable_cache_dir', return_value=str(tmp_path)):
+        with patch("src.cache_manager.CacheManager._get_writable_cache_dir", return_value=str(tmp_path)):
             cm = CacheManager()
             assert cm.cache_dir == str(tmp_path)
-            assert hasattr(cm, '_memory_cache_component')
-            assert hasattr(cm, '_disk_cache_component')
-            assert hasattr(cm, '_strategy_component')
-            assert hasattr(cm, '_metrics_component')
+            assert hasattr(cm, "_memory_cache_component")
+            assert hasattr(cm, "_disk_cache_component")
+            assert hasattr(cm, "_strategy_component")
+            assert hasattr(cm, "_metrics_component")
 
     def test_set_and_get(self, tmp_path):
         """Test basic set and get operations."""
-        with patch('src.cache_manager.CacheManager._get_writable_cache_dir', return_value=str(tmp_path)):
+        with patch("src.cache_manager.CacheManager._get_writable_cache_dir", return_value=str(tmp_path)):
             cm = CacheManager()
             test_data = {"key": "value", "number": 42}
 
@@ -43,7 +43,7 @@ class TestCacheManager:
 
     def test_get_expired(self, tmp_path):
         """Test getting expired cache entry."""
-        with patch('src.cache_manager.CacheManager._get_writable_cache_dir', return_value=str(tmp_path)):
+        with patch("src.cache_manager.CacheManager._get_writable_cache_dir", return_value=str(tmp_path)):
             cm = CacheManager()
             cm.set("test_key", {"data": "value"})
 
@@ -208,8 +208,8 @@ class TestCacheMetrics:
         stats = metrics.get_metrics()
 
         # get_metrics() returns calculated values, not raw hits/misses
-        assert stats['total_requests'] == 1
-        assert stats['cache_hit_rate'] == 1.0  # 1 hit out of 1 request
+        assert stats["total_requests"] == 1
+        assert stats["cache_hit_rate"] == 1.0  # 1 hit out of 1 request
 
     def test_record_miss(self):
         """Test recording cache miss."""
@@ -218,8 +218,8 @@ class TestCacheMetrics:
         stats = metrics.get_metrics()
 
         # get_metrics() returns calculated values, not raw hits/misses
-        assert stats['total_requests'] == 1
-        assert stats['cache_hit_rate'] == 0.0  # 0 hits out of 1 request
+        assert stats["total_requests"] == 1
+        assert stats["cache_hit_rate"] == 0.0  # 0 hits out of 1 request
 
     def test_record_fetch_time(self):
         """Test recording fetch time."""
@@ -227,9 +227,9 @@ class TestCacheMetrics:
         metrics.record_fetch_time(0.5)
         stats = metrics.get_metrics()
 
-        assert stats['fetch_count'] == 1
-        assert stats['total_fetch_time'] == 0.5
-        assert stats['average_fetch_time'] == 0.5
+        assert stats["fetch_count"] == 1
+        assert stats["total_fetch_time"] == 0.5
+        assert stats["average_fetch_time"] == 0.5
 
     def test_cache_hit_rate(self):
         """Test cache hit rate calculation."""
@@ -239,7 +239,7 @@ class TestCacheMetrics:
         metrics.record_miss()
 
         stats = metrics.get_metrics()
-        assert stats['cache_hit_rate'] == pytest.approx(0.666, abs=0.01)
+        assert stats["cache_hit_rate"] == pytest.approx(0.666, abs=0.01)
 
 
 class TestDiskCache:
@@ -322,10 +322,7 @@ class TestDiskCache:
     def test_set_with_datetime(self, tmp_path):
         """Test setting cache with datetime objects."""
         cache = DiskCache(cache_dir=str(tmp_path))
-        test_data = {
-            "timestamp": datetime.now(),
-            "data": "value"
-        }
+        test_data = {"timestamp": datetime.now(), "data": "value"}
 
         cache.set("test_key", test_data)
         result = cache.get("test_key")
@@ -363,20 +360,20 @@ class TestDiskCache:
     def test_record_background_hit(self):
         """Test recording background cache hit."""
         metrics = CacheMetrics()
-        metrics.record_hit(cache_type='background')
+        metrics.record_hit(cache_type="background")
         stats = metrics.get_metrics()
 
-        assert stats['total_requests'] == 1
-        assert stats['background_hit_rate'] == 1.0
+        assert stats["total_requests"] == 1
+        assert stats["background_hit_rate"] == 1.0
 
     def test_record_background_miss(self):
         """Test recording background cache miss."""
         metrics = CacheMetrics()
-        metrics.record_miss(cache_type='background')
+        metrics.record_miss(cache_type="background")
         stats = metrics.get_metrics()
 
-        assert stats['total_requests'] == 1
-        assert stats['background_hit_rate'] == 0.0
+        assert stats["total_requests"] == 1
+        assert stats["background_hit_rate"] == 0.0
 
     def test_multiple_fetch_times(self):
         """Test recording multiple fetch times."""
@@ -386,6 +383,6 @@ class TestDiskCache:
         metrics.record_fetch_time(0.3)
 
         stats = metrics.get_metrics()
-        assert stats['fetch_count'] == 3
-        assert stats['total_fetch_time'] == 1.8
-        assert stats['average_fetch_time'] == pytest.approx(0.6, abs=0.01)
+        assert stats["fetch_count"] == 3
+        assert stats["total_fetch_time"] == 1.8
+        assert stats["average_fetch_time"] == pytest.approx(0.6, abs=0.01)

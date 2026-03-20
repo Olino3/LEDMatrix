@@ -22,6 +22,7 @@ from matrix_cli import cli
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _invoke(*args):
     """Shorthand: invoke the CLI and return the Click Result."""
     return CliRunner().invoke(cli, list(args))
@@ -30,6 +31,7 @@ def _invoke(*args):
 # ---------------------------------------------------------------------------
 # diagnose --help
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestDiagnoseGroup:
@@ -53,26 +55,41 @@ class TestDiagnoseGroup:
 # diagnose web
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDiagnoseWeb:
     """``matrix diagnose web``."""
 
-    def _run_web(self, port_open=True, status_code=200, health_code=200,
-                 files_exist=True, static_exists=True, templates_exist=True,
-                 autostart=True, svc_exists=False, svc_active="active"):
+    def _run_web(
+        self,
+        port_open=True,
+        status_code=200,
+        health_code=200,
+        files_exist=True,
+        static_exists=True,
+        templates_exist=True,
+        autostart=True,
+        svc_exists=False,
+        svc_active="active",
+    ):
         """Run ``diagnose web`` with configurable mocked conditions."""
         # Build patches
 
-        with patch.object(matrix_cli, "_check_port_open", return_value=port_open), \
-             patch.object(matrix_cli, "_check_url") as mock_url, \
-             patch.object(matrix_cli, "_read_config", return_value={
-                 "web_display_autostart": autostart,
-             }), \
-             patch("pathlib.Path.exists") as mock_exists, \
-             patch("pathlib.Path.is_dir") as mock_is_dir, \
-             patch("pathlib.Path.rglob") as mock_rglob, \
-             patch("subprocess.run") as mock_subp:
-
+        with (
+            patch.object(matrix_cli, "_check_port_open", return_value=port_open),
+            patch.object(matrix_cli, "_check_url") as mock_url,
+            patch.object(
+                matrix_cli,
+                "_read_config",
+                return_value={
+                    "web_display_autostart": autostart,
+                },
+            ),
+            patch("pathlib.Path.exists") as mock_exists,
+            patch("pathlib.Path.is_dir") as mock_is_dir,
+            patch("pathlib.Path.rglob") as mock_rglob,
+            patch("subprocess.run") as mock_subp,
+        ):
             # _check_url returns different values per call
             def url_side_effect(url, timeout=3.0):
                 if "status" in url:
@@ -80,6 +97,7 @@ class TestDiagnoseWeb:
                 if "health" in url:
                     return health_code
                 return None
+
             mock_url.side_effect = url_side_effect
 
             # Path.exists returns True for files we want to exist
@@ -94,9 +112,7 @@ class TestDiagnoseWeb:
             mock_rglob.return_value = [mock_file] * 5
 
             # systemd
-            mock_subp.return_value = MagicMock(
-                stdout=svc_active + "\n", returncode=0
-            )
+            mock_subp.return_value = MagicMock(stdout=svc_active + "\n", returncode=0)
 
             result = _invoke("diagnose", "web")
 
@@ -138,17 +154,18 @@ class TestDiagnoseWeb:
 # diagnose network
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDiagnoseNetwork:
     """``matrix diagnose network``."""
 
     def test_network_all_healthy(self):
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -156,12 +173,12 @@ class TestDiagnoseNetwork:
         assert "PASS" in result.output
 
     def test_network_ping_fails(self):
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -171,10 +188,13 @@ class TestDiagnoseNetwork:
 
     def test_network_dns_fails(self):
         import socket as _socket
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", side_effect=_socket.gaierror("Name resolution failed")):
+
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", side_effect=_socket.gaierror("Name resolution failed")),
+        ):
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -182,12 +202,12 @@ class TestDiagnoseNetwork:
         assert "FAIL" in result.output
 
     def test_network_captive_portal_detected(self):
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=302), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=302),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -197,15 +217,16 @@ class TestDiagnoseNetwork:
     def test_network_wifi_on_pi(self):
         iwconfig_output = (
             'wlan0     IEEE 802.11  ESSID:"MyNetwork"\n'
-            '          Mode:Managed  Frequency:2.437 GHz\n'
-            '          Link Quality=70/70  Signal level=-30 dBm\n'
+            "          Mode:Managed  Frequency:2.437 GHz\n"
+            "          Link Quality=70/70  Signal level=-30 dBm\n"
         )
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=True), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=True),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
+
             def run_side_effect(cmd, **kwargs):
                 if "ping" in cmd:
                     return MagicMock(returncode=0, stdout="", stderr="")
@@ -214,6 +235,7 @@ class TestDiagnoseNetwork:
                 if "systemctl" in cmd:
                     return MagicMock(returncode=0, stdout="active\n", stderr="")
                 return MagicMock(returncode=1, stdout="", stderr="")
+
             mock_run.side_effect = run_side_effect
             result = _invoke("diagnose", "network")
 
@@ -222,12 +244,12 @@ class TestDiagnoseNetwork:
         assert "-30 dBm" in result.output
 
     def test_network_not_pi_skips_wifi(self):
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -235,12 +257,12 @@ class TestDiagnoseNetwork:
         assert "Skipped" in result.output or "not a Raspberry Pi" in result.output
 
     def test_network_output_contains_summary(self):
-        with patch("subprocess.run") as mock_run, \
-             patch.object(matrix_cli, "_check_url", return_value=204), \
-             patch.object(matrix_cli, "_is_raspberry_pi", return_value=False), \
-             patch("socket.getaddrinfo", return_value=[
-                 (2, 1, 6, "", ("151.101.0.223", 443))
-             ]):
+        with (
+            patch("subprocess.run") as mock_run,
+            patch.object(matrix_cli, "_check_url", return_value=204),
+            patch.object(matrix_cli, "_is_raspberry_pi", return_value=False),
+            patch("socket.getaddrinfo", return_value=[(2, 1, 6, "", ("151.101.0.223", 443))]),
+        ):
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             result = _invoke("diagnose", "network")
 
@@ -252,12 +274,14 @@ class TestDiagnoseNetwork:
 # diagnose plugins
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDiagnosePlugins:
     """``matrix diagnose plugins``."""
 
-    def _make_plugin(self, plugins_dir, pid, manifest=None, schema=True,
-                     manager=True, deps_marker=True, requirements=""):
+    def _make_plugin(
+        self, plugins_dir, pid, manifest=None, schema=True, manager=True, deps_marker=True, requirements=""
+    ):
         """Create a minimal plugin directory for testing."""
         pdir = plugins_dir / pid
         pdir.mkdir(exist_ok=True)
@@ -275,11 +299,16 @@ class TestDiagnosePlugins:
     def test_plugins_healthy(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "clock-simple", manifest={
-            "id": "clock-simple", "name": "Clock", "version": "1.0.0",
-        })
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "clock-simple",
+            manifest={
+                "id": "clock-simple",
+                "name": "Clock",
+                "version": "1.0.0",
+            },
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert result.exit_code == 0
@@ -291,8 +320,7 @@ class TestDiagnosePlugins:
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
         self._make_plugin(plugins_dir, "bad-plugin", manifest=None)
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "FAIL" in result.output
@@ -301,11 +329,17 @@ class TestDiagnosePlugins:
     def test_plugins_missing_manager(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "no-entry", manifest={
-            "id": "no-entry", "name": "No Entry", "version": "1.0.0",
-        }, manager=False)
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "no-entry",
+            manifest={
+                "id": "no-entry",
+                "name": "No Entry",
+                "version": "1.0.0",
+            },
+            manager=False,
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "FAIL" in result.output
@@ -314,11 +348,18 @@ class TestDiagnosePlugins:
     def test_plugins_missing_deps_marker_with_requirements(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "needs-deps", manifest={
-            "id": "needs-deps", "name": "Needs Deps", "version": "1.0.0",
-        }, deps_marker=False, requirements="requests>=2.0")
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "needs-deps",
+            manifest={
+                "id": "needs-deps",
+                "name": "Needs Deps",
+                "version": "1.0.0",
+            },
+            deps_marker=False,
+            requirements="requests>=2.0",
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "WARN" in result.output
@@ -326,11 +367,18 @@ class TestDiagnosePlugins:
     def test_plugins_no_requirements_no_marker_is_ok(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "simple", manifest={
-            "id": "simple", "name": "Simple", "version": "1.0.0",
-        }, deps_marker=False, requirements="")
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "simple",
+            manifest={
+                "id": "simple",
+                "name": "Simple",
+                "version": "1.0.0",
+            },
+            deps_marker=False,
+            requirements="",
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert result.exit_code == 0
@@ -348,8 +396,7 @@ class TestDiagnosePlugins:
     def test_plugins_empty_dir(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "WARN" in result.output
@@ -360,16 +407,21 @@ class TestDiagnosePlugins:
         plugins_dir.mkdir()
         pdir = plugins_dir / "bad-schema"
         pdir.mkdir()
-        (pdir / "manifest.json").write_text(json.dumps({
-            "id": "bad-schema", "name": "Bad Schema", "version": "1.0.0",
-        }))
+        (pdir / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "id": "bad-schema",
+                    "name": "Bad Schema",
+                    "version": "1.0.0",
+                }
+            )
+        )
         (pdir / "config_schema.json").write_text("{not valid json")
         (pdir / "manager.py").write_text("# stub")
         (pdir / ".dependencies_installed").write_text("")
         (pdir / "requirements.txt").write_text("")
 
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "FAIL" in result.output
@@ -378,12 +430,15 @@ class TestDiagnosePlugins:
     def test_plugins_manifest_missing_fields(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "incomplete", manifest={
-            "id": "incomplete",
-            # missing name and version
-        })
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "incomplete",
+            manifest={
+                "id": "incomplete",
+                # missing name and version
+            },
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "WARN" in result.output
@@ -392,11 +447,16 @@ class TestDiagnosePlugins:
     def test_plugins_output_contains_summary(self, tmp_path):
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        self._make_plugin(plugins_dir, "test-plugin", manifest={
-            "id": "test-plugin", "name": "Test", "version": "1.0.0",
-        })
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), \
-             patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
+        self._make_plugin(
+            plugins_dir,
+            "test-plugin",
+            manifest={
+                "id": "test-plugin",
+                "name": "Test",
+                "version": "1.0.0",
+            },
+        )
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins_dir), patch.object(matrix_cli, "LEDMATRIX_ROOT", tmp_path):
             result = _invoke("diagnose", "plugins")
 
         assert "passed" in result.output
@@ -406,6 +466,7 @@ class TestDiagnosePlugins:
 # ---------------------------------------------------------------------------
 # _DiagResult unit tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestDiagResult:
@@ -445,6 +506,7 @@ class TestDiagResult:
 # ---------------------------------------------------------------------------
 # Helper function unit tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestDiagnoseHelpers:

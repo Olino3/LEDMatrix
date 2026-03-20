@@ -57,7 +57,7 @@ class PluginExecutor:
         plugin_context = f"plugin {plugin_id}" if plugin_id else "plugin"
 
         # Use threading-based timeout (more reliable than signal-based)
-        result_container = {"value": None, "exception": None, "completed": False}
+        result_container: dict[str, Any] = {"value": None, "exception": None, "completed": False}
 
         def target():
             try:

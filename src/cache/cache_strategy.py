@@ -55,7 +55,7 @@ class CacheStrategy:
             config = self.config_manager.config
             # All sports now use _scoreboard suffix
             sport_config = config.get(f"{sport_key}_scoreboard", {})
-            return sport_config.get("live_update_interval", 60)  # Default to 60 seconds
+            return sport_config.get("live_update_interval", 60)  # type: ignore[no-any-return]  # Default to 60 seconds
         except (KeyError, AttributeError, TypeError) as e:
             self.logger.warning("Could not get live_update_interval for %s: %s", sport_key, e, exc_info=True)
             return 60  # Default to 60 seconds

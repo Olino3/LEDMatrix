@@ -9,7 +9,7 @@ enabling better error handling and debugging.
 class LEDMatrixError(Exception):
     """Base exception for all LEDMatrix errors."""
 
-    def __init__(self, message: str, context: dict = None):
+    def __init__(self, message: str, context: dict | None = None):
         """
         Initialize the exception.
 
@@ -32,7 +32,7 @@ class LEDMatrixError(Exception):
 class CacheError(LEDMatrixError):
     """Exception raised for cache-related errors."""
 
-    def __init__(self, message: str, cache_key: str = None, context: dict = None):
+    def __init__(self, message: str, cache_key: str | None = None, context: dict | None = None):
         """
         Initialize cache error.
 
@@ -51,7 +51,9 @@ class CacheError(LEDMatrixError):
 class ConfigError(LEDMatrixError):
     """Exception raised for configuration-related errors."""
 
-    def __init__(self, message: str, config_path: str = None, field: str = None, context: dict = None):
+    def __init__(
+        self, message: str, config_path: str | None = None, field: str | None = None, context: dict | None = None
+    ):
         """
         Initialize config error.
 
@@ -75,7 +77,7 @@ class ConfigError(LEDMatrixError):
 class PluginError(LEDMatrixError):
     """Exception raised for plugin-related errors."""
 
-    def __init__(self, message: str, plugin_id: str = None, context: dict = None):
+    def __init__(self, message: str, plugin_id: str | None = None, context: dict | None = None):
         """
         Initialize plugin error.
 
@@ -94,7 +96,7 @@ class PluginError(LEDMatrixError):
 class DisplayError(LEDMatrixError):
     """Exception raised for display-related errors."""
 
-    def __init__(self, message: str, display_mode: str = None, context: dict = None):
+    def __init__(self, message: str, display_mode: str | None = None, context: dict | None = None):
         """
         Initialize display error.
 

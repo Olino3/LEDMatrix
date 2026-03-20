@@ -40,7 +40,7 @@ def discover_plugin_tests(plugins_dir: Path, plugin_id: Optional[str] = None) ->
         for item in plugins_dir.iterdir():
             if not item.is_dir():
                 continue
-            if item.name.startswith('.') or item.name.startswith('_'):
+            if item.name.startswith(".") or item.name.startswith("_"):
                 continue
             test_files.extend(_find_tests_in_dir(item))
 
@@ -52,12 +52,12 @@ def _find_tests_in_dir(directory: Path) -> list:
     test_files = []
 
     # Look for test files
-    patterns = ['test_*.py', '*_test.py', 'tests/test_*.py', 'tests/*_test.py']
+    patterns = ["test_*.py", "*_test.py", "tests/test_*.py", "tests/*_test.py"]
 
     for pattern in patterns:
-        if '/' in pattern:
+        if "/" in pattern:
             # Subdirectory pattern
-            subdir, file_pattern = pattern.split('/', 1)
+            subdir, file_pattern = pattern.split("/", 1)
             test_dir = directory / subdir
             if test_dir.exists():
                 test_files.extend(test_dir.glob(file_pattern))
@@ -121,12 +121,12 @@ def run_pytest_tests(test_files: list, verbose: bool = False, coverage: bool = F
     args = []
 
     if verbose:
-        args.append('-v')
+        args.append("-v")
     else:
-        args.append('-q')
+        args.append("-q")
 
     if coverage:
-        args.extend(['--cov', 'plugins', '--cov-report', 'html', '--cov-report', 'term'])
+        args.extend(["--cov", "plugins", "--cov-report", "html", "--cov-report", "term"])
 
     # Add test files
     args.extend([str(f) for f in test_files])
@@ -138,16 +138,20 @@ def run_pytest_tests(test_files: list, verbose: bool = False, coverage: bool = F
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='Run LEDMatrix plugin tests')
-    parser.add_argument('--plugin', '-p', help='Test specific plugin ID')
-    parser.add_argument('--plugins-dir', '-d', default=None,
-                       help='Plugins directory (default: auto-detect plugins/ or plugin-repos/)')
-    parser.add_argument('--runner', '-r', choices=['unittest', 'pytest', 'auto'],
-                       default='auto', help='Test runner to use (default: auto)')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Enable verbose output')
-    parser.add_argument('--coverage', '-c', action='store_true',
-                       help='Generate coverage report (pytest only)')
+    parser = argparse.ArgumentParser(description="Run LEDMatrix plugin tests")
+    parser.add_argument("--plugin", "-p", help="Test specific plugin ID")
+    parser.add_argument(
+        "--plugins-dir", "-d", default=None, help="Plugins directory (default: auto-detect plugins/ or plugin-repos/)"
+    )
+    parser.add_argument(
+        "--runner",
+        "-r",
+        choices=["unittest", "pytest", "auto"],
+        default="auto",
+        help="Test runner to use (default: auto)",
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+    parser.add_argument("--coverage", "-c", action="store_true", help="Generate coverage report (pytest only)")
 
     args = parser.parse_args()
 
@@ -155,12 +159,11 @@ def main():
         plugins_dir = Path(args.plugins_dir)
     else:
         # Auto-detect: prefer plugins/ if it has content, then plugin-repos/
-        plugins_path = PROJECT_ROOT / 'plugins'
-        plugin_repos_path = PROJECT_ROOT / 'plugin-repos'
+        plugins_path = PROJECT_ROOT / "plugins"
+        plugin_repos_path = PROJECT_ROOT / "plugin-repos"
         try:
             has_plugins = plugins_path.exists() and any(
-                p for p in plugins_path.iterdir()
-                if p.is_dir() and not p.name.startswith('.')
+                p for p in plugins_path.iterdir() if p.is_dir() and not p.name.startswith(".")
             )
         except PermissionError:
             print(f"Warning: cannot read {plugins_path}, falling back to plugin-repos/")
@@ -193,23 +196,24 @@ def main():
 
     # Determine runner
     runner = args.runner
-    if runner == 'auto':
+    if runner == "auto":
         # Try pytest first, fall back to unittest
         try:
             import pytest  # noqa: F401
-            runner = 'pytest'
+
+            runner = "pytest"
         except ImportError:
-            runner = 'unittest'
+            runner = "unittest"
 
     # Run tests
-    if runner == 'pytest':
+    if runner == "pytest":
         return run_pytest_tests(test_files, args.verbose, args.coverage)
     else:
         return run_unittest_tests(test_files, args.verbose)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import importlib.util
     from typing import Optional
-    sys.exit(main())
 
+    sys.exit(main())

@@ -98,6 +98,9 @@ class ESPNFootballExtractor(APIDataExtractor):
         common_data, home_team, away_team, status, situation = self._extract_common_details(game_event)
         if not common_data:
             return None
+        assert home_team is not None
+        assert away_team is not None
+        assert status is not None
 
         try:
             # Extract basic team info
@@ -180,6 +183,9 @@ class ESPNBaseballExtractor(APIDataExtractor):
         common_data, home_team, away_team, status, situation = self._extract_common_details(game_event)
         if not common_data:
             return None
+        assert home_team is not None
+        assert away_team is not None
+        assert status is not None
 
         try:
             # Extract basic team info
@@ -250,6 +256,9 @@ class ESPNHockeyExtractor(APIDataExtractor):
         common_data, home_team, away_team, status, situation = self._extract_common_details(game_event)
         if not common_data:
             return None
+        assert home_team is not None
+        assert away_team is not None
+        assert status is not None
 
         try:
             # Extract basic team info

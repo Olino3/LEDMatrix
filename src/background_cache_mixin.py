@@ -7,7 +7,12 @@ where Recent/Upcoming managers consume data from the background service cache.
 """
 
 import time
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+
+if TYPE_CHECKING:
+    import logging
+
+    from src.cache_manager import CacheManager
 
 
 class BackgroundCacheMixin:
@@ -21,8 +26,12 @@ class BackgroundCacheMixin:
     GenericCacheMixin instead. See src/generic_cache_mixin.py for details.
     """
 
+    cache_manager: "CacheManager"
+    logger: "logging.Logger"
+    _fetch_count: int
+
     def _fetch_data_with_background_cache(
-        self, sport_key: str, api_fetch_method: Callable, live_manager_class: type = None
+        self, sport_key: str, api_fetch_method: Callable, live_manager_class: type | None = None
     ) -> Optional[Dict]:
         """
         Common logic for fetching data with background service cache support.
@@ -86,7 +95,7 @@ class BackgroundCacheMixin:
             # Log performance metrics
             self._log_fetch_performance(sport_key, duration, cache_hit, cache_source)
 
-            return result
+            return result  # type: ignore[no-any-return]
 
         except Exception as e:
             duration = time.time() - start_time
@@ -133,6 +142,6 @@ class BackgroundCacheMixin:
         """
         return self.cache_manager.get_cache_metrics()
 
-    def log_cache_performance(self):
+    def log_cache_performance(self) -> None:
         """Log current cache performance metrics."""
         self.cache_manager.log_cache_metrics()

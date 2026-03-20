@@ -18,7 +18,7 @@ Usage:
 
 import logging
 import time
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import requests
 
@@ -34,12 +34,12 @@ class DynamicTeamResolver:
     """
 
     # Cache for rankings data
-    _rankings_cache: Dict[str, List[str]] = {}
+    _rankings_cache: Dict[str, int] = {}
     _cache_timestamp: float = 0
     _cache_duration: int = 3600  # 1 hour cache
 
     # Supported dynamic team patterns
-    DYNAMIC_PATTERNS = {
+    DYNAMIC_PATTERNS: Dict[str, Dict[str, Any]] = {
         "AP_TOP_25": {"sport": "ncaa_fb", "limit": 25},
         "AP_TOP_10": {"sport": "ncaa_fb", "limit": 10},
         "AP_TOP_5": {"sport": "ncaa_fb", "limit": 5},
@@ -108,7 +108,7 @@ class DynamicTeamResolver:
 
         pattern_config = self.DYNAMIC_PATTERNS[dynamic_team]
         target_sport = pattern_config["sport"]
-        limit = pattern_config["limit"]
+        limit = int(pattern_config["limit"])
 
         # Only support NCAA Football rankings for now
         if target_sport != "ncaa_fb":

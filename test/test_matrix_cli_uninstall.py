@@ -19,6 +19,7 @@ from matrix_cli import cli
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _invoke(args, input=None):
     """Run the CLI via CliRunner and return the result."""
     runner = CliRunner()
@@ -54,6 +55,7 @@ def mock_filesystem(tmp_path):
 # Confirmation prompt
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallConfirmation:
     """Confirmation prompt behavior."""
@@ -85,6 +87,7 @@ class TestUninstallConfirmation:
 # Service management
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallServices:
     """Stop and disable systemd services."""
@@ -93,34 +96,23 @@ class TestUninstallServices:
         """Uninstall stops ledmatrix and ledmatrix-web services."""
         result = _invoke(["--yes"])
         assert result.exit_code == 0
-        stop_calls = [
-            c for c in mock_subprocess.call_args_list
-            if "stop" in str(c) and "systemctl" in str(c)
-        ]
+        stop_calls = [c for c in mock_subprocess.call_args_list if "stop" in str(c) and "systemctl" in str(c)]
         assert len(stop_calls) >= 1
 
     def test_disables_services(self, mock_subprocess):
         """Uninstall disables ledmatrix and ledmatrix-web services."""
         result = _invoke(["--yes"])
         assert result.exit_code == 0
-        disable_calls = [
-            c for c in mock_subprocess.call_args_list
-            if "disable" in str(c) and "systemctl" in str(c)
-        ]
+        disable_calls = [c for c in mock_subprocess.call_args_list if "disable" in str(c) and "systemctl" in str(c)]
         assert len(disable_calls) >= 1
 
     def test_daemon_reload_called(self, mock_subprocess, mock_filesystem):
         """Uninstall calls daemon-reload after removing unit files."""
         # Mock the unit files as existing + mock filesystem ops
-        with patch.object(Path, "exists", return_value=True), \
-             patch.object(Path, "unlink"), \
-             patch("shutil.rmtree"):
+        with patch.object(Path, "exists", return_value=True), patch.object(Path, "unlink"), patch("shutil.rmtree"):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
-        reload_calls = [
-            c for c in mock_subprocess.call_args_list
-            if "daemon-reload" in str(c)
-        ]
+        reload_calls = [c for c in mock_subprocess.call_args_list if "daemon-reload" in str(c)]
         assert len(reload_calls) >= 1
 
 
@@ -128,16 +120,19 @@ class TestUninstallServices:
 # Unit file removal
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallUnitFiles:
     """Remove systemd unit files."""
 
     def test_removes_unit_files_when_present(self, mock_subprocess, mock_filesystem):
         """When unit files exist, they are removed."""
-        with patch.object(Path, "exists", return_value=True), \
-             patch.object(Path, "is_symlink", return_value=False), \
-             patch.object(Path, "unlink"), \
-             patch("shutil.rmtree"):
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "is_symlink", return_value=False),
+            patch.object(Path, "unlink"),
+            patch("shutil.rmtree"),
+        ):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
         all_args = " ".join(str(c) for c in mock_subprocess.call_args_list)
@@ -153,6 +148,7 @@ class TestUninstallUnitFiles:
 # ---------------------------------------------------------------------------
 # Sudoers removal
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestUninstallSudoers:
@@ -170,16 +166,19 @@ class TestUninstallSudoers:
 # Matrix symlink removal
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallSymlink:
     """Remove /usr/local/bin/matrix symlink."""
 
     def test_removes_matrix_symlink_when_present(self, mock_subprocess, mock_filesystem):
         """When symlink exists, it is removed."""
-        with patch.object(Path, "exists", return_value=True), \
-             patch.object(Path, "is_symlink", return_value=True), \
-             patch.object(Path, "unlink"), \
-             patch("shutil.rmtree"):
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "is_symlink", return_value=True),
+            patch.object(Path, "unlink"),
+            patch("shutil.rmtree"),
+        ):
             result = _invoke(["--yes"])
         assert result.exit_code == 0
         all_args = " ".join(str(c) for c in mock_subprocess.call_args_list)
@@ -189,6 +188,7 @@ class TestUninstallSymlink:
 # ---------------------------------------------------------------------------
 # Keep flags
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestUninstallKeepConfig:
@@ -264,6 +264,7 @@ class TestUninstallKeepVenv:
 # --all flag
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallAll:
     """--all overrides all keep flags."""
@@ -300,6 +301,7 @@ class TestUninstallAll:
 # Idempotency
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallIdempotency:
     """Removing already-absent resources doesn't error."""
@@ -311,6 +313,7 @@ class TestUninstallIdempotency:
 
     def test_service_stop_failure_does_not_abort(self, mock_subprocess):
         """If services are already stopped, uninstall continues."""
+
         def side_effect(cmd, **kwargs):
             m = MagicMock()
             if "stop" in cmd:
@@ -318,6 +321,7 @@ class TestUninstallIdempotency:
             else:
                 m.returncode = 0
             return m
+
         mock_subprocess.side_effect = side_effect
         result = _invoke(["--yes"])
         assert result.exit_code == 0
@@ -336,6 +340,7 @@ class TestUninstallIdempotency:
 # Group removal
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUninstallGroupRemoval:
     """Remove ledmatrix group."""
@@ -349,6 +354,7 @@ class TestUninstallGroupRemoval:
 
     def test_groupdel_failure_does_not_abort(self, mock_subprocess):
         """If groupdel fails (group doesn't exist), uninstall continues."""
+
         def side_effect(cmd, **kwargs):
             m = MagicMock()
             if "groupdel" in cmd:
@@ -356,6 +362,7 @@ class TestUninstallGroupRemoval:
             else:
                 m.returncode = 0
             return m
+
         mock_subprocess.side_effect = side_effect
         result = _invoke(["--yes"])
         assert result.exit_code == 0

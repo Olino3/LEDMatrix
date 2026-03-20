@@ -100,10 +100,10 @@ class LogoHelper:
             # Load image
             logo = Image.open(logo_path)
             if logo.mode != "RGBA":
-                logo = logo.convert("RGBA")
+                logo = logo.convert("RGBA")  # type: ignore[assignment]
 
             # Resize if needed
-            logo = self._resize_logo(logo, max_width, max_height)
+            logo = self._resize_logo(logo, max_width, max_height)  # type: ignore[assignment]
 
             # Cache the logo
             self._cache_logo(cache_key, logo)
@@ -210,7 +210,7 @@ class LogoHelper:
         self._cache_order.clear()
         self.logger.debug("Logo cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, int]:
+    def get_cache_stats(self) -> Dict[str, Union[int, float]]:
         """
         Get cache statistics.
 

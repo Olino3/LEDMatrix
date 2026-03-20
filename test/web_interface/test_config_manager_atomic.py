@@ -22,14 +22,14 @@ class TestAtomicConfigManager(unittest.TestCase):
         self.backup_dir = self.temp_dir / "backups"
 
         # Create initial config
-        with open(self.config_path, 'w') as f:
+        with open(self.config_path, "w") as f:
             json.dump({"test": "initial"}, f)
 
         self.manager = AtomicConfigManager(
             config_path=str(self.config_path),
             secrets_path=str(self.secrets_path),
             backup_dir=str(self.backup_dir),
-            max_backups=3
+            max_backups=3,
         )
 
     def tearDown(self):
@@ -46,7 +46,7 @@ class TestAtomicConfigManager(unittest.TestCase):
         self.assertIsNotNone(result.backup_path)
 
         # Verify config was saved
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path, "r") as f:
             saved_config = json.load(f)
         self.assertEqual(saved_config, new_config)
 
@@ -86,7 +86,7 @@ class TestAtomicConfigManager(unittest.TestCase):
         self.assertTrue(success)
 
         # Verify config was rolled back
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path, "r") as f:
             rolled_back_config = json.load(f)
         self.assertEqual(rolled_back_config, initial_config)
 
@@ -95,13 +95,9 @@ class TestAtomicConfigManager(unittest.TestCase):
         # This would require a custom validator
         # For now, just test that validation runs
         new_config = {"test": "valid"}
-        result = self.manager.save_config_atomic(
-            new_config,
-            validate_after_write=True
-        )
+        result = self.manager.save_config_atomic(new_config, validate_after_write=True)
         self.assertEqual(result.status, SaveResultStatus.SUCCESS)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

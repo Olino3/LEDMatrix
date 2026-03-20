@@ -17,6 +17,7 @@ import pytest
 # Module-level freetype mock so the C extension is never imported in tests.
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def mock_freetype_module():
     """Patch freetype at import level for every test in this file."""
@@ -33,6 +34,7 @@ def mock_freetype_module():
 # Helper: build a FontManager with minimal filesystem side-effects.
 # ---------------------------------------------------------------------------
 
+
 def _make_font_manager(config: Dict[str, Any] = None):
     """
     Instantiate FontManager with all filesystem side-effects mocked out so
@@ -41,12 +43,15 @@ def _make_font_manager(config: Dict[str, Any] = None):
     if config is None:
         config = {}
 
-    with patch("os.path.exists", return_value=False), \
-         patch("os.listdir", return_value=[]), \
-         patch("tempfile.gettempdir", return_value="/tmp"), \
-         patch("pathlib.Path.mkdir"), \
-         patch("src.font_manager.FontManager._load_overrides"):
+    with (
+        patch("os.path.exists", return_value=False),
+        patch("os.listdir", return_value=[]),
+        patch("tempfile.gettempdir", return_value="/tmp"),
+        patch("pathlib.Path.mkdir"),
+        patch("src.font_manager.FontManager._load_overrides"),
+    ):
         from src.font_manager import FontManager
+
         fm = FontManager(config)
     return fm
 
@@ -54,6 +59,7 @@ def _make_font_manager(config: Dict[str, Any] = None):
 # ---------------------------------------------------------------------------
 # TestFontManagerInit
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestFontManagerInit:
@@ -105,17 +111,21 @@ class TestFontManagerInit:
 # TestFontCatalogScanning
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestFontCatalogScanning:
     """Tests for _scan_fonts_directory and _register_common_fonts."""
 
     def test_scan_missing_directory_is_graceful(self):
-        with patch("os.path.exists", return_value=False), \
-             patch("os.listdir", return_value=[]), \
-             patch("tempfile.gettempdir", return_value="/tmp"), \
-             patch("pathlib.Path.mkdir"), \
-             patch("src.font_manager.FontManager._load_overrides"):
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.listdir", return_value=[]),
+            patch("tempfile.gettempdir", return_value="/tmp"),
+            patch("pathlib.Path.mkdir"),
+            patch("src.font_manager.FontManager._load_overrides"),
+        ):
             from src.font_manager import FontManager
+
             fm = FontManager({})
         # No crash; catalog may be empty (common fonts not found either)
         assert isinstance(fm.font_catalog, dict)
@@ -124,13 +134,16 @@ class TestFontCatalogScanning:
         """TTF and BDF files in assets/fonts are added to the catalog."""
         filenames = ["MyFont-Regular.ttf", "PixelFont.bdf", "image.png"]
 
-        with patch("os.path.exists", side_effect=lambda p: p == "assets/fonts"), \
-             patch("os.listdir", return_value=filenames), \
-             patch("os.path.join", side_effect=lambda *a: "/".join(a)), \
-             patch("tempfile.gettempdir", return_value="/tmp"), \
-             patch("pathlib.Path.mkdir"), \
-             patch("src.font_manager.FontManager._load_overrides"):
+        with (
+            patch("os.path.exists", side_effect=lambda p: p == "assets/fonts"),
+            patch("os.listdir", return_value=filenames),
+            patch("os.path.join", side_effect=lambda *a: "/".join(a)),
+            patch("tempfile.gettempdir", return_value="/tmp"),
+            patch("pathlib.Path.mkdir"),
+            patch("src.font_manager.FontManager._load_overrides"),
+        ):
             from src.font_manager import FontManager
+
             fm = FontManager({})
 
         assert "myfont-regular" in fm.font_catalog
@@ -139,16 +152,19 @@ class TestFontCatalogScanning:
 
     def test_register_common_fonts_adds_existing_files(self):
         """Common font aliases are added when the font files exist."""
-        def exists_side_effect(p):
-            return p in ("assets/fonts/PressStart2P-Regular.ttf",
-                         "assets/fonts/4x6-font.ttf")
 
-        with patch("os.path.exists", side_effect=exists_side_effect), \
-             patch("os.listdir", return_value=[]), \
-             patch("tempfile.gettempdir", return_value="/tmp"), \
-             patch("pathlib.Path.mkdir"), \
-             patch("src.font_manager.FontManager._load_overrides"):
+        def exists_side_effect(p):
+            return p in ("assets/fonts/PressStart2P-Regular.ttf", "assets/fonts/4x6-font.ttf")
+
+        with (
+            patch("os.path.exists", side_effect=exists_side_effect),
+            patch("os.listdir", return_value=[]),
+            patch("tempfile.gettempdir", return_value="/tmp"),
+            patch("pathlib.Path.mkdir"),
+            patch("src.font_manager.FontManager._load_overrides"),
+        ):
             from src.font_manager import FontManager
+
             fm = FontManager({})
 
         assert "press_start" in fm.font_catalog
@@ -157,12 +173,15 @@ class TestFontCatalogScanning:
         assert "five_by_seven" not in fm.font_catalog
 
     def test_register_common_fonts_skips_missing_files(self):
-        with patch("os.path.exists", return_value=False), \
-             patch("os.listdir", return_value=[]), \
-             patch("tempfile.gettempdir", return_value="/tmp"), \
-             patch("pathlib.Path.mkdir"), \
-             patch("src.font_manager.FontManager._load_overrides"):
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.listdir", return_value=[]),
+            patch("tempfile.gettempdir", return_value="/tmp"),
+            patch("pathlib.Path.mkdir"),
+            patch("src.font_manager.FontManager._load_overrides"),
+        ):
             from src.font_manager import FontManager
+
             fm = FontManager({})
 
         for key in ("press_start", "four_by_six", "five_by_seven"):
@@ -172,6 +191,7 @@ class TestFontCatalogScanning:
 # ---------------------------------------------------------------------------
 # TestReloadConfig
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestReloadConfig:
@@ -208,6 +228,7 @@ class TestReloadConfig:
 # ---------------------------------------------------------------------------
 # TestGetFont
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGetFont:
@@ -270,8 +291,10 @@ class TestGetFont:
         fm.font_catalog["broken"] = "broken.ttf"
         fake_default = MagicMock()
 
-        with patch("src.font_manager.ImageFont.truetype", side_effect=OSError("missing")), \
-             patch("src.font_manager.ImageFont.load_default", return_value=fake_default):
+        with (
+            patch("src.font_manager.ImageFont.truetype", side_effect=OSError("missing")),
+            patch("src.font_manager.ImageFont.load_default", return_value=fake_default),
+        ):
             result = fm.get_font("broken", 12)
 
         assert result is fake_default
@@ -281,6 +304,7 @@ class TestGetFont:
 # ---------------------------------------------------------------------------
 # TestLoadBdfFont
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestLoadBdfFont:
@@ -309,6 +333,7 @@ class TestLoadBdfFont:
 # TestGetFallbackFont
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetFallbackFont:
     """Tests for _get_fallback_font."""
@@ -324,6 +349,7 @@ class TestGetFallbackFont:
 # ---------------------------------------------------------------------------
 # TestMeasureText
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestMeasureText:
@@ -400,6 +426,7 @@ class TestMeasureText:
 # TestGetFontHeight
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetFontHeight:
     """Tests for get_font_height."""
@@ -427,6 +454,7 @@ class TestGetFontHeight:
 # ---------------------------------------------------------------------------
 # TestManagerFontRegistration
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestManagerFontRegistration:
@@ -502,6 +530,7 @@ class TestManagerFontRegistration:
 # TestPluginFontRegistration
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestPluginFontRegistration:
     """Tests for register_plugin_fonts, _validate_font_manifest,
@@ -553,25 +582,25 @@ class TestPluginFontRegistration:
 
     def test_register_plugin_font_http_source_triggers_download(self):
         fm = _make_font_manager()
-        manifest = {
-            "fonts": [{"family": "WebFont", "source": "https://example.com/font.ttf"}]
-        }
+        manifest = {"fonts": [{"family": "WebFont", "source": "https://example.com/font.ttf"}]}
         downloaded_path = "/tmp/WebFont_abc.ttf"
 
-        with patch.object(fm, "_download_font", return_value=downloaded_path) as mock_dl, \
-             patch("os.path.exists", return_value=True):
+        with (
+            patch.object(fm, "_download_font", return_value=downloaded_path) as mock_dl,
+            patch("os.path.exists", return_value=True),
+        ):
             fm.register_plugin_fonts("wp", manifest)
 
         mock_dl.assert_called_once()
 
     def test_register_plugin_font_plugin_source_resolves_path(self):
         fm = _make_font_manager()
-        manifest = {
-            "fonts": [{"family": "LocalFont", "source": "plugin://fonts/local.ttf"}]
-        }
+        manifest = {"fonts": [{"family": "LocalFont", "source": "plugin://fonts/local.ttf"}]}
 
-        with patch.object(fm, "_resolve_plugin_font_path", return_value="/resolved/local.ttf") as mock_res, \
-             patch("os.path.exists", return_value=True):
+        with (
+            patch.object(fm, "_resolve_plugin_font_path", return_value="/resolved/local.ttf") as mock_res,
+            patch("os.path.exists", return_value=True),
+        ):
             fm.register_plugin_fonts("lp", manifest)
 
         mock_res.assert_called_once_with("lp", "fonts/local.ttf")
@@ -589,13 +618,7 @@ class TestPluginFontRegistration:
 
     def test_register_plugin_font_stores_metadata(self):
         fm = _make_font_manager()
-        manifest = {
-            "fonts": [{
-                "family": "MetaFont",
-                "source": "/tmp/meta.ttf",
-                "metadata": {"author": "test"}
-            }]
-        }
+        manifest = {"fonts": [{"family": "MetaFont", "source": "/tmp/meta.ttf", "metadata": {"author": "test"}}]}
 
         with patch("os.path.exists", return_value=True):
             fm.register_plugin_fonts("mp", manifest)
@@ -605,13 +628,7 @@ class TestPluginFontRegistration:
 
     def test_register_plugin_font_stores_dependencies(self):
         fm = _make_font_manager()
-        manifest = {
-            "fonts": [{
-                "family": "DepFont",
-                "source": "/tmp/dep.ttf",
-                "dependencies": ["BaseFont"]
-            }]
-        }
+        manifest = {"fonts": [{"family": "DepFont", "source": "/tmp/dep.ttf", "dependencies": ["BaseFont"]}]}
 
         with patch("os.path.exists", return_value=True):
             fm.register_plugin_fonts("dp", manifest)
@@ -677,6 +694,7 @@ class TestPluginFontRegistration:
 # TestDownloadFont
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDownloadFont:
     """Tests for _download_font."""
@@ -699,8 +717,7 @@ class TestDownloadFont:
         fm = _make_font_manager()
         font_def = {"family": "FreshFont"}
 
-        with patch("pathlib.Path.exists", return_value=False), \
-             patch("urllib.request.urlretrieve") as mock_retrieve:
+        with patch("pathlib.Path.exists", return_value=False), patch("urllib.request.urlretrieve") as mock_retrieve:
             result = fm._download_font("https://example.com/fresh.ttf", font_def)
 
         mock_retrieve.assert_called_once()
@@ -710,8 +727,10 @@ class TestDownloadFont:
         fm = _make_font_manager()
         font_def = {"family": "FailFont"}
 
-        with patch("pathlib.Path.exists", return_value=False), \
-             patch("urllib.request.urlretrieve", side_effect=Exception("network error")):
+        with (
+            patch("pathlib.Path.exists", return_value=False),
+            patch("urllib.request.urlretrieve", side_effect=Exception("network error")),
+        ):
             result = fm._download_font("https://example.com/fail.ttf", font_def)
 
         assert result is None
@@ -734,10 +753,13 @@ class TestDownloadFont:
 
         def fake_urlretrieve(url, dest):
             import shutil
+
             shutil.copy(str(zip_path), str(dest))
 
-        with patch("pathlib.Path.exists", return_value=False), \
-             patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve):
+        with (
+            patch("pathlib.Path.exists", return_value=False),
+            patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve),
+        ):
             result = fm._download_font("https://example.com/fonts.zip", font_def)
 
         assert result is not None
@@ -747,6 +769,7 @@ class TestDownloadFont:
 # ---------------------------------------------------------------------------
 # TestGetFontExtension
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGetFontExtension:
@@ -777,6 +800,7 @@ class TestGetFontExtension:
 # TestResolvePluginFontPath
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestResolvePluginFontPath:
     """Tests for _resolve_plugin_font_path."""
@@ -799,6 +823,7 @@ class TestResolvePluginFontPath:
 # ---------------------------------------------------------------------------
 # TestResolveFont
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestResolveFont:
@@ -858,8 +883,10 @@ class TestResolveFont:
         fm = _make_font_manager()
         fake_fallback = MagicMock()
 
-        with patch.object(fm, "get_font", side_effect=Exception("boom")), \
-             patch.object(fm, "_get_fallback_font", return_value=fake_fallback):
+        with (
+            patch.object(fm, "get_font", side_effect=Exception("boom")),
+            patch.object(fm, "_get_fallback_font", return_value=fake_fallback),
+        ):
             result = fm.resolve_font("broken.elem", "myfont", 12)
 
         assert result is fake_fallback
@@ -868,6 +895,7 @@ class TestResolveFont:
 # ---------------------------------------------------------------------------
 # TestOverrideManagement
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestOverrideManagement:
@@ -898,8 +926,7 @@ class TestOverrideManagement:
 
     def test_set_override_calls_clear_cache(self):
         fm = _make_font_manager()
-        with patch.object(fm, "_save_overrides"), \
-             patch.object(fm, "clear_cache") as mock_clear:
+        with patch.object(fm, "_save_overrides"), patch.object(fm, "clear_cache") as mock_clear:
             fm.set_override("k", family="f")
         mock_clear.assert_called_once()
 
@@ -929,8 +956,7 @@ class TestOverrideManagement:
         override_data = {"elem.key": {"family": "loaded_font"}}
         m = mock_open(read_data=json.dumps(override_data))
 
-        with patch("os.path.exists", return_value=True), \
-             patch("builtins.open", m):
+        with patch("os.path.exists", return_value=True), patch("builtins.open", m):
             fm._load_overrides()
 
         assert fm.font_overrides == override_data
@@ -944,8 +970,7 @@ class TestOverrideManagement:
     def test_load_overrides_bad_json_sets_empty(self):
         fm = _make_font_manager()
         m = mock_open(read_data="NOT JSON{{")
-        with patch("os.path.exists", return_value=True), \
-             patch("builtins.open", m):
+        with patch("os.path.exists", return_value=True), patch("builtins.open", m):
             fm._load_overrides()
         assert fm.font_overrides == {}
 
@@ -954,16 +979,17 @@ class TestOverrideManagement:
         fm.font_overrides = {"k": {"family": "f"}}
         m = mock_open()
 
-        with patch("src.font_manager.FontManager._save_overrides",
-                   wraps=None) as _mock:
+        with patch("src.font_manager.FontManager._save_overrides", wraps=None) as _mock:
             # Test by calling the real method with mocked filesystem
             pass
 
         # Test the real method in isolation
-        with patch("os.path.exists", return_value=True), \
-             patch("builtins.open", m), \
-             patch("src.font_manager.Path"), \
-             patch("src.font_manager.FontManager._save_overrides", autospec=True) as mock_save:
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("builtins.open", m),
+            patch("src.font_manager.Path"),
+            patch("src.font_manager.FontManager._save_overrides", autospec=True) as mock_save,
+        ):
             mock_save(fm)
         mock_save.assert_called_once()
 
@@ -972,8 +998,7 @@ class TestOverrideManagement:
         fm = _make_font_manager()
         fm.font_overrides = {"k": {"family": "f"}}
 
-        with patch("src.common.permission_utils.ensure_directory_permissions",
-                   side_effect=PermissionError("denied")):
+        with patch("src.common.permission_utils.ensure_directory_permissions", side_effect=PermissionError("denied")):
             try:
                 fm._save_overrides()
             except Exception:
@@ -983,6 +1008,7 @@ class TestOverrideManagement:
 # ---------------------------------------------------------------------------
 # TestClearCache
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestClearCache:
@@ -1005,6 +1031,7 @@ class TestClearCache:
 # TestAddFont
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestAddFont:
     """Tests for add_font."""
@@ -1024,18 +1051,22 @@ class TestAddFont:
         fm = _make_font_manager()
         mock_perm = MagicMock()
 
-        with patch("os.path.exists", return_value=True), \
-             patch.object(fm, "clear_cache"), \
-             patch("src.font_manager.ensure_directory_permissions", mock_perm, create=True), \
-             patch("src.font_manager.get_assets_dir_mode", return_value=0o755, create=True), \
-             patch("src.font_manager.Path"):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch.object(fm, "clear_cache"),
+            patch("src.font_manager.ensure_directory_permissions", mock_perm, create=True),
+            patch("src.font_manager.get_assets_dir_mode", return_value=0o755, create=True),
+            patch("src.font_manager.Path"),
+        ):
             # Import the real permission utils at the module level
-            with patch.dict("sys.modules", {
-                "src.common.permission_utils": MagicMock(
-                    ensure_directory_permissions=MagicMock(),
-                    get_assets_dir_mode=MagicMock(return_value=0o755)
-                )
-            }):
+            with patch.dict(
+                "sys.modules",
+                {
+                    "src.common.permission_utils": MagicMock(
+                        ensure_directory_permissions=MagicMock(), get_assets_dir_mode=MagicMock(return_value=0o755)
+                    )
+                },
+            ):
                 result = fm.add_font("/real/font.ttf", "newface")
 
         assert result is True
@@ -1050,6 +1081,7 @@ class TestAddFont:
 # ---------------------------------------------------------------------------
 # TestRemoveFont
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestRemoveFont:
@@ -1092,6 +1124,7 @@ class TestRemoveFont:
 # TestValidateFont
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestValidateFont:
     """Tests for validate_font."""
@@ -1112,8 +1145,10 @@ class TestValidateFont:
 
     def test_valid_ttf_returns_true(self):
         fm = _make_font_manager()
-        with patch("os.path.exists", return_value=True), \
-             patch("src.font_manager.ImageFont.truetype", return_value=MagicMock()):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("src.font_manager.ImageFont.truetype", return_value=MagicMock()),
+        ):
             result = fm.validate_font("/path/to/font.ttf")
         assert result["valid"] is True
         assert result["type"] == "ttf"
@@ -1128,8 +1163,10 @@ class TestValidateFont:
 
     def test_ttf_load_error_returns_invalid(self):
         fm = _make_font_manager()
-        with patch("os.path.exists", return_value=True), \
-             patch("src.font_manager.ImageFont.truetype", side_effect=OSError("bad ttf")):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("src.font_manager.ImageFont.truetype", side_effect=OSError("bad ttf")),
+        ):
             result = fm.validate_font("/path/to/corrupt.ttf")
         assert result["valid"] is False
         assert "bad ttf" in result["error"]
@@ -1145,6 +1182,7 @@ class TestValidateFont:
 # ---------------------------------------------------------------------------
 # TestPerformanceStats
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestPerformanceStats:
@@ -1209,6 +1247,7 @@ class TestPerformanceStats:
 # TestGetAvailableFonts  /  GetSizeTokens  /  GetFontCatalog
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUtilityMethods:
     """Tests for get_available_fonts, get_size_tokens, get_font_catalog."""
@@ -1238,6 +1277,7 @@ class TestUtilityMethods:
 # ---------------------------------------------------------------------------
 # TestClearPluginFontCache
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestClearPluginFontCache:

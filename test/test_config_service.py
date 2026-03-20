@@ -23,27 +23,18 @@ class TestConfigService:
         template_path = config_dir / "config.template.json"
 
         # Initial config
-        config_data = {
-            "display": {"brightness": 50},
-            "plugins": {"weather": {"enabled": True}}
-        }
-        with open(config_path, 'w') as f:
+        config_data = {"display": {"brightness": 50}, "plugins": {"weather": {"enabled": True}}}
+        with open(config_path, "w") as f:
             json.dump(config_data, f)
 
         # Secrets
-        secrets_data = {
-            "weather": {"api_key": "secret_key"}
-        }
-        with open(secrets_path, 'w') as f:
+        secrets_data = {"weather": {"api_key": "secret_key"}}
+        with open(secrets_path, "w") as f:
             json.dump(secrets_data, f)
 
         # Template
-        template_data = {
-            "display": {"brightness": 100},
-            "plugins": {"weather": {"enabled": False}},
-            "timezone": "UTC"
-        }
-        with open(template_path, 'w') as f:
+        template_data = {"display": {"brightness": 100}, "plugins": {"weather": {"enabled": False}}, "timezone": "UTC"}
+        with open(template_path, "w") as f:
             json.dump(template_data, f)
 
         return str(config_path), str(secrets_path), str(template_path)
@@ -55,9 +46,10 @@ class TestConfigService:
 
         # Patch the hardcoded paths in ConfigManager or use constructor if available
         # Assuming ConfigManager takes paths in constructor or we can patch them
-        with patch('src.config_manager.ConfigManager.get_config_path', return_value=config_path), \
-             patch('src.config_manager.ConfigManager.get_secrets_path', return_value=secrets_path):
-
+        with (
+            patch("src.config_manager.ConfigManager.get_config_path", return_value=config_path),
+            patch("src.config_manager.ConfigManager.get_secrets_path", return_value=secrets_path),
+        ):
             manager = ConfigManager()
             # Inject paths directly if constructor doesn't take them
             manager.config_path = config_path
@@ -104,11 +96,12 @@ class TestConfigService:
 
         # Modify config file to trigger actual change
         import json
+
         config_path = config_manager.config_path
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             current_config = json.load(f)
-        current_config['display']['brightness'] = 75  # Change value
-        with open(config_path, 'w') as f:
+        current_config["display"]["brightness"] = 75  # Change value
+        with open(config_path, "w") as f:
             json.dump(current_config, f)
 
         # Trigger reload manually - should detect change and notify
@@ -128,15 +121,16 @@ class TestConfigService:
 
         # Modify weather config to trigger change
         import json
+
         config_path = config_manager.config_path
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             current_config = json.load(f)
-        if 'plugins' not in current_config:
-            current_config['plugins'] = {}
-        if 'weather' not in current_config['plugins']:
-            current_config['plugins']['weather'] = {}
-        current_config['plugins']['weather']['enabled'] = False  # Change value
-        with open(config_path, 'w') as f:
+        if "plugins" not in current_config:
+            current_config["plugins"] = {}
+        if "weather" not in current_config["plugins"]:
+            current_config["plugins"]["weather"] = {}
+        current_config["plugins"]["weather"]["enabled"] = False  # Change value
+        with open(config_path, "w") as f:
             json.dump(current_config, f)
 
         # Trigger reload manually - should detect change and notify

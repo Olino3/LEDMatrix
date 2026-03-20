@@ -84,9 +84,7 @@ class TestDisplayGenerator:
     def test_display_event_returns_dict_with_expected_keys(self):
         from src.api.routers.streams import _generate_display_event
 
-        result = asyncio.run(
-            _generate_display_event(config_manager=None)
-        )
+        result = asyncio.run(_generate_display_event(config_manager=None))
         assert isinstance(result, dict)
         assert "timestamp" in result
         assert "width" in result
@@ -98,18 +96,14 @@ class TestDisplayGenerator:
         """When snapshot file doesn't exist, image should be None."""
         from src.api.routers.streams import _generate_display_event
 
-        result = asyncio.run(
-            _generate_display_event(config_manager=None)
-        )
+        result = asyncio.run(_generate_display_event(config_manager=None))
         assert result["image"] is None
 
     def test_display_event_default_dimensions(self):
         """Without config, defaults to 128x64."""
         from src.api.routers.streams import _generate_display_event
 
-        result = asyncio.run(
-            _generate_display_event(config_manager=None)
-        )
+        result = asyncio.run(_generate_display_event(config_manager=None))
         assert result["width"] == 128
         assert result["height"] == 64
 
@@ -130,9 +124,7 @@ class TestDisplayGenerator:
                 }
             }
         }
-        result = asyncio.run(
-            _generate_display_event(config_manager=mock_cm)
-        )
+        result = asyncio.run(_generate_display_event(config_manager=mock_cm))
         assert result["width"] == 192  # 64 * 3
         assert result["height"] == 64  # 32 * 2
 
@@ -144,9 +136,7 @@ class TestLogsGenerator:
     def test_logs_event_returns_dict_with_expected_keys(self):
         from src.api.routers.streams import _generate_logs_event
 
-        result = asyncio.run(
-            _generate_logs_event()
-        )
+        result = asyncio.run(_generate_logs_event())
         assert isinstance(result, dict)
         assert "timestamp" in result
         assert "logs" in result
@@ -155,18 +145,14 @@ class TestLogsGenerator:
         """On non-Pi systems where journalctl may fail, should not raise."""
         from src.api.routers.streams import _generate_logs_event
 
-        result = asyncio.run(
-            _generate_logs_event()
-        )
+        result = asyncio.run(_generate_logs_event())
         assert isinstance(result["logs"], str)
         assert len(result["logs"]) > 0
 
     def test_logs_event_timestamp_is_numeric(self):
         from src.api.routers.streams import _generate_logs_event
 
-        result = asyncio.run(
-            _generate_logs_event()
-        )
+        result = asyncio.run(_generate_logs_event())
         assert isinstance(result["timestamp"], (int, float))
 
 

@@ -33,9 +33,11 @@ class TextHelper:
         """
         self.logger = logger or logging.getLogger(__name__)
         self.font_dir = Path(font_dir) if font_dir else Path("assets/fonts")
-        self._font_cache: Dict[str, ImageFont.ImageFont] = {}
+        self._font_cache: Dict[str, ImageFont.FreeTypeFont | ImageFont.ImageFont] = {}
 
-    def load_fonts(self, font_config: Optional[Dict[str, Dict]] = None) -> Dict[str, ImageFont.ImageFont]:
+    def load_fonts(
+        self, font_config: Optional[Dict[str, Dict]] = None
+    ) -> Dict[str, ImageFont.FreeTypeFont | ImageFont.ImageFont]:
         """
         Load fonts for different text elements.
 
@@ -48,7 +50,7 @@ class TextHelper:
         if font_config is None:
             font_config = self._get_default_font_config()
 
-        fonts = {}
+        fonts: Dict[str, ImageFont.FreeTypeFont | ImageFont.ImageFont] = {}
 
         for font_name, config in font_config.items():
             try:
@@ -61,7 +63,7 @@ class TextHelper:
                     self.logger.debug(f"Loaded font: {font_name} ({font_path}, size {size})")
                 else:
                     # Fallback to default font
-                    font = ImageFont.load_default()
+                    font = ImageFont.load_default()  # type: ignore[assignment]
                     fonts[font_name] = font
                     self.logger.warning(f"Font file not found: {font_path}, using default")
 
@@ -118,16 +120,16 @@ class TextHelper:
         dummy = Image.new("RGB", (1, 1))
         draw_ctx = ImageDraw.Draw(dummy)
         try:
-            return draw_ctx.textlength(text, font=font)
+            return int(draw_ctx.textlength(text, font=font))
         except AttributeError:
             try:
                 # Fallback for older PIL versions without textlength
                 bbox = draw_ctx.textbbox((0, 0), text, font=font)
-                return bbox[2] - bbox[0]
+                return int(bbox[2] - bbox[0])
             except AttributeError:
                 # Fallback for very old PIL versions without textbbox
-                width, _ = draw_ctx.textsize(text, font=font)
-                return width
+                width, _ = draw_ctx.textsize(text, font=font)  # type: ignore[attr-defined]
+                return width  # type: ignore[no-any-return]
 
     def get_text_height(self, text: str, font: ImageFont.ImageFont) -> int:
         """
@@ -144,11 +146,11 @@ class TextHelper:
         draw_ctx = ImageDraw.Draw(dummy)
         try:
             bbox = draw_ctx.textbbox((0, 0), text, font=font)
-            return bbox[3] - bbox[1]
+            return int(bbox[3] - bbox[1])
         except AttributeError:
             # Fallback for older Pillow versions without textbbox
-            _, height = draw_ctx.textsize(text, font=font)
-            return height
+            _, height = draw_ctx.textsize(text, font=font)  # type: ignore[attr-defined]
+            return height  # type: ignore[no-any-return]
 
     def get_text_dimensions(self, text: str, font: ImageFont.ImageFont) -> Tuple[int, int]:
         """
@@ -200,7 +202,7 @@ class TextHelper:
         """
         words = text.split()
         lines = []
-        current_line = []
+        current_line: list[str] = []
 
         for word in words:
             # Test if adding this word would exceed width

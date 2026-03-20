@@ -105,7 +105,7 @@ class StateReconciliation:
             state_manager_state = self._get_state_manager_state()
 
             # Find all unique plugin IDs
-            all_plugin_ids = set()
+            all_plugin_ids: set[str] = set()
             all_plugin_ids.update(config_state.keys())
             all_plugin_ids.update(disk_state.keys())
             all_plugin_ids.update(manager_state.keys())

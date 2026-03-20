@@ -25,10 +25,7 @@ class TestConfigManagerInitialization:
 
     def test_init_with_custom_paths(self):
         """Test initialization with custom paths."""
-        manager = ConfigManager(
-            config_path="custom/config.json",
-            secrets_path="custom/secrets.json"
-        )
+        manager = ConfigManager(config_path="custom/config.json", secrets_path="custom/secrets.json")
         assert manager.config_path == "custom/config.json"
         assert manager.secrets_path == "custom/secrets.json"
 
@@ -51,7 +48,7 @@ class TestConfigLoading:
         config_file = tmp_path / "config.json"
         config_data = {"timezone": "UTC", "display": {"hardware": {"rows": 32}}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -66,13 +63,10 @@ class TestConfigLoading:
         config_file = tmp_path / "config.json"
         template_data = {"timezone": "UTC", "display": {}}
 
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(template_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(tmp_path / "secrets.json")
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(tmp_path / "secrets.json"))
         manager.template_path = str(template_file)
 
         loaded = manager.load_config()
@@ -88,15 +82,12 @@ class TestConfigLoading:
         config_data = {"timezone": "UTC", "plugin1": {"enabled": True}}
         secrets_data = {"plugin1": {"api_key": "secret123"}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             json.dump(secrets_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(secrets_file)
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(secrets_file))
         loaded = manager.load_config()
 
         assert loaded["plugin1"]["enabled"] is True
@@ -107,13 +98,10 @@ class TestConfigLoading:
         config_file = tmp_path / "config.json"
         config_data = {"timezone": "UTC"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(tmp_path / "nonexistent.json")
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(tmp_path / "nonexistent.json"))
         loaded = manager.load_config()
 
         assert loaded["timezone"] == "UTC"
@@ -121,9 +109,10 @@ class TestConfigLoading:
     def test_load_config_handles_invalid_json(self, tmp_path):
         """Test that invalid JSON raises appropriate error."""
         from src.exceptions import ConfigError
+
         config_file = tmp_path / "config.json"
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write("invalid json {")
 
         manager = ConfigManager(config_path=str(config_file))
@@ -138,7 +127,7 @@ class TestConfigLoading:
         config_file = tmp_path / "config.json"
         config_data = {"timezone": "America/New_York"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -156,15 +145,11 @@ class TestConfigMigration:
         template_file = tmp_path / "template.json"
 
         current_data = {"timezone": "UTC"}
-        template_data = {
-            "timezone": "UTC",
-            "display": {"hardware": {"rows": 32}},
-            "new_key": "new_value"
-        }
+        template_data = {"timezone": "UTC", "display": {"hardware": {"rows": 32}}, "new_key": "new_value"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(current_data, f)
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(template_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -186,9 +171,9 @@ class TestConfigMigration:
         current_data = {"timezone": "UTC"}
         template_data = {"timezone": "UTC", "new_key": "new_value"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(current_data, f)
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(template_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -198,7 +183,7 @@ class TestConfigMigration:
         manager._migrate_config()
 
         assert backup_file.exists()
-        with open(backup_file, 'r') as f:
+        with open(backup_file, "r") as f:
             backup_data = json.load(f)
             assert backup_data == current_data
 
@@ -210,9 +195,9 @@ class TestConfigMigration:
         config_data = {"timezone": "UTC", "display": {}}
         template_data = {"timezone": "UTC", "display": {}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(template_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -234,32 +219,19 @@ class TestConfigSaving:
         config_file = tmp_path / "config.json"
         secrets_file = tmp_path / "secrets.json"
 
-        config_data = {
-            "timezone": "UTC",
-            "plugin1": {
-                "enabled": True,
-                "api_key": "secret123"
-            }
-        }
-        secrets_data = {
-            "plugin1": {
-                "api_key": "secret123"
-            }
-        }
+        config_data = {"timezone": "UTC", "plugin1": {"enabled": True, "api_key": "secret123"}}
+        secrets_data = {"plugin1": {"api_key": "secret123"}}
 
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             json.dump(secrets_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(secrets_file)
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(secrets_file))
         manager.config = config_data.copy()
 
         manager.save_config(config_data)
 
         # Verify secrets were stripped
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             saved_data = json.load(f)
             assert "api_key" not in saved_data["plugin1"]
             assert saved_data["plugin1"]["enabled"] is True
@@ -269,7 +241,7 @@ class TestConfigSaving:
         config_file = tmp_path / "config.json"
         config_data = {"timezone": "America/New_York"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump({"timezone": "UTC"}, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -286,21 +258,21 @@ class TestConfigSaving:
 
         manager = ConfigManager(config_path=str(config_file))
         manager.template_path = str(tmp_path / "nonexistent_template.json")  # Prevent migration
-        manager.save_raw_file_content('main', config_data)
+        manager.save_raw_file_content("main", config_data)
 
         assert config_file.exists()
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             saved_data = json.load(f)
             # After save, load_config() is called which may migrate, so check that saved keys exist
-            assert saved_data.get('timezone') == config_data['timezone']
-            assert 'display' in saved_data
+            assert saved_data.get("timezone") == config_data["timezone"]
+            assert "display" in saved_data
 
     def test_save_raw_file_content_invalid_type(self):
         """Test that invalid file type raises ValueError."""
         manager = ConfigManager()
 
         with pytest.raises(ValueError, match="Invalid file_type"):
-            manager.save_raw_file_content('invalid', {})
+            manager.save_raw_file_content("invalid", {})
 
 
 class TestSecretsHandling:
@@ -311,7 +283,7 @@ class TestSecretsHandling:
         secrets_file = tmp_path / "secrets.json"
         secrets_data = {"api_key": "secret123", "token": "token456"}
 
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             json.dump(secrets_data, f)
 
         manager = ConfigManager(secrets_path=str(secrets_file))
@@ -330,7 +302,7 @@ class TestSecretsHandling:
         """Test that get_secret handles invalid JSON gracefully."""
         secrets_file = tmp_path / "secrets.json"
 
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             f.write("invalid json {")
 
         manager = ConfigManager(secrets_path=str(secrets_file))
@@ -347,7 +319,7 @@ class TestConfigHelpers:
         config_file = tmp_path / "config.json"
         config_data = {"timezone": "America/New_York"}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -360,7 +332,7 @@ class TestConfigHelpers:
         config_file = tmp_path / "config.json"
         config_data = {}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -376,7 +348,7 @@ class TestConfigHelpers:
         config_file = tmp_path / "config.json"
         config_data = {"display": {"hardware": {"rows": 32}}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -390,7 +362,7 @@ class TestConfigHelpers:
         config_file = tmp_path / "config.json"
         config_data = {"clock": {"format": "12h"}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         manager = ConfigManager(config_path=str(config_file))
@@ -408,31 +380,23 @@ class TestPluginConfigManagement:
         config_file = tmp_path / "config.json"
         secrets_file = tmp_path / "secrets.json"
 
-        config_data = {
-            "plugin1": {"enabled": True},
-            "plugin2": {"enabled": False}
-        }
-        secrets_data = {
-            "plugin1": {"api_key": "secret123"}
-        }
+        config_data = {"plugin1": {"enabled": True}, "plugin2": {"enabled": False}}
+        secrets_data = {"plugin1": {"api_key": "secret123"}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             json.dump(secrets_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(secrets_file)
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(secrets_file))
         manager.cleanup_plugin_config("plugin1")
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             saved_config = json.load(f)
             assert "plugin1" not in saved_config
             assert "plugin2" in saved_config
 
-        with open(secrets_file, 'r') as f:
+        with open(secrets_file, "r") as f:
             saved_secrets = json.load(f)
             assert "plugin1" not in saved_secrets
 
@@ -444,26 +408,21 @@ class TestPluginConfigManagement:
         config_data = {
             "plugin1": {"enabled": True},
             "plugin2": {"enabled": False},
-            "orphaned_plugin": {"enabled": True}
+            "orphaned_plugin": {"enabled": True},
         }
-        secrets_data = {
-            "orphaned_plugin": {"api_key": "secret"}
-        }
+        secrets_data = {"orphaned_plugin": {"api_key": "secret"}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
-        with open(secrets_file, 'w') as f:
+        with open(secrets_file, "w") as f:
             json.dump(secrets_data, f)
 
-        manager = ConfigManager(
-            config_path=str(config_file),
-            secrets_path=str(secrets_file)
-        )
+        manager = ConfigManager(config_path=str(config_file), secrets_path=str(secrets_file))
         removed = manager.cleanup_orphaned_plugin_configs(["plugin1", "plugin2"])
 
         assert "orphaned_plugin" in removed
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             saved_config = json.load(f)
             assert "orphaned_plugin" not in saved_config
             assert "plugin1" in saved_config
@@ -476,6 +435,7 @@ class TestErrorHandling:
     def test_load_config_file_not_found_without_template(self, tmp_path):
         """Test that missing config file raises error if no template."""
         from src.exceptions import ConfigError
+
         manager = ConfigManager(config_path=str(tmp_path / "nonexistent.json"))
         manager.template_path = str(tmp_path / "nonexistent_template.json")
 
@@ -488,21 +448,21 @@ class TestErrorHandling:
         manager = ConfigManager()
 
         with pytest.raises(ValueError, match="Invalid file_type"):
-            manager.get_raw_file_content('invalid')
+            manager.get_raw_file_content("invalid")
 
     def test_get_raw_file_content_missing_main_file(self, tmp_path):
         """Test that missing main config file raises error."""
         from src.exceptions import ConfigError
+
         manager = ConfigManager(config_path=str(tmp_path / "nonexistent.json"))
 
         # ConfigManager raises ConfigError, not FileNotFoundError
         with pytest.raises(ConfigError):
-            manager.get_raw_file_content('main')
+            manager.get_raw_file_content("main")
 
     def test_get_raw_file_content_missing_secrets_returns_empty(self, tmp_path):
         """Test that missing secrets file returns empty dict."""
         manager = ConfigManager(secrets_path=str(tmp_path / "nonexistent.json"))
 
-        result = manager.get_raw_file_content('secrets')
+        result = manager.get_raw_file_content("secrets")
         assert result == {}
-

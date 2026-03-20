@@ -34,7 +34,7 @@ class SavedRepositoriesManager:
                     if isinstance(data, list):
                         return data
                     elif isinstance(data, dict) and "repositories" in data:
-                        return data["repositories"]
+                        return data["repositories"]  # type: ignore[no-any-return]
                     else:
                         return []
             return []

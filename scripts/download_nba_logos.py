@@ -2,20 +2,19 @@
 """
 Script to download all NBA team logos from ESPN API and save them in assets/sports/nba_logos/
 """
+
 import logging
 import os
 import sys
 from typing import Tuple
 
 # Add the src directory to Python path so we can import the logo downloader
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def download_nba_logos(force_download: bool = False) -> Tuple[int, int]:
     """
@@ -35,7 +34,7 @@ def download_nba_logos(force_download: bool = False) -> Tuple[int, int]:
         logger.info(f"Force download: {force_download}")
 
         # Use the existing function to download all NBA logos
-        downloaded_count, failed_count = download_all_logos_for_league('nba', force_download)
+        downloaded_count, failed_count = download_all_logos_for_league("nba", force_download)
 
         logger.info("✅ NBA logo download complete!")
         logger.info(f"📊 Summary: {downloaded_count} downloaded, {failed_count} failed")
@@ -55,21 +54,14 @@ def download_nba_logos(force_download: bool = False) -> Tuple[int, int]:
         logger.error(f"❌ Unexpected error: {e}")
         return 0, 0
 
+
 def main():
     """Main function with command line argument parsing."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Download all NBA team logos from ESPN API')
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Force re-download of existing logos'
-    )
-    parser.add_argument(
-        '--quiet',
-        action='store_true',
-        help='Reduce logging output'
-    )
+    parser = argparse.ArgumentParser(description="Download all NBA team logos from ESPN API")
+    parser.add_argument("--force", action="store_true", help="Force re-download of existing logos")
+    parser.add_argument("--quiet", action="store_true", help="Reduce logging output")
 
     args = parser.parse_args()
 
@@ -93,6 +85,7 @@ def main():
     else:
         logger.info("🎉 All NBA logos downloaded successfully!")
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

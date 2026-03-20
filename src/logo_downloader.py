@@ -286,7 +286,7 @@ class LogoDownloader:
             data = response.json()
 
             logger.info(f"Successfully fetched team data for {league}")
-            return data
+            return data  # type: ignore[no-any-return]
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching team data for {league}: {e}")
@@ -309,7 +309,7 @@ class LogoDownloader:
             data = response.json()
 
             logger.info(f"Successfully fetched team data for {team_id} in {league}")
-            return data
+            return data  # type: ignore[no-any-return]
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching team data for {team_id} in {league}: {e}")
@@ -685,7 +685,7 @@ class LogoDownloader:
                 font = ImageFont.truetype("assets/fonts/PressStart2P-Regular.ttf", 12)
             except (OSError, IOError):
                 try:
-                    font = ImageFont.load_default()
+                    font = ImageFont.load_default()  # type: ignore[assignment]
                 except Exception:
                     font = None
 

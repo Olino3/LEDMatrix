@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Prevent hardware imports
-os.environ['EMULATOR'] = 'true'
+os.environ["EMULATOR"] = "true"
 
 # Import logger after path setup so src.logging_config is importable
 from src.logging_config import get_logger  # noqa: E402
@@ -38,6 +38,7 @@ MAX_DIMENSION = 512
 def find_plugin_dir(plugin_id: str, search_dirs: Sequence[Union[str, Path]]) -> Optional[Path]:
     """Find a plugin directory by searching multiple paths."""
     from src.plugin_system.plugin_loader import PluginLoader
+
     loader = PluginLoader()
     for search_dir in search_dirs:
         search_path = Path(search_dir)
@@ -51,43 +52,42 @@ def find_plugin_dir(plugin_id: str, search_dirs: Sequence[Union[str, Path]]) -> 
 
 def load_manifest(plugin_dir: Path) -> Dict[str, Any]:
     """Load and return manifest.json from plugin directory."""
-    manifest_path = plugin_dir / 'manifest.json'
+    manifest_path = plugin_dir / "manifest.json"
     if not manifest_path.exists():
         raise FileNotFoundError(f"No manifest.json in {plugin_dir}")
-    with open(manifest_path, 'r') as f:
+    with open(manifest_path, "r") as f:
         return json.load(f)
 
 
 def load_config_defaults(plugin_dir: Path) -> Dict[str, Any]:
     """Extract default values from config_schema.json."""
-    schema_path = plugin_dir / 'config_schema.json'
+    schema_path = plugin_dir / "config_schema.json"
     if not schema_path.exists():
         return {}
-    with open(schema_path, 'r') as f:
+    with open(schema_path, "r") as f:
         schema = json.load(f)
     defaults: Dict[str, Any] = {}
-    for key, prop in schema.get('properties', {}).items():
-        if 'default' in prop:
-            defaults[key] = prop['default']
+    for key, prop in schema.get("properties", {}).items():
+        if "default" in prop:
+            defaults[key] = prop["default"]
     return defaults
 
 
 def main() -> int:
     """Load a plugin, call update() + display(), and save the result as a PNG image."""
-    parser = argparse.ArgumentParser(description='Render a plugin display to a PNG image')
-    parser.add_argument('--plugin', '-p', required=True, help='Plugin ID to render')
-    parser.add_argument('--plugin-dir', '-d', default=None,
-                        help='Directory to search for plugins (default: auto-detect)')
-    parser.add_argument('--config', '-c', default='{}',
-                        help='Plugin config as JSON string')
-    parser.add_argument('--mock-data', '-m', default=None,
-                        help='Path to JSON file with mock cache data')
-    parser.add_argument('--output', '-o', default='/tmp/plugin_render.png',
-                        help='Output PNG path (default: /tmp/plugin_render.png)')
-    parser.add_argument('--width', type=int, default=128, help='Display width (default: 128)')
-    parser.add_argument('--height', type=int, default=32, help='Display height (default: 32)')
-    parser.add_argument('--skip-update', action='store_true',
-                        help='Skip calling update() (render display only)')
+    parser = argparse.ArgumentParser(description="Render a plugin display to a PNG image")
+    parser.add_argument("--plugin", "-p", required=True, help="Plugin ID to render")
+    parser.add_argument(
+        "--plugin-dir", "-d", default=None, help="Directory to search for plugins (default: auto-detect)"
+    )
+    parser.add_argument("--config", "-c", default="{}", help="Plugin config as JSON string")
+    parser.add_argument("--mock-data", "-m", default=None, help="Path to JSON file with mock cache data")
+    parser.add_argument(
+        "--output", "-o", default="/tmp/plugin_render.png", help="Output PNG path (default: /tmp/plugin_render.png)"
+    )
+    parser.add_argument("--width", type=int, default=128, help="Display width (default: 128)")
+    parser.add_argument("--height", type=int, default=32, help="Display height (default: 32)")
+    parser.add_argument("--skip-update", action="store_true", help="Skip calling update() (render display only)")
 
     args = parser.parse_args()
 
@@ -103,8 +103,8 @@ def main() -> int:
         search_dirs = [args.plugin_dir]
     else:
         search_dirs = [
-            str(PROJECT_ROOT / 'plugins'),
-            str(PROJECT_ROOT / 'plugin-repos'),
+            str(PROJECT_ROOT / "plugins"),
+            str(PROJECT_ROOT / "plugin-repos"),
         ]
 
     # Find plugin
@@ -126,7 +126,7 @@ def main() -> int:
         logger.error("Invalid JSON config: %s", e)
         return 1
 
-    config = {'enabled': True}
+    config = {"enabled": True}
     config.update(config_defaults)
     config.update(user_config)
 
@@ -137,7 +137,7 @@ def main() -> int:
         if not mock_data_path.exists():
             logger.error("Mock data file not found: %s", args.mock_data)
             return 1
-        with open(mock_data_path, 'r') as f:
+        with open(mock_data_path, "r") as f:
             mock_data = json.load(f)
 
     # Create visual display manager and mocks
@@ -196,5 +196,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

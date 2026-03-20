@@ -22,7 +22,7 @@ STANDARD_COMMON_FIELDS = {
         "default": False,
         "description": "Enable or disable this plugin",
         "required": True,
-        "order": 1
+        "order": 1,
     },
     "display_duration": {
         "type": "number",
@@ -30,32 +30,30 @@ STANDARD_COMMON_FIELDS = {
         "minimum": 1,
         "maximum": 300,
         "description": "How long to display this plugin in seconds",
-        "order": 2
+        "order": 2,
     },
     "live_priority": {
         "type": "boolean",
         "default": False,
         "description": "Enable live priority takeover when plugin has live content",
-        "order": 3
+        "order": 3,
     },
     "high_performance_transitions": {
         "type": "boolean",
         "default": False,
         "description": "Use high-performance transitions (120 FPS) instead of standard (30 FPS)",
-        "order": 4
+        "order": 4,
     },
     "update_interval": {
         "type": "integer",
         "default": 60,
         "minimum": 1,
         "description": "How often to refresh data in seconds",
-        "order": 5
+        "order": 5,
     },
-    "transition": {
-        "type": "object",
-        "order": 6
-    }
+    "transition": {"type": "object", "order": 6},
 }
+
 
 def find_duplicate_fields(schema: Dict[str, Any], path: str = "") -> List[str]:
     """Find duplicate field definitions within a schema."""
@@ -86,10 +84,11 @@ def find_duplicate_fields(schema: Dict[str, Any], path: str = "") -> List[str]:
 
     return duplicates
 
+
 def validate_schema_syntax(schema_path: Path) -> tuple[bool, List[str]]:
     """Validate JSON Schema syntax."""
     try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)
 
         # Validate schema structure
@@ -101,6 +100,7 @@ def validate_schema_syntax(schema_path: Path) -> tuple[bool, List[str]]:
         return False, [f"Schema validation error: {str(e)}"]
     except Exception as e:
         return False, [f"Error: {str(e)}"]
+
 
 def analyze_schema(schema_path: Path) -> Dict[str, Any]:
     """Analyze a single schema file."""
@@ -118,11 +118,11 @@ def analyze_schema(schema_path: Path) -> Dict[str, Any]:
         "naming_issues": [],
         "duplicates": [],
         "property_order": [],
-        "update_interval_variant": None
+        "update_interval_variant": None,
     }
 
     try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)
 
         # Check for title and description
@@ -163,9 +163,7 @@ def analyze_schema(schema_path: Path) -> Dict[str, Any]:
                     # Check for update_interval_seconds variant
                     if "update_interval_seconds" in properties:
                         analysis["update_interval_variant"] = "update_interval_seconds"
-                        analysis["naming_issues"].append(
-                            "Uses 'update_interval_seconds' instead of 'update_interval'"
-                        )
+                        analysis["naming_issues"].append("Uses 'update_interval_seconds' instead of 'update_interval'")
                     else:
                         analysis["missing_common_fields"].append(field_name)
                 else:
@@ -176,9 +174,7 @@ def analyze_schema(schema_path: Path) -> Dict[str, Any]:
         analysis["property_order"] = prop_keys
 
         if prop_keys and prop_keys[0] != "enabled":
-            analysis["warnings"].append(
-                f"'enabled' is not first property. First property is '{prop_keys[0]}'"
-            )
+            analysis["warnings"].append(f"'enabled' is not first property. First property is '{prop_keys[0]}'")
 
         # Check for required fields
         required = schema.get("required", [])
@@ -189,6 +185,7 @@ def analyze_schema(schema_path: Path) -> Dict[str, Any]:
         analysis["errors"].append(f"Failed to analyze schema: {str(e)}")
 
     return analysis
+
 
 def main():
     """Main analysis function."""
@@ -212,52 +209,52 @@ def main():
         results.append(analysis)
 
     # Print summary
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("ANALYSIS SUMMARY")
-    print("="*80)
+    print("=" * 80)
 
     for result in results:
         print(f"\n{result['plugin_id']}:")
         print(f"  Valid: {result['valid']}")
 
-        if result['errors']:
+        if result["errors"]:
             print(f"  Errors ({len(result['errors'])}):")
-            for error in result['errors']:
+            for error in result["errors"]:
                 print(f"    - {error}")
 
-        if result['warnings']:
+        if result["warnings"]:
             print(f"  Warnings ({len(result['warnings'])}):")
-            for warning in result['warnings']:
+            for warning in result["warnings"]:
                 print(f"    - {warning}")
 
-        if result['duplicates']:
+        if result["duplicates"]:
             print(f"  Duplicates ({len(result['duplicates'])}):")
-            for dup in result['duplicates']:
+            for dup in result["duplicates"]:
                 print(f"    - {dup}")
 
-        if result['missing_common_fields']:
+        if result["missing_common_fields"]:
             print(f"  Missing common fields: {', '.join(result['missing_common_fields'])}")
 
-        if result['naming_issues']:
+        if result["naming_issues"]:
             print("  Naming issues:")
-            for issue in result['naming_issues']:
+            for issue in result["naming_issues"]:
                 print(f"    - {issue}")
 
-        if result['property_order'] and result['property_order'][0] != 'enabled':
+        if result["property_order"] and result["property_order"][0] != "enabled":
             print(f"  Property order: First is '{result['property_order'][0]}' (should be 'enabled')")
 
     # Overall statistics
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("OVERALL STATISTICS")
-    print("="*80)
+    print("=" * 80)
 
-    valid_count = sum(1 for r in results if r['valid'])
-    has_title_count = sum(1 for r in results if r['has_title'])
-    has_description_count = sum(1 for r in results if r['has_description'])
-    enabled_first_count = sum(1 for r in results if r['property_order'] and r['property_order'][0] == 'enabled')
-    total_errors = sum(len(r['errors']) for r in results)
-    total_warnings = sum(len(r['warnings']) for r in results)
-    total_duplicates = sum(len(r['duplicates']) for r in results)
+    valid_count = sum(1 for r in results if r["valid"])
+    has_title_count = sum(1 for r in results if r["has_title"])
+    has_description_count = sum(1 for r in results if r["has_description"])
+    enabled_first_count = sum(1 for r in results if r["property_order"] and r["property_order"][0] == "enabled")
+    total_errors = sum(len(r["errors"]) for r in results)
+    total_warnings = sum(len(r["warnings"]) for r in results)
+    total_duplicates = sum(len(r["duplicates"]) for r in results)
 
     print(f"Total plugins: {len(results)}")
     print(f"Valid schemas: {valid_count}/{len(results)}")
@@ -270,11 +267,11 @@ def main():
 
     # Save detailed report
     report_path = project_root / "plugin_schema_analysis.json"
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
     print(f"\nDetailed report saved to: {report_path}")
 
+
 if __name__ == "__main__":
     main()
-

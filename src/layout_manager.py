@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class LayoutManager:
         try:
             if os.path.exists(self.config_path):
                 with open(self.config_path, "r") as f:
-                    return json.load(f)
+                    return json.load(f)  # type: ignore[no-any-return]
             return {}
         except Exception as e:
             logger.error(f"Error loading layouts: {e}")
@@ -60,7 +60,7 @@ class LayoutManager:
             logger.error(f"Error creating layout '{name}': {e}")
             return False
 
-    def update_layout(self, name: str, elements: List[Dict], description: str = None) -> bool:
+    def update_layout(self, name: str, elements: List[Dict], description: Optional[str] = None) -> bool:
         """Update an existing layout."""
         try:
             if name not in self.layouts:
@@ -90,7 +90,7 @@ class LayoutManager:
 
     def get_layout(self, name: str) -> Dict[str, Any]:
         """Get a specific layout."""
-        return self.layouts.get(name, {})
+        return self.layouts.get(name, {})  # type: ignore[no-any-return]
 
     def list_layouts(self) -> List[str]:
         """Get list of all layout names."""
@@ -103,7 +103,7 @@ class LayoutManager:
             return True
         return False
 
-    def render_layout(self, layout_name: str = None, data_context: Dict = None) -> bool:
+    def render_layout(self, layout_name: Optional[str] = None, data_context: Optional[Dict] = None) -> bool:
         """Render a layout to the display."""
         if not self.display_manager:
             logger.error("No display manager available")

@@ -31,20 +31,11 @@ class TestSchemaManager:
         return {
             "type": "object",
             "properties": {
-                "enabled": {
-                    "type": "boolean",
-                    "default": True
-                },
-                "update_interval": {
-                    "type": "integer",
-                    "default": 300,
-                    "minimum": 60
-                },
-                "api_key": {
-                    "type": "string"
-                }
+                "enabled": {"type": "boolean", "default": True},
+                "update_interval": {"type": "integer", "default": 300, "minimum": 60},
+                "api_key": {"type": "string"},
             },
-            "required": ["api_key"]
+            "required": ["api_key"],
         }
 
     def test_init(self, tmp_project_root):
@@ -137,16 +128,8 @@ class TestSchemaManager:
         nested_schema = {
             "type": "object",
             "properties": {
-                "display": {
-                    "type": "object",
-                    "properties": {
-                        "brightness": {
-                            "type": "integer",
-                            "default": 50
-                        }
-                    }
-                }
-            }
+                "display": {"type": "object", "properties": {"brightness": {"type": "integer", "default": 50}}}
+            },
         }
 
         defaults = schema_manager.extract_defaults_from_schema(nested_schema)
@@ -168,11 +151,7 @@ class TestSchemaManager:
 
     def test_validate_config_against_schema_valid(self, schema_manager, sample_schema):
         """Test validating valid config against schema."""
-        config = {
-            "enabled": True,
-            "update_interval": 300,
-            "api_key": "test_key"
-        }
+        config = {"enabled": True, "update_interval": 300, "api_key": "test_key"}
 
         is_valid, errors = schema_manager.validate_config_against_schema(config, sample_schema)
 
@@ -194,10 +173,7 @@ class TestSchemaManager:
 
     def test_validate_config_against_schema_with_errors(self, schema_manager, sample_schema):
         """Test validation with error collection."""
-        config = {
-            "enabled": "not a boolean",
-            "update_interval": 30
-        }
+        config = {"enabled": "not a boolean", "update_interval": 30}
 
         is_valid, errors = schema_manager.validate_config_against_schema(config, sample_schema)
 
@@ -206,14 +182,8 @@ class TestSchemaManager:
 
     def test_merge_with_defaults(self, schema_manager):
         """Test merging config with defaults."""
-        config = {
-            "enabled": False,
-            "api_key": "custom_key"
-        }
-        defaults = {
-            "enabled": True,
-            "update_interval": 300
-        }
+        config = {"enabled": False, "api_key": "custom_key"}
+        defaults = {"enabled": True, "update_interval": 300}
 
         result = schema_manager.merge_with_defaults(config, defaults)
 
@@ -223,17 +193,8 @@ class TestSchemaManager:
 
     def test_merge_with_defaults_nested(self, schema_manager):
         """Test merging nested config with defaults."""
-        config = {
-            "display": {
-                "brightness": 75
-            }
-        }
-        defaults = {
-            "display": {
-                "brightness": 50,
-                "width": 64
-            }
-        }
+        config = {"display": {"brightness": 75}}
+        defaults = {"display": {"brightness": 50, "width": 64}}
 
         result = schema_manager.merge_with_defaults(config, defaults)
 
@@ -252,10 +213,7 @@ class TestSchemaManager:
     def test_merge_with_defaults_empty_config(self, schema_manager):
         """Test merging empty config with defaults."""
         config = {}
-        defaults = {
-            "enabled": True,
-            "update_interval": 300
-        }
+        defaults = {"enabled": True, "update_interval": 300}
 
         result = schema_manager.merge_with_defaults(config, defaults)
 
@@ -264,10 +222,7 @@ class TestSchemaManager:
 
     def test_merge_with_defaults_empty_defaults(self, schema_manager):
         """Test merging config with empty defaults."""
-        config = {
-            "enabled": False,
-            "api_key": "test"
-        }
+        config = {"enabled": False, "api_key": "test"}
         defaults = {}
 
         result = schema_manager.merge_with_defaults(config, defaults)
@@ -322,17 +277,9 @@ class TestSchemaManager:
             "properties": {
                 "items": {
                     "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "default": "item"
-                            }
-                        }
-                    }
+                    "items": {"type": "object", "properties": {"name": {"type": "string", "default": "item"}}},
                 }
-            }
+            },
         }
 
         defaults = schema_manager.extract_defaults_from_schema(array_schema)

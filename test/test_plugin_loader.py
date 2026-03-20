@@ -39,10 +39,7 @@ class TestPluginLoader:
         plugin_dir = tmp_plugins_dir / "test_plugin"
         plugin_dir.mkdir()
 
-        result = plugin_loader.find_plugin_directory(
-            "test_plugin",
-            tmp_plugins_dir
-        )
+        result = plugin_loader.find_plugin_directory("test_plugin", tmp_plugins_dir)
 
         assert result == plugin_dir
 
@@ -51,10 +48,7 @@ class TestPluginLoader:
         plugin_dir = tmp_plugins_dir / "ledmatrix-test_plugin"
         plugin_dir.mkdir()
 
-        result = plugin_loader.find_plugin_directory(
-            "test_plugin",
-            tmp_plugins_dir
-        )
+        result = plugin_loader.find_plugin_directory("test_plugin", tmp_plugins_dir)
 
         assert result == plugin_dir
 
@@ -63,29 +57,22 @@ class TestPluginLoader:
         plugin_dir = tmp_plugins_dir / "custom_plugin_name"
         plugin_dir.mkdir()
 
-        plugin_directories = {
-            "test_plugin": plugin_dir
-        }
+        plugin_directories = {"test_plugin": plugin_dir}
 
         result = plugin_loader.find_plugin_directory(
-            "test_plugin",
-            tmp_plugins_dir,
-            plugin_directories=plugin_directories
+            "test_plugin", tmp_plugins_dir, plugin_directories=plugin_directories
         )
 
         assert result == plugin_dir
 
     def test_find_plugin_directory_not_found(self, plugin_loader, tmp_plugins_dir):
         """Test finding non-existent plugin directory."""
-        result = plugin_loader.find_plugin_directory(
-            "nonexistent_plugin",
-            tmp_plugins_dir
-        )
+        result = plugin_loader.find_plugin_directory("nonexistent_plugin", tmp_plugins_dir)
 
         assert result is None
 
-    @patch('importlib.util.spec_from_file_location')
-    @patch('importlib.util.module_from_spec')
+    @patch("importlib.util.spec_from_file_location")
+    @patch("importlib.util.module_from_spec")
     def test_load_module(self, mock_module_from_spec, mock_spec_from_file, plugin_loader, tmp_plugins_dir):
         """Test loading a plugin module."""
         plugin_dir = tmp_plugins_dir / "test_plugin"
@@ -116,6 +103,7 @@ class TestPluginLoader:
 
     def test_get_plugin_class(self, plugin_loader):
         """Test getting plugin class from module."""
+
         # Create a real class for testing
         class TestPlugin:
             pass
@@ -132,8 +120,8 @@ class TestPluginLoader:
         mock_module = MagicMock()
         mock_module.__name__ = "test_module"
         # Use delattr to properly remove the attribute
-        if hasattr(mock_module, 'Plugin'):
-            delattr(mock_module, 'Plugin')
+        if hasattr(mock_module, "Plugin"):
+            delattr(mock_module, "Plugin")
 
         with pytest.raises(PluginError, match="Class.*not found"):
             plugin_loader.get_plugin_class("test_plugin", mock_module, "Plugin")
@@ -150,12 +138,7 @@ class TestPluginLoader:
         plugin_manager = MagicMock()
 
         result = plugin_loader.instantiate_plugin(
-            "test_plugin",
-            mock_class,
-            config,
-            display_manager,
-            cache_manager,
-            plugin_manager
+            "test_plugin", mock_class, config, display_manager, cache_manager, plugin_manager
         )
 
         assert result == mock_instance
@@ -165,7 +148,7 @@ class TestPluginLoader:
             config=config,
             display_manager=display_manager,
             cache_manager=cache_manager,
-            plugin_manager=plugin_manager
+            plugin_manager=plugin_manager,
         )
 
     def test_instantiate_plugin_error(self, plugin_loader):
@@ -174,16 +157,9 @@ class TestPluginLoader:
         mock_class.side_effect = Exception("Instantiation error")
 
         with pytest.raises(PluginError, match="Failed to instantiate"):
-            plugin_loader.instantiate_plugin(
-                "test_plugin",
-                mock_class,
-                {},
-                MagicMock(),
-                MagicMock(),
-                MagicMock()
-            )
+            plugin_loader.instantiate_plugin("test_plugin", mock_class, {}, MagicMock(), MagicMock(), MagicMock())
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_dependencies(self, mock_subprocess, plugin_loader, tmp_plugins_dir):
         """Test installing plugin dependencies."""
         plugin_dir = tmp_plugins_dir / "test_plugin"
@@ -198,7 +174,7 @@ class TestPluginLoader:
         assert result is True
         mock_subprocess.assert_called_once()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_dependencies_no_requirements(self, mock_subprocess, plugin_loader, tmp_plugins_dir):
         """Test when no requirements.txt exists."""
         plugin_dir = tmp_plugins_dir / "test_plugin"
@@ -209,7 +185,7 @@ class TestPluginLoader:
         assert result is True
         mock_subprocess.assert_not_called()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_dependencies_failure(self, mock_subprocess, plugin_loader, tmp_plugins_dir):
         """Test handling dependency installation failure."""
         plugin_dir = tmp_plugins_dir / "test_plugin"

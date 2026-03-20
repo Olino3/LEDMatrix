@@ -78,7 +78,7 @@ def mock_config_manager():
         return mock.config
 
     def mock_get_secret(key: str) -> Optional[Any]:
-        secrets = mock.config.get('_secrets', {})
+        secrets = mock.config.get("_secrets", {})
         return secrets.get(key)
 
     mock.load_config = Mock(side_effect=mock_load_config)
@@ -106,23 +106,19 @@ def mock_plugin_manager():
 def test_config():
     """Provide a test configuration dictionary."""
     return {
-        'display': {
-            'hardware': {
-                'rows': 32,
-                'cols': 64,
-                'chain_length': 2,
-                'parallel': 1,
-                'hardware_mapping': 'adafruit-hat-pwm',
-                'brightness': 90
+        "display": {
+            "hardware": {
+                "rows": 32,
+                "cols": 64,
+                "chain_length": 2,
+                "parallel": 1,
+                "hardware_mapping": "adafruit-hat-pwm",
+                "brightness": 90,
             },
-            'runtime': {
-                'gpio_slowdown': 2
-            }
+            "runtime": {"gpio_slowdown": 2},
         },
-        'timezone': 'UTC',
-        'plugin_system': {
-            'plugins_directory': 'plugins'
-        }
+        "timezone": "UTC",
+        "plugin_system": {"plugins_directory": "plugins"},
     }
 
 
@@ -145,6 +141,7 @@ def emulator_mode(monkeypatch):
 def reset_logging():
     """Reset logging configuration before each test."""
     import logging
+
     logging.root.handlers = []
     logging.root.setLevel(logging.WARNING)
     yield
@@ -200,10 +197,7 @@ def mock_plugin_with_dynamic(mock_plugin_instance):
     mock_plugin_instance.get_dynamic_duration_cap = MagicMock(return_value=180.0)
     mock_plugin_instance.is_cycle_complete = MagicMock(return_value=False)
     mock_plugin_instance.reset_cycle_state = MagicMock(return_value=None)
-    mock_plugin_instance.config["dynamic_duration"] = {
-        "enabled": True,
-        "max_duration_seconds": 180
-    }
+    mock_plugin_instance.config["dynamic_duration"] = {"enabled": True, "max_duration_seconds": 180}
     return mock_plugin_instance
 
 
@@ -211,34 +205,18 @@ def mock_plugin_with_dynamic(mock_plugin_instance):
 def test_config_with_plugins(test_config):
     """Provide a test configuration with multiple plugins enabled."""
     config = test_config.copy()
-    config.update({
-        "plugin1": {
-            "enabled": True,
-            "display_duration": 30,
-            "update_interval": 300
-        },
-        "plugin2": {
-            "enabled": True,
-            "display_duration": 45,
-            "update_interval": 600,
-            "live_priority": True
-        },
-        "plugin3": {
-            "enabled": False,
-            "display_duration": 20
-        },
-        "display": {
-            **config.get("display", {}),
-            "display_durations": {
-                "plugin1": 30,
-                "plugin2": 45,
-                "plugin3": 20
+    config.update(
+        {
+            "plugin1": {"enabled": True, "display_duration": 30, "update_interval": 300},
+            "plugin2": {"enabled": True, "display_duration": 45, "update_interval": 600, "live_priority": True},
+            "plugin3": {"enabled": False, "display_duration": 20},
+            "display": {
+                **config.get("display", {}),
+                "display_durations": {"plugin1": 30, "plugin2": 45, "plugin3": 20},
+                "dynamic_duration": {"max_duration_seconds": 180},
             },
-            "dynamic_duration": {
-                "max_duration_seconds": 180
-            }
         }
-    })
+    )
     return config
 
 
@@ -254,7 +232,7 @@ def test_plugin_manager(mock_config_manager, mock_display_manager, mock_cache_ma
         plugin_dir = Path(tmpdir) / "plugins"
         plugin_dir.mkdir()
 
-        with patch('src.plugin_system.plugin_manager.PluginManager') as MockPM:
+        with patch("src.plugin_system.plugin_manager.PluginManager") as MockPM:
             pm = MagicMock()
             pm.plugins = {}
             pm.plugin_manifests = {}
@@ -275,6 +253,7 @@ def test_plugin_manager(mock_config_manager, mock_display_manager, mock_cache_ma
 def cli_runner():
     """Click CliRunner for matrix CLI tests."""
     from click.testing import CliRunner
+
     return CliRunner()
 
 
@@ -282,15 +261,22 @@ def cli_runner():
 def fake_plugins_dir(tmp_path):
     """Temp plugins/ directory with two plugins (one enabled, one disabled)."""
     import json
-    plugins_dir = tmp_path / 'plugins'
+
+    plugins_dir = tmp_path / "plugins"
     plugins_dir.mkdir()
-    for pid, cat in [('clock-simple', 'time'), ('weather-board', 'weather')]:
+    for pid, cat in [("clock-simple", "time"), ("weather-board", "weather")]:
         p = plugins_dir / pid
         p.mkdir()
-        (p / 'manifest.json').write_text(json.dumps({
-            'id': pid, 'name': pid.replace('-', ' ').title(),
-            'version': '1.0.0', 'category': cat,
-        }))
+        (p / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "id": pid,
+                    "name": pid.replace("-", " ").title(),
+                    "version": "1.0.0",
+                    "category": cat,
+                }
+            )
+        )
     return plugins_dir
 
 
@@ -298,17 +284,23 @@ def fake_plugins_dir(tmp_path):
 def fake_config_path(tmp_path):
     """Temp config.json with two plugin entries."""
     import json
-    cfg = tmp_path / 'config.json'
-    cfg.write_text(json.dumps({
-        'clock-simple': {'enabled': True},
-        'weather-board': {'enabled': False},
-    }))
+
+    cfg = tmp_path / "config.json"
+    cfg.write_text(
+        json.dumps(
+            {
+                "clock-simple": {"enabled": True},
+                "weather-board": {"enabled": False},
+            }
+        )
+    )
     return cfg
 
 
 @pytest.fixture
-def test_display_controller(mock_config_manager, mock_display_manager, mock_cache_manager,
-                            test_config_with_plugins, emulator_mode):
+def test_display_controller(
+    mock_config_manager, mock_display_manager, mock_cache_manager, test_config_with_plugins, emulator_mode
+):
     """Create a test DisplayController instance with mocked dependencies."""
     from unittest.mock import MagicMock, patch
 
@@ -318,12 +310,13 @@ def test_display_controller(mock_config_manager, mock_display_manager, mock_cach
     mock_config_manager.get_config.return_value = test_config_with_plugins
     mock_config_manager.load_config.return_value = test_config_with_plugins
 
-    with patch('src.display_controller.ConfigManager', return_value=mock_config_manager), \
-         patch('src.display_controller.DisplayManager', return_value=mock_display_manager), \
-         patch('src.display_controller.CacheManager', return_value=mock_cache_manager), \
-         patch('src.display_controller.FontManager'), \
-         patch('src.plugin_system.PluginManager') as mock_pm_class:
-
+    with (
+        patch("src.display_controller.ConfigManager", return_value=mock_config_manager),
+        patch("src.display_controller.DisplayManager", return_value=mock_display_manager),
+        patch("src.display_controller.CacheManager", return_value=mock_cache_manager),
+        patch("src.display_controller.FontManager"),
+        patch("src.plugin_system.PluginManager") as mock_pm_class,
+    ):
         # Set up plugin manager mock
         mock_pm = MagicMock()
         mock_pm.discover_plugins = MagicMock(return_value=[])
@@ -346,4 +339,3 @@ def test_display_controller(mock_config_manager, mock_display_manager, mock_cach
             controller.cleanup()
         except Exception:
             pass
-

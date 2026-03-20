@@ -21,7 +21,7 @@ class MockDisplayManager:
         self.image = Image.new("RGB", (width, height), color=(0, 0, 0))
         self.clear_called = False
         self.update_called = False
-        self.draw_calls = []
+        self.draw_calls: list[Dict[str, Any]] = []
 
     def clear(self):
         """Clear the display."""
@@ -104,8 +104,8 @@ class MockConfigManager:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self._config = config or {}
-        self.load_config_calls = []
-        self.save_config_calls = []
+        self.load_config_calls: list[Dict[str, Any]] = []
+        self.save_config_calls: list[Dict[str, Any]] = []
 
     def load_config(self) -> Dict[str, Any]:
         """Load configuration."""

@@ -230,11 +230,11 @@ class WiFiManager:
                         return interface
 
             # Last resort: Check common interface names
-            for iface in ["wlan0", "wlan1", "wlp2s0", "wlp3s0"]:
-                iface_path = Path(f"/sys/class/net/{iface}")
+            for iface_name in ["wlan0", "wlan1", "wlp2s0", "wlp3s0"]:
+                iface_path = Path(f"/sys/class/net/{iface_name}")
                 if iface_path.exists():
-                    logger.debug(f"Found WiFi interface by name probe: {iface}")
-                    return iface
+                    logger.debug(f"Found WiFi interface by name probe: {iface_name}")
+                    return iface_name
 
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             logger.warning(f"Error discovering WiFi interface: {e}")

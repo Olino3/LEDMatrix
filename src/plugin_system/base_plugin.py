@@ -307,7 +307,7 @@ class BasePlugin(ABC):
         Returns:
             True if live priority is enabled in config, False otherwise
         """
-        return self.config.get("live_priority", False)
+        return self.config.get("live_priority", False)  # type: ignore[no-any-return]
 
     def has_live_content(self) -> bool:
         """
@@ -350,7 +350,7 @@ class BasePlugin(ABC):
         # Get display modes from manifest via plugin manager
         if self.plugin_manager and hasattr(self.plugin_manager, "plugin_manifests"):
             manifest = self.plugin_manager.plugin_manifests.get(self.plugin_id, {})
-            return manifest.get("display_modes", [self.plugin_id])
+            return manifest.get("display_modes", [self.plugin_id])  # type: ignore[no-any-return]
         return [self.plugin_id]
 
     # -------------------------------------------------------------------------

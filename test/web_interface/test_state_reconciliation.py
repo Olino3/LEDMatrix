@@ -37,7 +37,7 @@ class TestStateReconciliation(unittest.TestCase):
             state_manager=self.state_manager,
             config_manager=self.config_manager,
             plugin_manager=self.plugin_manager,
-            plugins_dir=self.plugins_dir
+            plugins_dir=self.plugins_dir,
         )
 
     def tearDown(self):
@@ -47,16 +47,10 @@ class TestStateReconciliation(unittest.TestCase):
     def test_reconcile_no_inconsistencies(self):
         """Test reconciliation with no inconsistencies."""
         # Setup: All states are consistent
-        self.config_manager.load_config.return_value = {
-            "plugin1": {"enabled": True}
-        }
+        self.config_manager.load_config.return_value = {"plugin1": {"enabled": True}}
 
         self.state_manager.get_all_states.return_value = {
-            "plugin1": Mock(
-                enabled=True,
-                status=PluginStateStatus.ENABLED,
-                version="1.0.0"
-            )
+            "plugin1": Mock(enabled=True, status=PluginStateStatus.ENABLED, version="1.0.0")
         }
 
         self.plugin_manager.plugin_manifests = {"plugin1": {}}
@@ -66,7 +60,7 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Run reconciliation
@@ -91,7 +85,7 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Run reconciliation
@@ -108,9 +102,7 @@ class TestStateReconciliation(unittest.TestCase):
     def test_plugin_missing_on_disk(self):
         """Test detection of plugin missing on disk."""
         # Setup: Plugin in config but not on disk
-        self.config_manager.load_config.return_value = {
-            "plugin1": {"enabled": True}
-        }
+        self.config_manager.load_config.return_value = {"plugin1": {"enabled": True}}
 
         self.state_manager.get_all_states.return_value = {}
 
@@ -133,16 +125,10 @@ class TestStateReconciliation(unittest.TestCase):
     def test_enabled_state_mismatch(self):
         """Test detection of enabled state mismatch."""
         # Setup: Config says enabled=True, state manager says enabled=False
-        self.config_manager.load_config.return_value = {
-            "plugin1": {"enabled": True}
-        }
+        self.config_manager.load_config.return_value = {"plugin1": {"enabled": True}}
 
         self.state_manager.get_all_states.return_value = {
-            "plugin1": Mock(
-                enabled=False,
-                status=PluginStateStatus.DISABLED,
-                version="1.0.0"
-            )
+            "plugin1": Mock(enabled=False, status=PluginStateStatus.DISABLED, version="1.0.0")
         }
 
         self.plugin_manager.plugin_manifests = {"plugin1": {}}
@@ -152,7 +138,7 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Run reconciliation
@@ -180,11 +166,12 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Mock save_config to track calls
         saved_configs = []
+
         def save_config(config):
             saved_configs.append(config)
 
@@ -202,16 +189,10 @@ class TestStateReconciliation(unittest.TestCase):
     def test_auto_fix_enabled_state_mismatch(self):
         """Test auto-fix of enabled state mismatch."""
         # Setup: Config says enabled=True, state manager says enabled=False
-        self.config_manager.load_config.return_value = {
-            "plugin1": {"enabled": True}
-        }
+        self.config_manager.load_config.return_value = {"plugin1": {"enabled": True}}
 
         self.state_manager.get_all_states.return_value = {
-            "plugin1": Mock(
-                enabled=False,
-                status=PluginStateStatus.DISABLED,
-                version="1.0.0"
-            )
+            "plugin1": Mock(enabled=False, status=PluginStateStatus.DISABLED, version="1.0.0")
         }
 
         self.plugin_manager.plugin_manifests = {"plugin1": {}}
@@ -221,11 +202,12 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Mock save_config to track calls
         saved_configs = []
+
         def save_config(config):
             saved_configs.append(config)
 
@@ -248,11 +230,7 @@ class TestStateReconciliation(unittest.TestCase):
         }
 
         self.state_manager.get_all_states.return_value = {
-            "plugin1": Mock(
-                enabled=True,
-                status=PluginStateStatus.ENABLED,
-                version="1.0.0"
-            )
+            "plugin1": Mock(enabled=True, status=PluginStateStatus.ENABLED, version="1.0.0")
         }
 
         self.plugin_manager.plugin_manifests = {}
@@ -262,7 +240,7 @@ class TestStateReconciliation(unittest.TestCase):
         plugin2_dir = self.plugins_dir / "plugin2"
         plugin2_dir.mkdir()
         manifest_path = plugin2_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 2"}, f)
 
         # Run reconciliation
@@ -303,7 +281,7 @@ class TestStateReconciliation(unittest.TestCase):
         plugin_dir = self.plugins_dir / "plugin1"
         plugin_dir.mkdir()
         manifest_path = plugin_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump({"version": "1.0.0", "name": "Plugin 1"}, f)
 
         # Mock save_config to raise exception
@@ -331,7 +309,7 @@ class TestStateReconciliation(unittest.TestCase):
     def test_get_disk_state_handles_exception(self):
         """Test that _get_disk_state handles exceptions."""
         # Setup: Make plugins_dir inaccessible
-        with patch.object(self.reconciler, 'plugins_dir', create=True) as mock_dir:
+        with patch.object(self.reconciler, "plugins_dir", create=True) as mock_dir:
             mock_dir.exists.side_effect = Exception("Disk error")
             mock_dir.iterdir.side_effect = Exception("Disk error")
 
@@ -342,6 +320,5 @@ class TestStateReconciliation(unittest.TestCase):
             self.assertEqual(state, {})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

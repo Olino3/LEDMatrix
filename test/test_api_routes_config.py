@@ -73,33 +73,53 @@ class TestScheduleRoutes:
 
     def test_save_schedule_global(self):
         client, cm, _ = _make_client()
-        resp = client.post("/api/v3/config/schedule", json={
-            "enabled": True, "mode": "global", "start_time": "08:00", "end_time": "22:00",
-        })
+        resp = client.post(
+            "/api/v3/config/schedule",
+            json={
+                "enabled": True,
+                "mode": "global",
+                "start_time": "08:00",
+                "end_time": "22:00",
+            },
+        )
         assert resp.status_code == 200
         assert resp.json()["status"] == "success"
 
     def test_save_schedule_invalid_time(self):
         client, _, _ = _make_client()
-        resp = client.post("/api/v3/config/schedule", json={
-            "enabled": True, "mode": "global", "start_time": "25:00", "end_time": "22:00",
-        })
+        resp = client.post(
+            "/api/v3/config/schedule",
+            json={
+                "enabled": True,
+                "mode": "global",
+                "start_time": "25:00",
+                "end_time": "22:00",
+            },
+        )
         assert resp.status_code == 400
         assert resp.json()["error_code"] == "VALIDATION_ERROR"
 
     def test_save_schedule_per_day_no_day_enabled(self):
         client, _, _ = _make_client()
-        resp = client.post("/api/v3/config/schedule", json={
-            "enabled": True, "mode": "per-day",
-        })
+        resp = client.post(
+            "/api/v3/config/schedule",
+            json={
+                "enabled": True,
+                "mode": "per-day",
+            },
+        )
         assert resp.status_code == 400
         assert "at least one day" in resp.json()["message"].lower()
 
     def test_save_schedule_invalid_mode(self):
         client, _, _ = _make_client()
-        resp = client.post("/api/v3/config/schedule", json={
-            "enabled": True, "mode": "bogus",
-        })
+        resp = client.post(
+            "/api/v3/config/schedule",
+            json={
+                "enabled": True,
+                "mode": "bogus",
+            },
+        )
         assert resp.status_code == 400
 
 
@@ -112,18 +132,29 @@ class TestDimScheduleRoutes:
 
     def test_save_dim_schedule_validates_brightness(self):
         client, _, _ = _make_client()
-        resp = client.post("/api/v3/config/dim-schedule", json={
-            "enabled": True, "dim_brightness": 150, "mode": "global",
-        })
+        resp = client.post(
+            "/api/v3/config/dim-schedule",
+            json={
+                "enabled": True,
+                "dim_brightness": 150,
+                "mode": "global",
+            },
+        )
         assert resp.status_code == 400
         assert "between 0 and 100" in resp.json()["message"]
 
     def test_save_dim_schedule_ok(self):
         client, cm, _ = _make_client()
-        resp = client.post("/api/v3/config/dim-schedule", json={
-            "enabled": True, "dim_brightness": 20, "mode": "global",
-            "start_time": "21:00", "end_time": "06:00",
-        })
+        resp = client.post(
+            "/api/v3/config/dim-schedule",
+            json={
+                "enabled": True,
+                "dim_brightness": 20,
+                "mode": "global",
+                "start_time": "21:00",
+                "end_time": "06:00",
+            },
+        )
         assert resp.status_code == 200
 
 

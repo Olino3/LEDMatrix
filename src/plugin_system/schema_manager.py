@@ -169,7 +169,7 @@ class SchemaManager:
         Returns:
             Dictionary of default values
         """
-        defaults = {}
+        defaults: Dict[str, Any] = {}
 
         # Handle schema with properties
         properties = schema.get("properties", {})

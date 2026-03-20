@@ -12,7 +12,7 @@ class TestOddsTickerPlugin(PluginTestBase):
 
     @pytest.fixture
     def plugin_id(self):
-        return 'odds-ticker'
+        return "odds-ticker"
 
     def test_manifest_exists(self, plugin_id):
         """Test that plugin manifest exists."""
@@ -50,8 +50,8 @@ class TestOddsTickerPlugin(PluginTestBase):
     def test_plugin_has_display_modes(self, plugin_id):
         """Test that plugin has display modes."""
         manifest = self.load_plugin_manifest(plugin_id)
-        assert 'display_modes' in manifest
-        assert 'odds_ticker' in manifest['display_modes']
+        assert "display_modes" in manifest
+        assert "odds_ticker" in manifest["display_modes"]
 
     def test_config_schema_valid(self, plugin_id):
         """Test that config schema is valid."""

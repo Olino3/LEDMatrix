@@ -48,7 +48,7 @@ class MemoryCache:
 
             timestamp = self._timestamps.get(key)
             if isinstance(timestamp, str):
-                try:
+                try:  # type: ignore[unreachable]
                     timestamp = float(timestamp)
                 except ValueError:
                     self.logger.error(f"Invalid timestamp format for key {key}: {timestamp}")
@@ -118,8 +118,8 @@ class MemoryCache:
 
             expired_keys = []
             for key, timestamp in list(self._timestamps.items()):
-                if isinstance(timestamp, str):
-                    try:
+                if isinstance(timestamp, str):  # type: ignore[unreachable]
+                    try:  # type: ignore[unreachable]
                         timestamp = float(timestamp)
                     except ValueError:
                         timestamp = None

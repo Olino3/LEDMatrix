@@ -7,7 +7,12 @@ version of BackgroundCacheMixin that works for weather, stocks, news, etc.
 """
 
 import time
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+
+if TYPE_CHECKING:
+    import logging
+
+    from src.cache_manager import CacheManager
 
 
 class GenericCacheMixin:
@@ -20,6 +25,10 @@ class GenericCacheMixin:
     Note: For sports managers that need background service cache integration,
     use BackgroundCacheMixin instead. See src/background_cache_mixin.py for details.
     """
+
+    cache_manager: "CacheManager"
+    logger: "logging.Logger"
+    _fetch_count: int
 
     def _fetch_data_with_cache(
         self, cache_key: str, api_fetch_method: Callable, cache_ttl: int = 300, force_refresh: bool = False
@@ -76,7 +85,7 @@ class GenericCacheMixin:
             # Log performance
             self._log_fetch_performance(cache_key, duration, cache_hit, cache_source)
 
-            return result
+            return result  # type: ignore[no-any-return]
 
         except Exception as e:
             duration = time.time() - start_time
@@ -123,11 +132,11 @@ class GenericCacheMixin:
         """
         return self.cache_manager.get_cache_metrics()
 
-    def log_cache_performance(self):
+    def log_cache_performance(self) -> None:
         """Log current cache performance metrics."""
         self.cache_manager.log_cache_metrics()
 
-    def clear_cache_for_key(self, cache_key: str):
+    def clear_cache_for_key(self, cache_key: str) -> None:
         """Clear cache for a specific key."""
         self.cache_manager.clear_cache(cache_key)
         self.logger.info(f"Cleared cache for {cache_key}")

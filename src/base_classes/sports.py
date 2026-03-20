@@ -26,7 +26,7 @@ from src.logo_downloader import LogoDownloader, download_missing_logo
 try:
     from src.base_odds_manager import BaseOddsManager as OddsManager
 except ImportError:
-    OddsManager = None
+    OddsManager = None  # type: ignore[assignment, misc]
 
 
 class SportsCore(ABC):
@@ -42,25 +42,25 @@ class SportsCore(ABC):
         self.config = config
         self.cache_manager = cache_manager
         self.config_manager = self.cache_manager.config_manager
-        if OddsManager:
+        self.odds_manager: Any = None
+        if OddsManager is not None:
             try:
                 self.odds_manager = OddsManager(self.cache_manager, self.config_manager)
             except Exception as e:
                 self.logger.warning(f"Failed to initialize OddsManager: {e}")
                 self.odds_manager = None
         else:
-            self.odds_manager = None
-            self.logger.warning("OddsManager not available - odds functionality disabled")
+            self.logger.warning("OddsManager not available - odds functionality disabled")  # type: ignore[unreachable]
         self.display_manager = display_manager
         self.display_width = self.display_manager.width
         self.display_height = self.display_manager.height
 
         self.sport_key = sport_key
-        self.sport = None
-        self.league = None
+        self.sport: str | None = None
+        self.league: str | None = None
 
         # Initialize new architecture components (will be overridden by sport-specific classes)
-        self.sport_config = None
+        self.sport_config: Dict[str, Any] | None = None
         self.api_extractor: APIDataExtractor
         self.data_source: DataSource
         self.mode_config = config.get(f"{sport_key}_scoreboard", {})  # Changed config key
@@ -90,7 +90,7 @@ class SportsCore(ABC):
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
 
-        self._logo_cache = {}
+        self._logo_cache: Dict[str, Image.Image] = {}
 
         # Set up headers
         self.headers = {
@@ -100,8 +100,8 @@ class SportsCore(ABC):
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
         }
-        self.last_update = 0
-        self.current_game = None
+        self.last_update: float = 0
+        self.current_game: Dict[str, Any] | None = None
         self.fonts = self._load_fonts()
 
         # Initialize dynamic team resolver and resolve favorite teams
@@ -118,14 +118,14 @@ class SportsCore(ABC):
         self.logger.setLevel(logging.INFO)
 
         # Initialize team rankings cache
-        self._team_rankings_cache = {}
-        self._rankings_cache_timestamp = 0
+        self._team_rankings_cache: Dict[str, int] = {}
+        self._rankings_cache_timestamp: float = 0
         self._rankings_cache_duration = 3600  # Cache rankings for 1 hour
 
         # Initialize background data service with optimized settings
         # Hardcoded for memory optimization: 1 worker, 30s timeout, 3 retries
         self.background_service = get_background_service(self.cache_manager, max_workers=1)
-        self.background_fetch_requests = {}  # Track background fetch requests
+        self.background_fetch_requests: Dict[str, Any] = {}  # Track background fetch requests
         self.background_enabled = True
         self.logger.info("Background service enabled with 1 worker (memory optimized)")
 
@@ -225,7 +225,7 @@ class SportsCore(ABC):
 
             current_time = time.time()
             if not hasattr(self, "_last_warning_time"):
-                self._last_warning_time = 0
+                self._last_warning_time: float = 0
             if current_time - getattr(self, "_last_warning_time", 0) > 300:
                 self.logger.warning(f"No game data available to display in {self.__class__.__name__}")
                 self._last_warning_time = current_time
@@ -242,7 +242,7 @@ class SportsCore(ABC):
 
     def _load_fonts(self):
         """Load fonts used by the scoreboard."""
-        fonts = {}
+        fonts: Dict[str, ImageFont.FreeTypeFont | ImageFont.ImageFont] = {}
         h = self.display_height
         score_size = 8 if h < 24 else 10
         main_size = 6 if h < 20 else 8
@@ -264,7 +264,7 @@ class SportsCore(ABC):
             fonts["rank"] = ImageFont.load_default()
         return fonts
 
-    def _draw_dynamic_odds(self, draw: ImageDraw.Draw, odds: Dict[str, Any], width: int, height: int) -> None:
+    def _draw_dynamic_odds(self, draw: ImageDraw.ImageDraw, odds: Dict[str, Any], width: int, height: int) -> None:
         """Draw odds with dynamic positioning - only show negative spread and position O/U based on favored team."""
         home_team_odds = odds.get("home_team_odds", {})
         away_team_odds = odds.get("away_team_odds", {})
@@ -308,7 +308,7 @@ class SportsCore(ABC):
             if favored_side == "home":
                 # Home team is favored, show spread on right side
                 spread_width = draw.textlength(spread_text, font=font)
-                spread_x = width - spread_width  # Top right
+                spread_x = int(width - spread_width)  # Top right
                 spread_y = 0
                 self._draw_text_with_outline(draw, spread_text, (spread_x, spread_y), font, fill=(0, 255, 0))
                 self.logger.debug(f"Showing home spread '{spread_text}' on right side")
@@ -333,12 +333,12 @@ class SportsCore(ABC):
                 self.logger.debug(f"Showing O/U '{ou_text}' on left side (home favored)")
             elif favored_side == "away":
                 # Away team is favored, show O/U on right side (opposite of spread)
-                ou_x = width - ou_width  # Top right
+                ou_x = int(width - ou_width)  # Top right
                 ou_y = 0
                 self.logger.debug(f"Showing O/U '{ou_text}' on right side (away favored)")
             else:
                 # No clear favorite, show O/U in center
-                ou_x = (width - ou_width) // 2
+                ou_x = int((width - ou_width) // 2)
                 ou_y = 0
                 self.logger.debug(f"Showing O/U '{ou_text}' in center (no clear favorite)")
 
@@ -386,7 +386,7 @@ class SportsCore(ABC):
 
             # Only try to open the logo if the file exists
             if os.path.exists(actual_logo_path):
-                logo = Image.open(actual_logo_path)
+                logo: Image.Image = Image.open(actual_logo_path)
             else:
                 self.logger.error(f"Logo file still doesn't exist at {actual_logo_path} after download attempt")
                 return None
@@ -462,9 +462,9 @@ class SportsCore(ABC):
             return self._team_rankings_cache
 
         try:
-            data = self.data_source.fetch_standings(self.sport, self.league)
+            data = self.data_source.fetch_standings(self.sport or "", self.league or "")
 
-            rankings = {}
+            rankings: Dict[str, int] = {}
             rankings_data = data.get("rankings", [])
 
             if rankings_data:
@@ -621,7 +621,7 @@ class SportsCore(ABC):
             url = f"https://site.api.espn.com/apis/site/v2/sports/{self.sport}/{self.league}/scoreboard"
             response = self.session.get(
                 url,
-                params={"dates": f"{formatted_date_yesterday}-{formatted_date}", "limit": 1000},
+                params={"dates": f"{formatted_date_yesterday}-{formatted_date}", "limit": 1000},  # type: ignore[arg-type]
                 headers=self.headers,
                 timeout=10,
             )
@@ -650,7 +650,10 @@ class SportsCore(ABC):
             date_str = f"{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}"
             url = f"https://site.api.espn.com/apis/site/v2/sports/{self.sport}/{self.league}/scoreboard"
             response = self.session.get(
-                url, params={"dates": date_str, "limit": 1000}, headers=self.headers, timeout=10
+                url,
+                params={"dates": date_str, "limit": 1000},  # type: ignore[arg-type]
+                headers=self.headers,
+                timeout=10,
             )
             response.raise_for_status()
             data = response.json()
@@ -678,18 +681,18 @@ class SportsUpcoming(SportsCore):
         sport_key: str,
     ):
         super().__init__(config, display_manager, cache_manager, logger, sport_key)
-        self.upcoming_games = []  # Store all fetched upcoming games initially
-        self.games_list = []  # Filtered list for display (favorite teams)
+        self.upcoming_games: List[Dict[str, Any]] = []  # Store all fetched upcoming games initially
+        self.games_list: List[Dict[str, Any]] = []  # Filtered list for display (favorite teams)
         self.current_game_index = 0
-        self.last_update = 0
+        self.last_update: float = 0
         self.update_interval = self.mode_config.get(
             "upcoming_update_interval", 3600
         )  # Check for recent games every hour
-        self.last_log_time = 0
+        self.last_log_time: float = 0
         self.log_interval = 300
-        self.last_warning_time = 0
+        self.last_warning_time: float = 0
         self.warning_cooldown = 300
-        self.last_game_switch = 0
+        self.last_game_switch: float = 0
         self.game_display_duration = 15  # Display each upcoming game for 15 seconds
 
     def update(self):
@@ -913,11 +916,15 @@ class SportsUpcoming(SportsCore):
             # Draw records or rankings if enabled
             if self.show_records or self.show_ranking:
                 try:
-                    record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
+                    record_font: ImageFont.FreeTypeFont | ImageFont.ImageFont = ImageFont.truetype(
+                        "assets/fonts/4x6-font.ttf", 6
+                    )
                     self.logger.debug("Loaded 6px record font successfully")
                 except IOError:
                     record_font = ImageFont.load_default()
-                    self.logger.warning(f"Failed to load 6px font, using default font (size: {record_font.size})")
+                    self.logger.warning(
+                        f"Failed to load 6px font, using default font (size: {getattr(record_font, 'size', 'unknown')})"
+                    )
 
                 # Get team abbreviations
                 away_abbr = game.get("away_abbr", "")
@@ -956,7 +963,7 @@ class SportsUpcoming(SportsCore):
                     if away_text:
                         away_record_x = 0
                         self.logger.debug(
-                            f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                            f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {getattr(record_font, 'size', 'unknown')}"
                         )
                         self._draw_text_with_outline(draw_overlay, away_text, (away_record_x, record_y), record_font)
 
@@ -988,7 +995,7 @@ class SportsUpcoming(SportsCore):
                         home_record_width = home_record_bbox[2] - home_record_bbox[0]
                         home_record_x = self.display_width - home_record_width
                         self.logger.debug(
-                            f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                            f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {getattr(record_font, 'size', 'unknown')}"
                         )
                         self._draw_text_with_outline(draw_overlay, home_text, (home_record_x, record_y), record_font)
 
@@ -1056,12 +1063,12 @@ class SportsRecent(SportsCore):
         sport_key: str,
     ):
         super().__init__(config, display_manager, cache_manager, logger, sport_key)
-        self.recent_games = []  # Store all fetched recent games initially
-        self.games_list = []  # Filtered list for display (favorite teams)
+        self.recent_games: List[Dict[str, Any]] = []  # Store all fetched recent games initially
+        self.games_list: List[Dict[str, Any]] = []  # Filtered list for display (favorite teams)
         self.current_game_index = 0
-        self.last_update = 0
+        self.last_update: float = 0
         self.update_interval = self.mode_config.get("recent_update_interval", 3600)  # Check for recent games every hour
-        self.last_game_switch = 0
+        self.last_game_switch: float = 0
         self.game_display_duration = 15  # Display each recent game for 15 seconds
 
     def update(self):
@@ -1264,11 +1271,15 @@ class SportsRecent(SportsCore):
             # Draw records or rankings if enabled (skip on short displays to avoid overlap)
             if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
-                    record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
+                    record_font: ImageFont.FreeTypeFont | ImageFont.ImageFont = ImageFont.truetype(
+                        "assets/fonts/4x6-font.ttf", 6
+                    )
                     self.logger.debug("Loaded 6px record font successfully")
                 except IOError:
                     record_font = ImageFont.load_default()
-                    self.logger.warning(f"Failed to load 6px font, using default font (size: {record_font.size})")
+                    self.logger.warning(
+                        f"Failed to load 6px font, using default font (size: {getattr(record_font, 'size', 'unknown')})"
+                    )
 
                 # Get team abbreviations
                 away_abbr = game.get("away_abbr", "")
@@ -1404,15 +1415,15 @@ class SportsLive(SportsCore):
         super().__init__(config, display_manager, cache_manager, logger, sport_key)
         self.update_interval = self.mode_config.get("live_update_interval", 15)
         self.no_data_interval = 300
-        self.last_update = 0
-        self.live_games = []
+        self.last_update: float = 0
+        self.live_games: List[Dict[str, Any]] = []
         self.current_game_index = 0
-        self.last_game_switch = 0  # Will be set to current_time when games are first loaded
+        self.last_game_switch: float = 0  # Will be set to current_time when games are first loaded
         self.game_display_duration = self.mode_config.get("live_game_duration", 20)
-        self.last_display_update = 0
-        self.last_log_time = 0
+        self.last_display_update: float = 0
+        self.last_log_time: float = 0
         self.log_interval = 300
-        self.last_count_log_time = 0  # Track when we last logged count data
+        self.last_count_log_time: float = 0  # Track when we last logged count data
         self.count_log_interval = 5  # Only log count data every 5 seconds
         # Initialize test_mode - defaults to False (live mode)
         self.test_mode = self.mode_config.get("test_mode", False)

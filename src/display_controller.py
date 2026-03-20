@@ -132,7 +132,7 @@ class DisplayController:
                 plugins_dir = plugins_dir_name
             else:
                 # If relative, resolve relative to the project root (LEDMatrix directory)
-                project_root = os.getcwd()
+                project_root = os.getcwd()  # type: ignore[assignment]
                 plugins_dir = os.path.join(project_root, plugins_dir_name)
 
             logger.info("Plugin Manager initialized with plugins directory: %s", plugins_dir)
@@ -193,6 +193,7 @@ class DisplayController:
                     # Set on-demand state from cached config
                     self.on_demand_active = True
                     self.on_demand_plugin_id = on_demand_plugin_id
+                    assert on_demand_config is not None  # guaranteed by on_demand_plugin_id check
                     self.on_demand_mode = on_demand_config.get("mode")
                     self.on_demand_duration = on_demand_config.get("duration")
                     self.on_demand_pinned = on_demand_config.get("pinned", False)
@@ -213,7 +214,7 @@ class DisplayController:
                 """Load a single plugin and return result."""
                 plugin_load_start = time.time()
                 try:
-                    if self.plugin_manager.load_plugin(plugin_id):
+                    if self.plugin_manager.load_plugin(plugin_id):  # type: ignore[union-attr]
                         plugin_load_time = time.time() - plugin_load_start
                         return {"success": True, "plugin_id": plugin_id, "load_time": plugin_load_time, "error": None}
                     else:
@@ -396,7 +397,7 @@ class DisplayController:
                     logger.exception("Failed to import Vegas mode module")
                     return
 
-            self.vegas_coordinator = VegasModeCoordinator(
+            self.vegas_coordinator = VegasModeCoordinator(  # type: ignore[misc]
                 config=self.config, display_manager=self.display_manager, plugin_manager=self.plugin_manager
             )
 
@@ -598,14 +599,14 @@ class DisplayController:
         # If display is OFF via schedule, don't process dim schedule
         if not self.is_display_active:
             self.is_dimmed = False
-            return normal_brightness
+            return normal_brightness  # type: ignore[no-any-return]
 
         dim_config = current_config.get("dim_schedule", {})
 
         # If dim schedule doesn't exist or is disabled, use normal brightness
         if not dim_config or not dim_config.get("enabled", False):
             self.is_dimmed = False
-            return normal_brightness
+            return normal_brightness  # type: ignore[no-any-return]
 
         # Get configured timezone
         timezone_str = current_config.get("timezone", "UTC")
@@ -630,7 +631,7 @@ class DisplayController:
             day_config = days_config[current_day]
             if not day_config.get("enabled", True):
                 self.is_dimmed = False
-                return normal_brightness
+                return normal_brightness  # type: ignore[no-any-return]
             start_time_str = day_config.get("start_time", "20:00")
             end_time_str = day_config.get("end_time", "07:00")
         else:
@@ -663,11 +664,11 @@ class DisplayController:
                 logger.info(f"Dim schedule deactivated: brightness restored to {target_brightness}%")
 
             self._was_dimmed = self.is_dimmed
-            return target_brightness
+            return target_brightness  # type: ignore[no-any-return]
 
         except ValueError as e:
             logger.warning(f"Invalid dim schedule time format: {e}")
-            return normal_brightness
+            return normal_brightness  # type: ignore[no-any-return]
 
     def _update_modules(self):
         """Update all plugin modules."""
@@ -740,7 +741,7 @@ class DisplayController:
         if mode_key in self.plugin_modes:
             plugin_instance = self.plugin_modes[mode_key]
             if hasattr(plugin_instance, "get_display_duration"):
-                return plugin_instance.get_display_duration()
+                return plugin_instance.get_display_duration()  # type: ignore[union-attr]
 
         # Fall back to config
         display_durations = self.config.get("display", {}).get("display_durations", {})
@@ -778,13 +779,13 @@ class DisplayController:
         if not callable(cap_fn):
             return None
         try:
-            return cap_fn()
+            return cap_fn()  # type: ignore[no-any-return]
         except Exception as exc:  # pylint: disable=broad-except
             plugin_id = getattr(plugin_instance, "plugin_id", "unknown")
             logger.warning("Failed to read dynamic duration cap for %s: %s", plugin_id, exc)
             return None
 
-    def _plugin_cycle_duration(self, plugin_instance, display_mode: str = None) -> Optional[float]:
+    def _plugin_cycle_duration(self, plugin_instance, display_mode: str | None = None) -> Optional[float]:
         """Fetch plugin-calculated cycle duration for a specific mode.
 
         This allows plugins to calculate the total time needed to show all content
@@ -801,7 +802,7 @@ class DisplayController:
         if not callable(duration_fn):
             return None
         try:
-            return duration_fn(display_mode=display_mode)
+            return duration_fn(display_mode=display_mode)  # type: ignore[no-any-return]
         except Exception as exc:  # pylint: disable=broad-except
             plugin_id = getattr(plugin_instance, "plugin_id", "unknown")
             logger.debug("Failed to read cycle duration for %s mode %s: %s", plugin_id, display_mode, exc)
@@ -1287,10 +1288,10 @@ class DisplayController:
         for mode_name, plugin_instance in self.plugin_modes.items():
             if hasattr(plugin_instance, "has_live_priority") and hasattr(plugin_instance, "has_live_content"):
                 try:
-                    if plugin_instance.has_live_priority() and plugin_instance.has_live_content():
+                    if plugin_instance.has_live_priority() and plugin_instance.has_live_content():  # type: ignore[union-attr]
                         # Get the specific live mode from the plugin if available
                         if hasattr(plugin_instance, "get_live_modes"):
-                            live_modes = plugin_instance.get_live_modes()
+                            live_modes = plugin_instance.get_live_modes()  # type: ignore[union-attr]
                             if live_modes and len(live_modes) > 0:
                                 # Verify the mode actually exists before returning it
                                 for suggested_mode in live_modes:
@@ -1409,7 +1410,7 @@ class DisplayController:
                     if not live_mode:
                         try:
                             # Run Vegas mode iteration
-                            if self.vegas_coordinator.run_iteration():
+                            if self.vegas_coordinator.run_iteration():  # type: ignore[union-attr]
                                 # Vegas completed an iteration, continue to next loop
                                 continue
                             else:
@@ -1998,7 +1999,7 @@ class DisplayController:
                     plugin_instance = self.plugin_modes[active_mode]
                     if hasattr(plugin_instance, "has_live_priority") and hasattr(plugin_instance, "has_live_content"):
                         try:
-                            if plugin_instance.has_live_priority() and plugin_instance.has_live_content():
+                            if plugin_instance.has_live_priority() and plugin_instance.has_live_content():  # type: ignore[union-attr]
                                 logger.info("Live priority active for %s - staying on current mode", active_mode)
                                 should_rotate = False
                         except Exception as e:
@@ -2114,8 +2115,8 @@ class DisplayController:
             # Simple word wrapping for messages longer than ~20 characters
             max_chars_per_line = min(20, width // 6)  # Rough estimate based on font width
             words = message.split()
-            lines = []
-            current_line = []
+            lines: list[str] = []
+            current_line: list[str] = []
             current_length = 0
 
             for word in words:

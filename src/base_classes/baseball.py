@@ -117,7 +117,7 @@ class Baseball(SportsCore):
             elif game.get("is_upcoming", False):
                 return "Upcoming"
             else:
-                return status
+                return status  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error getting baseball game status: {e}")
@@ -127,7 +127,7 @@ class Baseball(SportsCore):
         """Extract relevant game details from ESPN NCAA FB API response."""
         details, home_team, away_team, status, situation = self._extract_game_details_common(game_event)
         if details is None or home_team is None or away_team is None or status is None:
-            return
+            return None
         try:
             # print(status["type"]["state"])
             # exit()

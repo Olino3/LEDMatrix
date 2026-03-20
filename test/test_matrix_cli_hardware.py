@@ -50,9 +50,9 @@ class TestInstallHardwareFlag:
     @patch("matrix_cli.subprocess.run")
     @patch("matrix_cli._sync_venv", return_value=0)
     @patch("matrix_cli._run", return_value=0)
-    def test_missing_apt_packages_shows_suggestion(self, mock_run, mock_venv,
-                                                    mock_subprocess, mock_machine):
+    def test_missing_apt_packages_shows_suggestion(self, mock_run, mock_venv, mock_subprocess, mock_machine):
         """When dpkg -l fails for a package, show install suggestion."""
+
         def subprocess_side_effect(cmd, **kwargs):
             mock_result = MagicMock()
             if cmd[0] == "dpkg" and cmd[1] == "-l":
@@ -77,9 +77,9 @@ class TestInstallHardwareFlag:
     @patch("matrix_cli.subprocess.run")
     @patch("matrix_cli._sync_venv", return_value=0)
     @patch("matrix_cli._run", return_value=0)
-    def test_successful_build(self, mock_run, mock_venv, mock_subprocess,
-                              mock_which, mock_machine):
+    def test_successful_build(self, mock_run, mock_venv, mock_subprocess, mock_which, mock_machine):
         """Successful build should print success and suggest matrix doctor."""
+
         def subprocess_side_effect(cmd, **kwargs):
             mock_result = MagicMock()
             mock_result.returncode = 0
@@ -99,8 +99,7 @@ class TestInstallHardwareFlag:
     @patch("matrix_cli.subprocess.run")
     @patch("matrix_cli._sync_venv", return_value=0)
     @patch("matrix_cli._run", return_value=0)
-    def test_build_failure_shows_error(self, mock_run, mock_venv, mock_subprocess,
-                                       mock_which, mock_machine):
+    def test_build_failure_shows_error(self, mock_run, mock_venv, mock_subprocess, mock_which, mock_machine):
         """Failed build should print error with troubleshooting steps."""
 
         def subprocess_side_effect(cmd, **kwargs):
@@ -131,6 +130,7 @@ class TestInstallHardwareHelper:
     @patch("matrix_cli.subprocess.run")
     def test_arm_v7_is_accepted(self, mock_subprocess, mock_which, mock_machine):
         """armv7l should be accepted as a valid ARM platform."""
+
         def subprocess_side_effect(cmd, **kwargs):
             mock_result = MagicMock()
             mock_result.returncode = 0

@@ -148,7 +148,7 @@ def retry_on_failure(
         @wraps(func)
         def wrapper(*args, **kwargs):
             current_delay = delay
-            last_exception = None
+            last_exception: Optional[Exception] = None
 
             for attempt in range(max_attempts):
                 try:
@@ -176,7 +176,9 @@ def retry_on_failure(
                             )
 
             # If we get here, all attempts failed
-            raise last_exception
+            if last_exception is not None:
+                raise last_exception
+            raise RuntimeError(f"{func.__name__} failed after {max_attempts} attempts")
 
         return wrapper
 

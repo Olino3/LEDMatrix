@@ -71,6 +71,7 @@ COLOR_DARK_BG = (20, 20, 20)
 # Plugin Class
 # ---------------------------------------------------------------------------
 
+
 class MarchMadnessPlugin(BasePlugin):
     """NCAA March Madness tournament bracket tracker."""
 
@@ -756,10 +757,7 @@ class MarchMadnessPlugin(BasePlugin):
                 self._has_live_games = any(g["is_live"] for g in games)
                 self.games_data = games
                 self._create_ticker_image()
-                self.logger.info(
-                    f"Updated: {len(games)} games, "
-                    f"live={self._has_live_games}"
-                )
+                self.logger.info(f"Updated: {len(games)} games, live={self._has_live_games}")
             except Exception as e:
                 self.logger.error(f"Update error: {e}", exc_info=True)
 

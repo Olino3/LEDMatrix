@@ -2,14 +2,16 @@
 """
 Comprehensive test script to verify NBA Manager, Leaderboard, and Odds Manager integration.
 """
+
 import json
 import logging
 import os
 import sys
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def test_nba_api_connectivity():
     """Test basic NBA API connectivity."""
@@ -41,6 +43,7 @@ def test_nba_api_connectivity():
         logger.error(f"❌ NBA API connectivity test FAILED: {e}")
         return False
 
+
 def test_odds_api_connectivity():
     """Test odds API connectivity."""
     try:
@@ -59,13 +62,14 @@ def test_odds_api_connectivity():
         logger.error(f"❌ Odds API connectivity test FAILED: {e}")
         return False
 
+
 def test_nba_manager_initialization():
     """Test NBA manager initialization and configuration."""
     try:
         # Mock the required dependencies since we're not on Raspberry Pi
         class MockDisplayManager:
             def __init__(self):
-                self.matrix = type('obj', (object,), {'width': 64, 'height': 32})()
+                self.matrix = type("obj", (object,), {"width": 64, "height": 32})()
 
         class MockCacheManager:
             def __init__(self):
@@ -78,11 +82,11 @@ def test_nba_manager_initialization():
                 pass
 
         # Load config
-        with open('config/config.json', 'r') as f:
+        with open("config/config.json", "r") as f:
             config = json.load(f)
 
         # Test manager imports
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
         from nba_managers import BaseNBAManager, NBALiveManager, NBARecentManager, NBAUpcomingManager
 
@@ -112,13 +116,14 @@ def test_nba_manager_initialization():
         logger.error(f"❌ NBA Manager initialization test FAILED: {e}")
         return False
 
+
 def test_leaderboard_nba_integration():
     """Test leaderboard NBA integration."""
     try:
         # Mock dependencies
         class MockDisplayManager:
             def __init__(self):
-                self.matrix = type('obj', (object,), {'width': 64, 'height': 32})()
+                self.matrix = type("obj", (object,), {"width": 64, "height": 32})()
 
         class MockCacheManager:
             def __init__(self):
@@ -134,10 +139,10 @@ def test_leaderboard_nba_integration():
                 pass
 
         # Load config
-        with open('config/config.json', 'r') as f:
+        with open("config/config.json", "r") as f:
             config = json.load(f)
 
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
         from leaderboard_manager import LeaderboardManager
 
@@ -148,7 +153,7 @@ def test_leaderboard_nba_integration():
         leaderboard = LeaderboardManager(config, display_manager)
 
         # Check if NBA is configured in leaderboard
-        nba_config = leaderboard.league_configs.get('nba', {})
+        nba_config = leaderboard.league_configs.get("nba", {})
         logger.info(f"NBA leaderboard config: {nba_config}")
 
         # Test NBA standings fetching (without actual API call)
@@ -158,6 +163,7 @@ def test_leaderboard_nba_integration():
     except Exception as e:
         logger.error(f"❌ Leaderboard NBA integration test FAILED: {e}")
         return False
+
 
 def test_odds_manager_integration():
     """Test odds manager integration."""
@@ -170,7 +176,7 @@ def test_odds_manager_integration():
             def get_with_auto_strategy(self, key):
                 return None
 
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
         from odds_manager import OddsManager
 
@@ -192,21 +198,22 @@ def test_odds_manager_integration():
         logger.error(f"❌ Odds Manager integration test FAILED: {e}")
         return False
 
+
 def test_configuration_consistency():
     """Test that configurations are consistent across components."""
     try:
-        with open('config/config.json', 'r') as f:
+        with open("config/config.json", "r") as f:
             config = json.load(f)
 
         # Check NBA scoreboard config
-        nba_scoreboard = config.get('nba_scoreboard', {})
-        nba_enabled = nba_scoreboard.get('enabled', False)
-        nba_show_odds = nba_scoreboard.get('show_odds', False)
+        nba_scoreboard = config.get("nba_scoreboard", {})
+        nba_enabled = nba_scoreboard.get("enabled", False)
+        nba_show_odds = nba_scoreboard.get("show_odds", False)
 
         # Check leaderboard config
-        leaderboard = config.get('leaderboard', {})
-        leaderboard_enabled = leaderboard.get('enabled', False)
-        nba_leaderboard_enabled = leaderboard.get('enabled_sports', {}).get('nba', {}).get('enabled', False)
+        leaderboard = config.get("leaderboard", {})
+        leaderboard_enabled = leaderboard.get("enabled", False)
+        nba_leaderboard_enabled = leaderboard.get("enabled_sports", {}).get("nba", {}).get("enabled", False)
 
         logger.info(f"NBA Scoreboard - Enabled: {nba_enabled}, Show Odds: {nba_show_odds}")
         logger.info(f"Leaderboard - Enabled: {leaderboard_enabled}, NBA Enabled: {nba_leaderboard_enabled}")
@@ -224,6 +231,7 @@ def test_configuration_consistency():
     except Exception as e:
         logger.error(f"❌ Configuration consistency test FAILED: {e}")
         return False
+
 
 def main():
     """Run all integration tests."""
@@ -274,6 +282,7 @@ def main():
     else:
         logger.error(f"❌ {failed} test(s) failed. Please check the issues above.")
         return False
+
 
 if __name__ == "__main__":
     success = main()

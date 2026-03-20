@@ -172,12 +172,7 @@ class PixletRenderer:
             return False
 
         try:
-            result = subprocess.run(
-                [self.pixlet_binary, "version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            result = subprocess.run([self.pixlet_binary, "version"], capture_output=True, text=True, timeout=5)
             return result.returncode == 0
         except subprocess.TimeoutExpired:
             logger.debug("Pixlet version check timed out")
@@ -197,12 +192,7 @@ class PixletRenderer:
             return None
 
         try:
-            result = subprocess.run(
-                [self.pixlet_binary, "version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            result = subprocess.run([self.pixlet_binary, "version"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 return result.stdout.strip()
         except subprocess.TimeoutExpired:
@@ -213,11 +203,7 @@ class PixletRenderer:
         return None
 
     def render(
-        self,
-        star_file: str,
-        output_path: str,
-        config: Optional[Dict[str, Any]] = None,
-        magnify: int = 1
+        self, star_file: str, output_path: str, config: Optional[Dict[str, Any]] = None, magnify: int = 1
     ) -> Tuple[bool, Optional[str]]:
         """
         Render a .star file to WebP output.
@@ -240,24 +226,20 @@ class PixletRenderer:
         try:
             # Build command - config params must be POSITIONAL between star_file and flags
             # Format: pixlet render <file.star> [key=value]... [flags]
-            cmd = [
-                self.pixlet_binary,
-                "render",
-                star_file
-            ]
+            cmd = [self.pixlet_binary, "render", star_file]
 
             # Add configuration parameters as positional arguments (BEFORE flags)
             if config:
                 for key, value in config.items():
                     # Validate key format (alphanumeric + underscore only)
-                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', key):
+                    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", key):
                         logger.warning(f"Skipping invalid config key: {key}")
                         continue
 
                     # Convert value to string for CLI
                     if isinstance(value, bool):
                         value_str = "true" if value else "false"
-                    elif isinstance(value, str) and (value.startswith('{') or value.startswith('[')):
+                    elif isinstance(value, str) and (value.startswith("{") or value.startswith("[")):
                         # JSON string - keep as-is, will be properly quoted by subprocess
                         value_str = value
                     else:
@@ -266,7 +248,7 @@ class PixletRenderer:
                     # Validate value doesn't contain dangerous shell metacharacters
                     # Block: backticks, $(), pipes, redirects, semicolons, ampersands, null bytes
                     # Allow: most printable chars including spaces, quotes, brackets, braces
-                    if re.search(r'[`$|<>&;\x00]|\$\(', value_str):
+                    if re.search(r"[`$|<>&;\x00]|\$\(", value_str):
                         logger.warning(f"Skipping config value with unsafe shell characters for key {key}: {value_str}")
                         continue
 
@@ -274,10 +256,7 @@ class PixletRenderer:
                     cmd.append(f"{key}={value_str}")
 
             # Add flags AFTER positional config arguments
-            cmd.extend([
-                "-o", output_path,
-                "-m", str(magnify)
-            ])
+            cmd.extend(["-o", output_path, "-m", str(magnify)])
 
             # Build sanitized command for logging (redact sensitive values)
             sanitized_cmd = [self.pixlet_binary, "render", star_file]
@@ -294,7 +273,7 @@ class PixletRenderer:
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
-                cwd=safe_cwd  # Run in .star file directory (or None if relative path)
+                cwd=safe_cwd,  # Run in .star file directory (or None if relative path)
             )
 
             if result.returncode == 0:
@@ -338,14 +317,14 @@ class PixletRenderer:
 
         try:
             # Read .star file
-            with open(star_file, 'r', encoding='utf-8') as f:
+            with open(star_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Parse schema from source
             schema = self._parse_schema_from_source(content, star_file)
 
             if schema:
-                field_count = len(schema.get('schema', []))
+                field_count = len(schema.get("schema", []))
                 logger.debug(f"Extracted schema with {field_count} field(s) from: {star_file}")
                 return True, schema, None
             else:
@@ -386,7 +365,7 @@ class PixletRenderer:
         version = version_match.group(1) if version_match else "1"
 
         # Extract fields array from schema.Schema(...) - handle nested brackets
-        fields_start_match = re.search(r'fields\s*=\s*\[', schema_body)
+        fields_start_match = re.search(r"fields\s*=\s*\[", schema_body)
         if not fields_start_match:
             # Empty schema or no fields
             return {"version": version, "schema": []}
@@ -395,9 +374,9 @@ class PixletRenderer:
         bracket_count = 1
         i = fields_start_match.end()
         while i < len(schema_body) and bracket_count > 0:
-            if schema_body[i] == '[':
+            if schema_body[i] == "[":
                 bracket_count += 1
-            elif schema_body[i] == ']':
+            elif schema_body[i] == "]":
                 bracket_count -= 1
             i += 1
 
@@ -406,12 +385,12 @@ class PixletRenderer:
             logger.warning(f"Unmatched brackets in schema fields for {file_path}")
             return {"version": version, "schema": []}
 
-        fields_text = schema_body[fields_start_match.end():i-1]
+        fields_text = schema_body[fields_start_match.end() : i - 1]
 
         # Parse individual fields
         schema_fields = []
         # Match schema.FieldType(...) patterns
-        field_pattern = r'schema\.(\w+)\s*\((.*?)\)'
+        field_pattern = r"schema\.(\w+)\s*\((.*?)\)"
 
         # Find all field definitions (handle nested parentheses)
         pos = 0
@@ -426,15 +405,15 @@ class PixletRenderer:
 
             # Handle nested parentheses properly
             paren_count = 1
-            i = pos + match.start() + len(f'schema.{field_type}(')
+            i = pos + match.start() + len(f"schema.{field_type}(")
             while i < len(fields_text) and paren_count > 0:
-                if fields_text[i] == '(':
+                if fields_text[i] == "(":
                     paren_count += 1
-                elif fields_text[i] == ')':
+                elif fields_text[i] == ")":
                     paren_count -= 1
                 i += 1
 
-            field_params_text = fields_text[pos + match.start() + len(f'schema.{field_type}('):i-1]
+            field_params_text = fields_text[pos + match.start() + len(f"schema.{field_type}(") : i - 1]
 
             # Parse field
             field_dict = self._parse_schema_field(field_type, field_params_text, var_table)
@@ -443,10 +422,7 @@ class PixletRenderer:
 
             pos = i
 
-        return {
-            "version": version,
-            "schema": schema_fields
-        }
+        return {"version": version, "schema": schema_fields}
 
     def _extract_variable_definitions(self, content: str) -> Dict[str, List[Dict]]:
         """
@@ -461,7 +437,7 @@ class PixletRenderer:
         var_table = {}
 
         # Find variable definitions like: variableName = [schema.Option(...), ...]
-        var_pattern = r'^(\w+)\s*=\s*\[(.*?schema\.Option.*?)\]'
+        var_pattern = r"^(\w+)\s*=\s*\[(.*?schema\.Option.*?)\]"
         matches = re.finditer(var_pattern, content, re.MULTILINE | re.DOTALL)
 
         for match in matches:
@@ -486,7 +462,7 @@ class PixletRenderer:
             Function body text, or None if not found
         """
         # Find def get_schema(): line
-        pattern = r'^(\s*)def\s+get_schema\s*\(\s*\)\s*:'
+        pattern = r"^(\s*)def\s+get_schema\s*\(\s*\)\s*:"
         match = re.search(pattern, content, re.MULTILINE)
 
         if not match:
@@ -497,7 +473,7 @@ class PixletRenderer:
         func_start = match.end()
 
         # Split content into lines starting after the function definition
-        lines_after = content[func_start:].split('\n')
+        lines_after = content[func_start:].split("\n")
         body_lines = []
 
         for line in lines_after:
@@ -513,7 +489,7 @@ class PixletRenderer:
             # If line has same or less indentation than function def, check if it's a top-level def
             if line_indent <= func_indent:
                 # This is a line at the same or outer level - check if it's a function
-                if re.match(r'def\s+\w+', stripped):
+                if re.match(r"def\s+\w+", stripped):
                     # Found next top-level function, stop here
                     break
                 # Otherwise it might be a comment or other top-level code, stop anyway
@@ -523,7 +499,7 @@ class PixletRenderer:
             body_lines.append(line)
 
         if body_lines:
-            return '\n'.join(body_lines)
+            return "\n".join(body_lines)
         return None
 
     def _parse_schema_field(self, field_type: str, params_text: str, var_table: Dict) -> Optional[Dict[str, Any]]:
@@ -540,23 +516,23 @@ class PixletRenderer:
         """
         # Map Pixlet field types to JSON typeOf
         type_mapping = {
-            'Location': 'location',
-            'Text': 'text',
-            'Toggle': 'toggle',
-            'Dropdown': 'dropdown',
-            'Color': 'color',
-            'DateTime': 'datetime',
-            'OAuth2': 'oauth2',
-            'PhotoSelect': 'photo_select',
-            'LocationBased': 'location_based',
-            'Typeahead': 'typeahead',
-            'Generated': 'generated',
+            "Location": "location",
+            "Text": "text",
+            "Toggle": "toggle",
+            "Dropdown": "dropdown",
+            "Color": "color",
+            "DateTime": "datetime",
+            "OAuth2": "oauth2",
+            "PhotoSelect": "photo_select",
+            "LocationBased": "location_based",
+            "Typeahead": "typeahead",
+            "Generated": "generated",
         }
 
         type_of = type_mapping.get(field_type, field_type.lower())
 
         # Skip Generated fields (invisible meta-fields)
-        if type_of == 'generated':
+        if type_of == "generated":
             return None
 
         field_dict = {"typeOf": type_of}
@@ -565,7 +541,7 @@ class PixletRenderer:
         # id
         id_match = re.search(r'id\s*=\s*"([^"]+)"', params_text)
         if id_match:
-            field_dict['id'] = id_match.group(1)
+            field_dict["id"] = id_match.group(1)
         else:
             # id is required, skip field if missing
             return None
@@ -573,17 +549,17 @@ class PixletRenderer:
         # name
         name_match = re.search(r'name\s*=\s*"([^"]+)"', params_text)
         if name_match:
-            field_dict['name'] = name_match.group(1)
+            field_dict["name"] = name_match.group(1)
 
         # desc
         desc_match = re.search(r'desc\s*=\s*"([^"]+)"', params_text)
         if desc_match:
-            field_dict['desc'] = desc_match.group(1)
+            field_dict["desc"] = desc_match.group(1)
 
         # icon
         icon_match = re.search(r'icon\s*=\s*"([^"]+)"', params_text)
         if icon_match:
-            field_dict['icon'] = icon_match.group(1)
+            field_dict["icon"] = icon_match.group(1)
 
         # default (can be string, bool, or variable reference)
         # First try to match quoted strings (which may contain commas)
@@ -593,42 +569,42 @@ class PixletRenderer:
             default_match = re.search(r"default\s*=\s*'([^']*)'", params_text)
         if not default_match:
             # Fall back to unquoted value (stop at comma or closing paren)
-            default_match = re.search(r'default\s*=\s*([^,\)]+)', params_text)
+            default_match = re.search(r"default\s*=\s*([^,\)]+)", params_text)
 
         if default_match:
             default_value = default_match.group(1).strip()
             # Handle boolean
-            if default_value in ('True', 'False'):
-                field_dict['default'] = default_value.lower()
+            if default_value in ("True", "False"):
+                field_dict["default"] = default_value.lower()
             # Handle string literal from first two patterns (already extracted without quotes)
             elif re.search(r'default\s*=\s*["\']', params_text):
                 # This was a quoted string, use the captured content directly
-                field_dict['default'] = default_value
+                field_dict["default"] = default_value
             # Handle variable reference (can't resolve, use as-is)
             else:
                 # Try to extract just the value if it's like options[0].value
-                if '.' in default_value or '[' in default_value:
+                if "." in default_value or "[" in default_value:
                     # Complex expression, skip default
                     pass
                 else:
-                    field_dict['default'] = default_value
+                    field_dict["default"] = default_value
 
         # For dropdown, extract options
-        if type_of == 'dropdown':
-            options_match = re.search(r'options\s*=\s*([^,\)]+)', params_text)
+        if type_of == "dropdown":
+            options_match = re.search(r"options\s*=\s*([^,\)]+)", params_text)
             if options_match:
                 options_ref = options_match.group(1).strip()
                 # Check if it's a variable reference
                 if options_ref in var_table:
-                    field_dict['options'] = var_table[options_ref]
+                    field_dict["options"] = var_table[options_ref]
                 # Or inline options
-                elif options_ref.startswith('['):
+                elif options_ref.startswith("["):
                     # Find the full options array (handle nested brackets)
                     # This is tricky, for now try to extract inline options
-                    inline_match = re.search(r'options\s*=\s*(\[.*?\])', params_text, re.DOTALL)
+                    inline_match = re.search(r"options\s*=\s*(\[.*?\])", params_text, re.DOTALL)
                     if inline_match:
                         options_text = inline_match.group(1)
-                        field_dict['options'] = self._parse_schema_options(options_text, var_table)
+                        field_dict["options"] = self._parse_schema_options(options_text, var_table)
 
         return field_dict
 
@@ -650,9 +626,6 @@ class PixletRenderer:
         matches = re.finditer(option_pattern, options_text)
 
         for match in matches:
-            options.append({
-                "display": match.group(1),
-                "value": match.group(2)
-            })
+            options.append({"display": match.group(1), "value": match.group(2)})
 
         return options

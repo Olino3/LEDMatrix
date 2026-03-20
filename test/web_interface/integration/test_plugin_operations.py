@@ -22,19 +22,12 @@ class TestPluginOperationsIntegration(unittest.TestCase):
 
         # Initialize components
         self.operation_queue = PluginOperationQueue(
-            history_file=str(self.temp_dir / "operations.json"),
-            max_history=100
+            history_file=str(self.temp_dir / "operations.json"), max_history=100
         )
 
-        self.state_manager = PluginStateManager(
-            state_file=str(self.temp_dir / "state.json"),
-            auto_save=True
-        )
+        self.state_manager = PluginStateManager(state_file=str(self.temp_dir / "state.json"), auto_save=True)
 
-        self.operation_history = OperationHistory(
-            history_file=str(self.temp_dir / "history.json"),
-            max_records=100
-        )
+        self.operation_history = OperationHistory(history_file=str(self.temp_dir / "history.json"), max_records=100)
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -46,11 +39,7 @@ class TestPluginOperationsIntegration(unittest.TestCase):
         plugin_id = "test-plugin"
 
         # Enqueue install operation
-        operation_id = self.operation_queue.enqueue_operation(
-            OperationType.INSTALL,
-            plugin_id,
-            {"version": "1.0.0"}
-        )
+        operation_id = self.operation_queue.enqueue_operation(OperationType.INSTALL, plugin_id, {"version": "1.0.0"})
 
         self.assertIsNotNone(operation_id)
 
@@ -61,10 +50,7 @@ class TestPluginOperationsIntegration(unittest.TestCase):
 
         # Record in history
         history_id = self.operation_history.record_operation(
-            operation_type="install",
-            plugin_id=plugin_id,
-            status="in_progress",
-            operation_id=operation_id
+            operation_type="install", plugin_id=plugin_id, status="in_progress", operation_id=operation_id
         )
         self.assertIsNotNone(history_id)
 
@@ -85,19 +71,14 @@ class TestPluginOperationsIntegration(unittest.TestCase):
 
         # Enqueue update operation
         operation_id = self.operation_queue.enqueue_operation(
-            OperationType.UPDATE,
-            plugin_id,
-            {"from_version": "1.0.0", "to_version": "2.0.0"}
+            OperationType.UPDATE, plugin_id, {"from_version": "1.0.0", "to_version": "2.0.0"}
         )
 
         self.assertIsNotNone(operation_id)
 
         # Record in history
         self.operation_history.record_operation(
-            operation_type="update",
-            plugin_id=plugin_id,
-            status="in_progress",
-            operation_id=operation_id
+            operation_type="update", plugin_id=plugin_id, status="in_progress", operation_id=operation_id
         )
 
         # Update state
@@ -115,19 +96,13 @@ class TestPluginOperationsIntegration(unittest.TestCase):
         self.state_manager.set_plugin_installed(plugin_id, "1.0.0")
 
         # Enqueue uninstall operation
-        operation_id = self.operation_queue.enqueue_operation(
-            OperationType.UNINSTALL,
-            plugin_id
-        )
+        operation_id = self.operation_queue.enqueue_operation(OperationType.UNINSTALL, plugin_id)
 
         self.assertIsNotNone(operation_id)
 
         # Record in history
         self.operation_history.record_operation(
-            operation_type="uninstall",
-            plugin_id=plugin_id,
-            status="in_progress",
-            operation_id=operation_id
+            operation_type="uninstall", plugin_id=plugin_id, status="in_progress", operation_id=operation_id
         )
 
         # Update state - remove plugin state
@@ -142,17 +117,11 @@ class TestPluginOperationsIntegration(unittest.TestCase):
         plugin_id = "test-plugin"
 
         # Perform multiple operations
-        operations = [
-            ("install", "1.0.0"),
-            ("update", "2.0.0"),
-            ("uninstall", None)
-        ]
+        operations = [("install", "1.0.0"), ("update", "2.0.0"), ("uninstall", None)]
 
         for op_type, _version in operations:
             history_id = self.operation_history.record_operation(
-                operation_type=op_type,
-                plugin_id=plugin_id,
-                status="completed"
+                operation_type=op_type, plugin_id=plugin_id, status="completed"
             )
             self.assertIsNotNone(history_id)
 
@@ -170,10 +139,7 @@ class TestPluginOperationsIntegration(unittest.TestCase):
         plugin_id = "test-plugin"
 
         # Enqueue first operation
-        op1_id = self.operation_queue.enqueue_operation(
-            OperationType.INSTALL,
-            plugin_id
-        )
+        op1_id = self.operation_queue.enqueue_operation(OperationType.INSTALL, plugin_id)
 
         # Get the operation to check its status
         op1 = self.operation_queue.get_operation_status(op1_id)
@@ -183,10 +149,7 @@ class TestPluginOperationsIntegration(unittest.TestCase):
         # Note: If the first operation completes quickly, it may not raise an error
         # The prevention only works for truly concurrent (pending/running) operations
         try:
-            self.operation_queue.enqueue_operation(
-                OperationType.UPDATE,
-                plugin_id
-            )
+            self.operation_queue.enqueue_operation(OperationType.UPDATE, plugin_id)
             # If no exception, the first operation may have completed already
             # This is acceptable - the mechanism prevents truly concurrent operations
         except ValueError as e:
@@ -194,6 +157,5 @@ class TestPluginOperationsIntegration(unittest.TestCase):
             self.assertIn("already has an active operation", str(e))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

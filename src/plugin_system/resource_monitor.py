@@ -147,7 +147,7 @@ class PluginResourceMonitor:
             return 0.0
         try:
             process = psutil.Process()
-            return process.memory_info().rss / 1024 / 1024
+            return process.memory_info().rss / 1024 / 1024  # type: ignore[no-any-return]
         except Exception:
             return 0.0
 
@@ -157,7 +157,7 @@ class PluginResourceMonitor:
             return 0.0
         try:
             process = psutil.Process()
-            return process.cpu_percent(interval=interval)
+            return process.cpu_percent(interval=interval)  # type: ignore[no-any-return]
         except Exception:
             return 0.0
 

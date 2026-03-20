@@ -355,15 +355,15 @@ class ConfigManager:
 
     def get_timezone(self) -> str:
         """Get the configured timezone."""
-        return self.config.get("timezone", "UTC")
+        return self.config.get("timezone", "UTC")  # type: ignore[no-any-return]
 
     def get_display_config(self) -> Dict[str, Any]:
         """Get display configuration."""
-        return self.config.get("display", {})
+        return self.config.get("display", {})  # type: ignore[no-any-return]
 
     def get_clock_config(self) -> Dict[str, Any]:
         """Get clock configuration."""
-        return self.config.get("clock", {})
+        return self.config.get("clock", {})  # type: ignore[no-any-return]
 
     def get_config(self) -> Dict[str, Any]:
         """Get the full configuration dictionary.
@@ -396,7 +396,7 @@ class ConfigManager:
 
         try:
             with open(path_to_load, "r") as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[no-any-return]
         except json.JSONDecodeError as e:
             error_msg = f"Error parsing {file_type} configuration file: {path_to_load}"
             self.logger.error(error_msg, exc_info=True)
@@ -432,7 +432,8 @@ class ConfigManager:
             file_mode = get_config_file_mode(path_obj)
 
             # Create temp file in same directory to ensure atomic move works
-            temp_fd, temp_path = tempfile.mkstemp(suffix=".json", dir=str(path_obj.parent), text=True)
+            temp_fd, temp_path_created = tempfile.mkstemp(suffix=".json", dir=str(path_obj.parent), text=True)
+            temp_path: Optional[str] = temp_path_created
 
             try:
                 # Write to temp file
@@ -443,13 +444,13 @@ class ConfigManager:
 
                 # Set permissions on temp file before moving
                 try:
-                    os.chmod(temp_path, file_mode)
+                    os.chmod(temp_path_created, file_mode)
                 except OSError:
                     pass  # Non-critical if chmod fails
 
                 # Atomically move temp file to final location
                 # This works even if target file exists and isn't writable
-                os.replace(temp_path, str(path_obj))
+                os.replace(temp_path_created, str(path_obj))
                 temp_path = None  # Mark as moved so we don't try to clean it up
 
                 # Ensure final file has correct permissions
@@ -616,7 +617,7 @@ class ConfigManager:
             self.logger.error(f"Error cleaning up orphaned plugin configs: {e}")
             return removed
 
-    def validate_all_plugin_configs(self, plugin_schema_manager=None) -> Dict[str, Dict[str, Any]]:
+    def validate_all_plugin_configs(self, plugin_schema_manager: Any = None) -> Dict[str, Dict[str, Any]]:
         """
         Validate all plugin configurations against their schemas.
 
@@ -629,7 +630,7 @@ class ConfigManager:
                 'errors': list of error messages
             }
         """
-        results = {}
+        results: Dict[str, Dict[str, Any]] = {}
 
         if not plugin_schema_manager:
             return results

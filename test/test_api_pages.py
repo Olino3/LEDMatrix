@@ -79,12 +79,24 @@ class TestPartials:
         resp = client.get("/v3/partials/nonexistent")
         assert resp.status_code == 404
 
-    @pytest.mark.parametrize("partial", [
-        "general", "display", "durations", "schedule",
-        "plugins", "fonts", "logs", "raw-json",
-        "wifi", "cache", "operation-history",
-        "weather", "stocks",
-    ])
+    @pytest.mark.parametrize(
+        "partial",
+        [
+            "general",
+            "display",
+            "durations",
+            "schedule",
+            "plugins",
+            "fonts",
+            "logs",
+            "raw-json",
+            "wifi",
+            "cache",
+            "operation-history",
+            "weather",
+            "stocks",
+        ],
+    )
     def test_all_partials_return_200(self, partial):
         client = _make_client()
         resp = client.get(f"/v3/partials/{partial}")

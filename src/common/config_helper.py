@@ -53,7 +53,7 @@ class ConfigHelper:
                 config = json.load(f)
 
             self.logger.debug(f"Loaded configuration from {config_path}")
-            return config
+            return config  # type: ignore[no-any-return]
 
         except json.JSONDecodeError as e:
             self.logger.error(f"Invalid JSON in configuration file {config_path}: {e}")
@@ -205,7 +205,7 @@ class ConfigHelper:
             Plugin-specific configuration
         """
         plugin_key = f"{plugin_id}_config"
-        return config.get(plugin_key, {})
+        return config.get(plugin_key, {})  # type: ignore[no-any-return]
 
     def create_default_config(self, plugin_id: str, default_values: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -249,7 +249,7 @@ class ConfigHelper:
         Returns:
             Display configuration
         """
-        return config.get("display", {})
+        return config.get("display", {})  # type: ignore[no-any-return]
 
     def get_sports_config(self, config: Dict[str, Any], sport: str) -> Dict[str, Any]:
         """
@@ -262,7 +262,7 @@ class ConfigHelper:
         Returns:
             Sport-specific configuration
         """
-        return config.get(f"{sport}_scoreboard", {})
+        return config.get(f"{sport}_scoreboard", {})  # type: ignore[no-any-return]
 
     def is_plugin_enabled(self, config: Dict[str, Any], plugin_id: str) -> bool:
         """
@@ -276,7 +276,7 @@ class ConfigHelper:
             True if plugin is enabled
         """
         plugin_config = self.get_plugin_config(config, plugin_id)
-        return plugin_config.get("enabled", True)
+        return plugin_config.get("enabled", True)  # type: ignore[no-any-return]
 
     def get_favorite_teams(self, config: Dict[str, Any], sport: str) -> List[str]:
         """
@@ -290,7 +290,7 @@ class ConfigHelper:
             List of favorite team abbreviations
         """
         sport_config = self.get_sports_config(config, sport)
-        return sport_config.get("favorite_teams", [])
+        return sport_config.get("favorite_teams", [])  # type: ignore[no-any-return]
 
     def get_display_modes(self, config: Dict[str, Any], sport: str) -> Dict[str, bool]:
         """
@@ -304,7 +304,7 @@ class ConfigHelper:
             Dictionary of display modes and their enabled status
         """
         sport_config = self.get_sports_config(config, sport)
-        return sport_config.get("display_modes", {})
+        return sport_config.get("display_modes", {})  # type: ignore[no-any-return]
 
     def _validate_against_schema(self, config: Dict[str, Any], schema: Dict[str, Any]) -> bool:
         """Validate configuration against a schema."""

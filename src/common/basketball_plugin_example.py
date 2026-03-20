@@ -9,7 +9,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import common helpers
-from src.common import APIHelper, ConfigHelper, DisplayHelper, GameHelper, LogoHelper, TextHelper
+from src.common import (  # type: ignore[attr-defined]
+    APIHelper,
+    ConfigHelper,
+    DisplayHelper,
+    GameHelper,
+    LogoHelper,
+    TextHelper,
+)
 from src.plugin_system.base_plugin import BasePlugin
 
 
@@ -36,7 +43,7 @@ class BasketballPluginManager(BasePlugin):
         self._load_config()
 
         # State tracking
-        self.current_games = []
+        self.current_games: list[Any] = []
         self.current_game = None
 
         # Log initialization
@@ -166,13 +173,13 @@ class BasketballPluginManager(BasePlugin):
                 game["home_logo_path"] = logo_dir / f"{game['home_abbr']}.png"
                 game["away_logo_path"] = logo_dir / f"{game['away_abbr']}.png"
 
-            return games
+            return games  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching {league_key} games: {e}", exc_info=True)
             return []
 
-    def display(self, force_clear: bool = False, display_mode: str = None) -> None:
+    def display(self, force_clear: bool = False, display_mode: str | None = None) -> None:
         """Display basketball games using display helper."""
         try:
             mode = display_mode or self._determine_display_mode()
@@ -271,7 +278,7 @@ class BasketballPluginManager(BasePlugin):
 
     def get_display_duration(self) -> float:
         """Get display duration."""
-        return self.config.get("display_duration", 15)
+        return self.config.get("display_duration", 15)  # type: ignore[no-any-return]
 
     def cleanup(self) -> None:
         """Cleanup resources."""

@@ -51,7 +51,7 @@ class FontManager:
         self.temp_font_dir.mkdir(exist_ok=True)
 
         # Performance monitoring
-        self.performance_stats = {
+        self.performance_stats: Dict[str, Any] = {
             "font_load_times": {},
             "cache_hits": 0,
             "cache_misses": 0,
@@ -459,7 +459,7 @@ class FontManager:
             logger.error(f"Error loading BDF font {font_path}: {e}")
             raise
 
-    def _get_fallback_font(self) -> ImageFont.ImageFont:
+    def _get_fallback_font(self) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
         """Get a fallback font when loading fails."""
         return ImageFont.load_default()
 
@@ -504,9 +504,9 @@ class FontManager:
             else:
                 # TTF font measurement with PIL
                 bbox = font.getbbox(text)
-                width = bbox[2] - bbox[0]
-                height = bbox[3] - bbox[1]
-                baseline = -bbox[1]  # Distance from top to baseline
+                width = int(bbox[2] - bbox[0])
+                height = int(bbox[3] - bbox[1])
+                baseline = int(-bbox[1])  # Distance from top to baseline
 
         except Exception as e:
             logger.error(f"Error measuring text '{text}': {e}", exc_info=True)
@@ -523,18 +523,18 @@ class FontManager:
         """Get the height of a font."""
         try:
             if isinstance(font, freetype.Face):
-                return font.size.height >> 6
+                return font.size.height >> 6  # type: ignore[no-any-return]
             else:
                 # Use a common character to measure height
                 bbox = font.getbbox("Ay")
-                return bbox[3] - bbox[1]
+                return int(bbox[3] - bbox[1])
         except Exception as e:
             logger.error(f"Error getting font height: {e}", exc_info=True)
             return 12  # Default height
 
     # ==================== Override Management ====================
 
-    def set_override(self, element_key: str, family: str = None, size_px: int = None):
+    def set_override(self, element_key: str, family: str | None = None, size_px: int | None = None):
         """Set font override for a specific element."""
         if element_key not in self.font_overrides:
             self.font_overrides[element_key] = {}

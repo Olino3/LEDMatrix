@@ -16,7 +16,7 @@ import time
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import requests
 
@@ -51,17 +51,19 @@ class PluginStoreManager:
         """
         self.plugins_dir = Path(plugins_dir)
         self.logger = logging.getLogger(__name__)
-        self.registry_cache = None
-        self.registry_cache_time = None  # Timestamp of when registry was cached
-        self.github_cache = {}  # Cache for GitHub API responses
+        self.registry_cache: Optional[Dict[str, Any]] = None
+        self.registry_cache_time: Optional[float] = None  # Timestamp of when registry was cached
+        self.github_cache: Dict[str, Any] = {}  # Cache for GitHub API responses
         self.cache_timeout = 3600  # 1 hour cache timeout
         self.registry_cache_timeout = 300  # 5 minutes for registry cache
-        self.commit_info_cache = {}  # Cache for latest commit info: {key: (timestamp, data)}
+        self.commit_info_cache: Dict[str, Any] = {}  # Cache for latest commit info: {key: (timestamp, data)}
         self.commit_cache_timeout = 300  # 5 minutes (same as registry)
-        self.manifest_cache = {}  # Cache for GitHub manifest fetches: {key: (timestamp, data)}
+        self.manifest_cache: Dict[str, Any] = {}  # Cache for GitHub manifest fetches: {key: (timestamp, data)}
         self.manifest_cache_timeout = 300  # 5 minutes
         self.github_token = self._load_github_token()
-        self._token_validation_cache = {}  # Cache for token validation results: {token: (is_valid, timestamp, error_message)}
+        self._token_validation_cache: Dict[
+            str, Any
+        ] = {}  # Cache for token validation results: {token: (is_valid, timestamp, error_message)}
         self._token_validation_cache_timeout = 300  # 5 minutes cache for token validation
 
         # Ensure plugins directory exists
@@ -81,7 +83,7 @@ class PluginStoreManager:
                     config = json.load(f)
                     token = config.get("github", {}).get("api_token", "").strip()
                     if token and token != "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN":
-                        return token
+                        return token  # type: ignore[no-any-return]
         except Exception as e:
             self.logger.debug(f"Could not load GitHub token: {e}")
         return None
@@ -121,7 +123,7 @@ class PluginStoreManager:
 
             if response.status_code == 200:
                 # Token is valid
-                result = (True, None)
+                result: tuple[bool, Optional[str]] = (True, None)
                 self._token_validation_cache[cache_key] = (True, time.time(), None)
                 return result
             elif response.status_code == 401:
@@ -180,7 +182,7 @@ class PluginStoreManager:
             return ""
 
     @staticmethod
-    def _distinct_sequence(values: List[str]) -> List[str]:
+    def _distinct_sequence(values: Sequence[Optional[str]]) -> List[str]:
         """Return list preserving order while removing duplicates and falsey entries."""
         seen = set()
         ordered = []
@@ -297,7 +299,7 @@ class PluginStoreManager:
                     if cache_key in self.github_cache:
                         cached_time, cached_data = self.github_cache[cache_key]
                         if time.time() - cached_time < self.cache_timeout:
-                            return cached_data
+                            return cached_data  # type: ignore[no-any-return]
 
                     # Fetch from GitHub API
                     api_url = f"https://api.github.com/repos/{owner}/{repo}"
@@ -374,7 +376,7 @@ class PluginStoreManager:
         *,
         timeout: int = 10,
         stream: bool = False,
-        headers: Dict[str, str] = None,
+        headers: Optional[Dict[str, str]] = None,
         max_retries: int = 3,
         backoff_sec: float = 0.75,
     ):
@@ -394,7 +396,7 @@ class PluginStoreManager:
                 if attempt < max_retries:
                     time.sleep(backoff_sec * attempt)
         # Exhausted retries
-        raise last_exc
+        raise last_exc  # type: ignore[misc]
 
     def fetch_registry_from_url(self, repo_url: str) -> Optional[Dict]:
         """
@@ -489,7 +491,7 @@ class PluginStoreManager:
         self,
         query: str = "",
         category: str = "",
-        tags: List[str] = None,
+        tags: Optional[List[str]] = None,
         fetch_commit_info: bool = True,
         include_saved_repos: bool = True,
         saved_repositories_manager=None,
@@ -638,7 +640,7 @@ class PluginStoreManager:
                     if not force_refresh and cache_key in self.manifest_cache:
                         cached_time, cached_data = self.manifest_cache[cache_key]
                         if time.time() - cached_time < self.manifest_cache_timeout:
-                            return cached_data
+                            return cached_data  # type: ignore[no-any-return]
 
                     raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{manifest_path}"
 
@@ -646,7 +648,7 @@ class PluginStoreManager:
                     if response.status_code == 200:
                         result = response.json()
                         self.manifest_cache[cache_key] = (time.time(), result)
-                        return result
+                        return result  # type: ignore[no-any-return]
                     elif response.status_code == 404:
                         # Try main branch instead
                         if branch != "main":
@@ -655,7 +657,7 @@ class PluginStoreManager:
                             if response.status_code == 200:
                                 result = response.json()
                                 self.manifest_cache[cache_key] = (time.time(), result)
-                                return result
+                                return result  # type: ignore[no-any-return]
 
                     # Cache negative result
                     self.manifest_cache[cache_key] = (time.time(), None)
@@ -688,7 +690,7 @@ class PluginStoreManager:
             if not force_refresh and cache_key in self.commit_info_cache:
                 cached_time, cached_data = self.commit_info_cache[cache_key]
                 if time.time() - cached_time < self.commit_cache_timeout:
-                    return cached_data
+                    return cached_data  # type: ignore[no-any-return]
 
             branches_to_try = self._distinct_sequence([branch, "main", "master"])
 
@@ -799,7 +801,7 @@ class PluginStoreManager:
                     if "description" in github_manifest:
                         plugin_info["description"] = github_manifest["description"]
 
-        return plugin_info
+        return plugin_info  # type: ignore[no-any-return]
 
     def get_registry_info(self, plugin_id: str) -> Optional[Dict]:
         """
@@ -985,7 +987,11 @@ class PluginStoreManager:
             return False
 
     def install_from_url(
-        self, repo_url: str, plugin_id: str = None, plugin_path: str = None, branch: Optional[str] = None
+        self,
+        repo_url: str,
+        plugin_id: Optional[str] = None,
+        plugin_path: Optional[str] = None,
+        branch: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Install a plugin directly from a GitHub URL.
@@ -1914,10 +1920,10 @@ class PluginStoreManager:
                         safe_to_remove = [".dependencies_installed"]
                         removed_files = []
                         for file_name in safe_to_remove:
-                            file_path = plugin_path / file_name
-                            if file_path.exists() and file_name in untracked_files:
+                            marker_path = plugin_path / file_name
+                            if marker_path.exists() and file_name in untracked_files:
                                 try:
-                                    file_path.unlink()
+                                    marker_path.unlink()
                                     removed_files.append(file_name)
                                     self.logger.info(f"Removed marker file {file_name} from {plugin_id} before update")
                                 except Exception as e:
@@ -2169,7 +2175,7 @@ class PluginStoreManager:
 
         try:
             with open(manifest_path, "r") as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[no-any-return]
         except Exception as e:
             self.logger.error(f"Error reading manifest for {plugin_id}: {e}")
             return None

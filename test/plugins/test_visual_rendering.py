@@ -48,10 +48,10 @@ class TestVisualDisplayManager:
         vdm = VisualTestDisplayManager(width=128, height=32)
         vdm.draw_text("Hello", x=10, y=5, color=(255, 0, 0))
         assert len(vdm.draw_calls) == 1
-        assert vdm.draw_calls[0]['type'] == 'text'
-        assert vdm.draw_calls[0]['text'] == 'Hello'
-        assert vdm.draw_calls[0]['x'] == 10
-        assert vdm.draw_calls[0]['y'] == 5
+        assert vdm.draw_calls[0]["type"] == "text"
+        assert vdm.draw_calls[0]["text"] == "Hello"
+        assert vdm.draw_calls[0]["x"] == 10
+        assert vdm.draw_calls[0]["y"] == 5
 
     def test_clear_resets_canvas(self):
         vdm = VisualTestDisplayManager(width=128, height=32)
@@ -103,17 +103,18 @@ class TestVisualDisplayManager:
         assert len(b64) > 0
         # Should be valid base64 PNG
         import base64
+
         decoded = base64.b64decode(b64)
-        assert decoded[:4] == b'\x89PNG'
+        assert decoded[:4] == b"\x89PNG"
 
     def test_font_attributes_exist(self):
         vdm = VisualTestDisplayManager(width=128, height=32)
-        assert hasattr(vdm, 'regular_font')
-        assert hasattr(vdm, 'small_font')
-        assert hasattr(vdm, 'extra_small_font')
-        assert hasattr(vdm, 'calendar_font')
-        assert hasattr(vdm, 'bdf_5x7_font')
-        assert hasattr(vdm, 'font')
+        assert hasattr(vdm, "regular_font")
+        assert hasattr(vdm, "small_font")
+        assert hasattr(vdm, "extra_small_font")
+        assert hasattr(vdm, "calendar_font")
+        assert hasattr(vdm, "bdf_5x7_font")
+        assert hasattr(vdm, "font")
 
     def test_get_text_width(self):
         vdm = VisualTestDisplayManager(width=128, height=32)
@@ -130,7 +131,7 @@ class TestVisualDisplayManager:
     def test_image_paste(self):
         """Verify plugins can paste images onto the display."""
         vdm = VisualTestDisplayManager(width=128, height=32)
-        overlay = Image.new('RGB', (10, 10), (255, 0, 0))
+        overlay = Image.new("RGB", (10, 10), (255, 0, 0))
         vdm.image.paste(overlay, (0, 0))
         pixel = vdm.image.getpixel((5, 5))
         assert pixel == (255, 0, 0)
@@ -138,16 +139,16 @@ class TestVisualDisplayManager:
     def test_image_assignment(self):
         """Verify plugins can assign a new image to display_manager.image."""
         vdm = VisualTestDisplayManager(width=128, height=32)
-        new_img = Image.new('RGB', (128, 32), (0, 255, 0))
+        new_img = Image.new("RGB", (128, 32), (0, 255, 0))
         vdm.image = new_img
         assert vdm.image.getpixel((0, 0)) == (0, 255, 0)
 
     def test_draw_image(self):
         vdm = VisualTestDisplayManager(width=128, height=32)
-        overlay = Image.new('RGB', (10, 10), (0, 0, 255))
+        overlay = Image.new("RGB", (10, 10), (0, 0, 255))
         vdm.draw_image(overlay, 5, 5)
         assert len(vdm.draw_calls) == 1
-        assert vdm.draw_calls[0]['type'] == 'image'
+        assert vdm.draw_calls[0]["type"] == "image"
         # Verify pixels were actually pasted
         pixel = vdm.image.getpixel((7, 7))
         assert pixel == (0, 0, 255)
@@ -174,16 +175,17 @@ class TestVisualDisplayManager:
 
     def test_format_date_with_ordinal(self):
         from datetime import datetime
+
         vdm = VisualTestDisplayManager(width=128, height=32)
         dt = datetime(2025, 8, 1)
         result = vdm.format_date_with_ordinal(dt)
-        assert '1st' in result
+        assert "1st" in result
         dt = datetime(2025, 8, 3)
         result = vdm.format_date_with_ordinal(dt)
-        assert '3rd' in result
+        assert "3rd" in result
         dt = datetime(2025, 8, 11)
         result = vdm.format_date_with_ordinal(dt)
-        assert '11th' in result
+        assert "11th" in result
 
 
 class TestWeatherDrawing:
@@ -219,7 +221,7 @@ class TestWeatherDrawing:
 
     def test_draw_weather_icon_dispatches(self):
         vdm = VisualTestDisplayManager(width=128, height=32)
-        for condition in ['clear', 'cloudy', 'rain', 'snow', 'storm', 'unknown']:
+        for condition in ["clear", "cloudy", "rain", "snow", "storm", "unknown"]:
             vdm.clear()
             vdm.draw_weather_icon(condition, 0, 0, 16)
             pixels = list(vdm.image.getdata())
