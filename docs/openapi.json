@@ -1,0 +1,2821 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LEDMatrix API",
+    "description": "LED Matrix display controller API",
+    "contact": {
+      "name": "LEDMatrix",
+      "url": "https://github.com/Olino3/LEDMatrix"
+    },
+    "license": {
+      "name": "MIT"
+    },
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/v3/config/main": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Main Config",
+        "description": "Return full config.",
+        "operationId": "get_main_config_api_v3_config_main_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Save Main Config",
+        "description": "Accept a partial config update, merge, and save atomically.",
+        "operationId": "save_main_config_api_v3_config_main_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/config/schedule": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Schedule Config",
+        "description": "Return schedule section of config.",
+        "operationId": "get_schedule_config_api_v3_config_schedule_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Save Schedule Config",
+        "description": "Validate and save schedule config (global or per-day).",
+        "operationId": "save_schedule_config_api_v3_config_schedule_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/config/dim-schedule": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Dim Schedule Config",
+        "description": "Return dim-schedule section, with sensible defaults.",
+        "operationId": "get_dim_schedule_config_api_v3_config_dim_schedule_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Save Dim Schedule Config",
+        "description": "Validate and save dim-schedule config.",
+        "operationId": "save_dim_schedule_config_api_v3_config_dim_schedule_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/config/secrets": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Secrets Config",
+        "description": "Return secrets config.",
+        "operationId": "get_secrets_config_api_v3_config_secrets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/config/raw/main": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Save Raw Main Config",
+        "description": "Overwrite main config with raw JSON.",
+        "operationId": "save_raw_main_config_api_v3_config_raw_main_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/config/raw/secrets": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Save Raw Secrets Config",
+        "description": "Overwrite secrets config with raw JSON and reload GitHub token.",
+        "operationId": "save_raw_secrets_config_api_v3_config_raw_secrets_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/system/status": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get System Status",
+        "description": "Return system metrics (CPU, memory, disk, temp).",
+        "operationId": "get_system_status_api_v3_system_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/system/version": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get System Version",
+        "description": "Return version info.",
+        "operationId": "get_system_version_api_v3_system_version_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/system/action": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Execute System Action",
+        "description": "Execute a system action (start/stop/restart service, reboot, git pull).",
+        "operationId": "execute_system_action_api_v3_system_action_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Health",
+        "description": "Comprehensive health check.",
+        "operationId": "get_health_api_v3_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/logs": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Logs",
+        "description": "Fetch recent ledmatrix service logs via journalctl.",
+        "operationId": "get_logs_api_v3_logs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/errors/summary": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Error Summary",
+        "description": "Return error aggregator summary.",
+        "operationId": "get_error_summary_api_v3_errors_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/errors/plugin/{plugin_id}": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Plugin Errors",
+        "description": "Return error health for a specific plugin.",
+        "operationId": "get_plugin_errors_api_v3_errors_plugin__plugin_id__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/errors/clear": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Clear Errors",
+        "description": "Clear error records older than max_age_hours.",
+        "operationId": "clear_errors_api_v3_errors_clear_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/installed": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Installed Plugins",
+        "operationId": "get_installed_plugins_api_v3_plugins_installed_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/toggle": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Toggle Plugin",
+        "operationId": "toggle_plugin_api_v3_plugins_toggle_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/config": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin Config",
+        "operationId": "get_plugin_config_api_v3_plugins_config_get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Save Plugin Config",
+        "operationId": "save_plugin_config_api_v3_plugins_config_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/config/reset": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Reset Plugin Config",
+        "operationId": "reset_plugin_config_api_v3_plugins_config_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/schema": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin Schema",
+        "operationId": "get_plugin_schema_api_v3_plugins_schema_get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/action": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Execute Plugin Action",
+        "operationId": "execute_plugin_action_api_v3_plugins_action_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/health": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get All Plugin Health",
+        "operationId": "get_all_plugin_health_api_v3_plugins_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/health/{plugin_id}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin Health",
+        "operationId": "get_plugin_health_api_v3_plugins_health__plugin_id__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/health/{plugin_id}/reset": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Reset Plugin Health",
+        "operationId": "reset_plugin_health_api_v3_plugins_health__plugin_id__reset_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/metrics": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get All Plugin Metrics",
+        "operationId": "get_all_plugin_metrics_api_v3_plugins_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/metrics/{plugin_id}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin Metrics",
+        "operationId": "get_plugin_metrics_api_v3_plugins_metrics__plugin_id__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/metrics/{plugin_id}/reset": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Reset Plugin Metrics",
+        "operationId": "reset_plugin_metrics_api_v3_plugins_metrics__plugin_id__reset_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/limits/{plugin_id}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Resource Limits",
+        "operationId": "get_resource_limits_api_v3_plugins_limits__plugin_id__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Set Resource Limits",
+        "operationId": "set_resource_limits_api_v3_plugins_limits__plugin_id__post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/operation/{operation_id}": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Operation Status",
+        "operationId": "get_operation_status_api_v3_plugins_operation__operation_id__get",
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Operation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/operation/history": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Operation History List",
+        "operationId": "get_operation_history_list_api_v3_plugins_operation_history_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "plugin_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plugin Id"
+            }
+          },
+          {
+            "name": "operation_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Operation Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Clear Operation History",
+        "operationId": "clear_operation_history_api_v3_plugins_operation_history_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/state": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Get Plugin State",
+        "operationId": "get_plugin_state_api_v3_plugins_state_get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/state/reconcile": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Reconcile State",
+        "operationId": "reconcile_state_api_v3_plugins_state_reconcile_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/authenticate/spotify": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Authenticate Spotify",
+        "description": "Spotify OAuth flow (2-step: get URL, then complete with redirect).",
+        "operationId": "authenticate_spotify_api_v3_plugins_authenticate_spotify_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/authenticate/ytm": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Authenticate Ytm",
+        "description": "Run YouTube Music authentication script.",
+        "operationId": "authenticate_ytm_api_v3_plugins_authenticate_ytm_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/store/list": {
+      "get": {
+        "tags": [
+          "store"
+        ],
+        "summary": "List Store Plugins",
+        "description": "List available plugins from the store registry.",
+        "operationId": "list_store_plugins_api_v3_plugins_store_list_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Search query",
+              "default": "",
+              "title": "Query"
+            },
+            "description": "Search query"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by category",
+              "default": "",
+              "title": "Category"
+            },
+            "description": "Filter by category"
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated tags",
+              "default": "",
+              "title": "Tags"
+            },
+            "description": "Comma-separated tags"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/store/github-status": {
+      "get": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Get Github Auth Status",
+        "description": "Check GitHub API authentication status and rate limit.",
+        "operationId": "get_github_auth_status_api_v3_plugins_store_github_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/store/refresh": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Refresh Store",
+        "description": "Force refresh the plugin registry from GitHub.",
+        "operationId": "refresh_store_api_v3_plugins_store_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/install": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Install Plugin",
+        "description": "Install a plugin from the official registry.",
+        "operationId": "install_plugin_api_v3_plugins_install_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/install-from-url": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Install From Url",
+        "description": "Install a plugin from a custom GitHub URL.",
+        "operationId": "install_from_url_api_v3_plugins_install_from_url_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/update": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Update Plugin",
+        "description": "Update an installed plugin to the latest version.",
+        "operationId": "update_plugin_api_v3_plugins_update_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/uninstall": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Uninstall Plugin",
+        "description": "Uninstall a plugin.",
+        "operationId": "uninstall_plugin_api_v3_plugins_uninstall_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/registry-from-url": {
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Get Registry From Url",
+        "description": "Fetch a plugin registry from a custom GitHub repo URL.",
+        "operationId": "get_registry_from_url_api_v3_plugins_registry_from_url_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/saved-repositories": {
+      "get": {
+        "tags": [
+          "store"
+        ],
+        "summary": "List Saved Repositories",
+        "description": "Return all saved repositories.",
+        "operationId": "list_saved_repositories_api_v3_plugins_saved_repositories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Add Saved Repository",
+        "description": "Add a saved repository.",
+        "operationId": "add_saved_repository_api_v3_plugins_saved_repositories_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "store"
+        ],
+        "summary": "Remove Saved Repository",
+        "description": "Remove a saved repository.",
+        "operationId": "remove_saved_repository_api_v3_plugins_saved_repositories_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/catalog": {
+      "get": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Get Font Catalog",
+        "description": "List available font files from system and user directories.",
+        "operationId": "get_font_catalog_api_v3_fonts_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/tokens": {
+      "get": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Get Design Tokens",
+        "description": "Return hardcoded design token sizes.",
+        "operationId": "get_design_tokens_api_v3_fonts_tokens_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/overrides": {
+      "get": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Get Font Overrides",
+        "description": "Read font overrides configuration.",
+        "operationId": "get_font_overrides_api_v3_fonts_overrides_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Save Font Overrides",
+        "description": "Write font overrides configuration.",
+        "operationId": "save_font_overrides_api_v3_fonts_overrides_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/overrides/{element_key}": {
+      "delete": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Delete Font Override",
+        "description": "Remove a single key from font overrides.",
+        "operationId": "delete_font_override_api_v3_fonts_overrides__element_key__delete",
+        "parameters": [
+          {
+            "name": "element_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Element Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/upload": {
+      "post": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Upload Font",
+        "description": "Upload a font file to the user fonts directory.",
+        "operationId": "upload_font_api_v3_fonts_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_font_api_v3_fonts_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/preview": {
+      "get": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Preview Font",
+        "description": "Render a text preview using the specified font. Returns base64 PNG.",
+        "operationId": "preview_font_api_v3_fonts_preview_get",
+        "parameters": [
+          {
+            "name": "font",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Font filename or path",
+              "title": "Font"
+            },
+            "description": "Font filename or path"
+          },
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Text to render",
+              "default": "Hello",
+              "title": "Text"
+            },
+            "description": "Text to render"
+          },
+          {
+            "name": "bg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Background color",
+              "default": "#000000",
+              "title": "Bg"
+            },
+            "description": "Background color"
+          },
+          {
+            "name": "fg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Foreground color",
+              "default": "#FFFFFF",
+              "title": "Fg"
+            },
+            "description": "Foreground color"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Font size in pixels",
+              "default": 16,
+              "title": "Size"
+            },
+            "description": "Font size in pixels"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/fonts/{font_family}": {
+      "delete": {
+        "tags": [
+          "fonts"
+        ],
+        "summary": "Delete Font",
+        "description": "Delete a user-uploaded font. System fonts cannot be deleted.",
+        "operationId": "delete_font_api_v3_fonts__font_family__delete",
+        "parameters": [
+          {
+            "name": "font_family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Font Family"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/status": {
+      "get": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Get Wifi Status",
+        "description": "Return current WiFi connection status.",
+        "operationId": "get_wifi_status_api_v3_wifi_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/scan": {
+      "get": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Scan Networks",
+        "description": "Scan for available WiFi networks.",
+        "operationId": "scan_networks_api_v3_wifi_scan_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/connect": {
+      "post": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Connect To Network",
+        "description": "Connect to a WiFi network. Expects {ssid, password}.",
+        "operationId": "connect_to_network_api_v3_wifi_connect_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/disconnect": {
+      "post": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Disconnect From Network",
+        "description": "Disconnect from the current WiFi network.",
+        "operationId": "disconnect_from_network_api_v3_wifi_disconnect_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/ap/enable": {
+      "post": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Enable Ap Mode",
+        "description": "Enable access point mode.",
+        "operationId": "enable_ap_mode_api_v3_wifi_ap_enable_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/ap/disable": {
+      "post": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Disable Ap Mode",
+        "description": "Disable access point mode.",
+        "operationId": "disable_ap_mode_api_v3_wifi_ap_disable_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/wifi/ap/auto-enable": {
+      "get": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Get Ap Auto Enable",
+        "description": "Read auto_enable_ap_mode setting from wifi_config.json.",
+        "operationId": "get_ap_auto_enable_api_v3_wifi_ap_auto_enable_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "wifi"
+        ],
+        "summary": "Set Ap Auto Enable",
+        "description": "Update auto_enable_ap_mode setting in wifi_config.json.",
+        "operationId": "set_ap_auto_enable_api_v3_wifi_ap_auto_enable_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/assets/upload": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Upload Assets",
+        "description": "Upload asset files for a plugin (max 10 files, 5 MB each).",
+        "operationId": "upload_assets_api_v3_plugins_assets_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_assets_api_v3_plugins_assets_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/assets/delete": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Delete Asset",
+        "description": "Delete an asset file. Expects {plugin_id, image_id}.",
+        "operationId": "delete_asset_api_v3_plugins_assets_delete_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/assets/list": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "List Assets",
+        "description": "List asset files for a plugin.",
+        "operationId": "list_assets_api_v3_plugins_assets_list_get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/{plugin_id}/static/{file_path}": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Serve Plugin Static",
+        "description": "Serve a static file from a plugin's directory.",
+        "operationId": "serve_plugin_static_api_v3_plugins__plugin_id__static__file_path__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          },
+          {
+            "name": "file_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/of-the-day/json/upload": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Upload Of The Day Json",
+        "description": "Upload a JSON data file for the of-the-day plugin.",
+        "operationId": "upload_of_the_day_json_api_v3_plugins_of_the_day_json_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_of_the_day_json_api_v3_plugins_of_the_day_json_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/of-the-day/json/delete": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Delete Of The Day Json",
+        "description": "Delete a JSON data file. Expects {file_id}.",
+        "operationId": "delete_of_the_day_json_api_v3_plugins_of_the_day_json_delete_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/calendar/upload-credentials": {
+      "post": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Upload Calendar Credentials",
+        "description": "Upload Google Calendar credentials JSON file.",
+        "operationId": "upload_calendar_credentials_api_v3_plugins_calendar_upload_credentials_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_calendar_credentials_api_v3_plugins_calendar_upload_credentials_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/plugins/calendar/list-calendars": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "List Calendars",
+        "description": "List Google calendars using stored credentials.",
+        "operationId": "list_calendars_api_v3_plugins_calendar_list_calendars_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/status": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Get Starlark Status",
+        "description": "Check if pixlet is available and count installed apps.",
+        "operationId": "get_starlark_status_api_v3_starlark_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/apps": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "List Apps",
+        "description": "List all starlark apps from the manifest.",
+        "operationId": "list_apps_api_v3_starlark_apps_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/apps/{app_id}": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Get App",
+        "description": "Get details for a single starlark app.",
+        "operationId": "get_app_api_v3_starlark_apps__app_id__get",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Delete App",
+        "description": "Remove a starlark app and its files.",
+        "operationId": "delete_app_api_v3_starlark_apps__app_id__delete",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/upload": {
+      "post": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Upload App",
+        "description": "Upload a .star app file.",
+        "operationId": "upload_app_api_v3_starlark_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_app_api_v3_starlark_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/apps/{app_id}/config": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Get App Config",
+        "description": "Read a starlark app's config JSON.",
+        "operationId": "get_app_config_api_v3_starlark_apps__app_id__config_get",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Update App Config",
+        "description": "Write a starlark app's config JSON.",
+        "operationId": "update_app_config_api_v3_starlark_apps__app_id__config_put",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/apps/{app_id}/toggle": {
+      "post": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Toggle App",
+        "description": "Toggle the enabled state of a starlark app in the manifest.",
+        "operationId": "toggle_app_api_v3_starlark_apps__app_id__toggle_post",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/apps/{app_id}/render": {
+      "post": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Render App",
+        "description": "Trigger a render of a starlark app via pixlet.",
+        "operationId": "render_app_api_v3_starlark_apps__app_id__render_post",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/repository/browse": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Browse Repository",
+        "description": "Fetch the app catalog from the tronbyte repository.",
+        "operationId": "browse_repository_api_v3_starlark_repository_browse_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/repository/install": {
+      "post": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Install From Repository",
+        "description": "Install an app from the tronbyte repository.",
+        "operationId": "install_from_repository_api_v3_starlark_repository_install_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/repository/categories": {
+      "get": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "List Repository Categories",
+        "description": "List available categories from the tronbyte repository.",
+        "operationId": "list_repository_categories_api_v3_starlark_repository_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/starlark/install-pixlet": {
+      "post": {
+        "tags": [
+          "starlark"
+        ],
+        "summary": "Install Pixlet",
+        "description": "Install the pixlet binary by downloading the latest release.",
+        "operationId": "install_pixlet_api_v3_starlark_install_pixlet_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/stream/stats": {
+      "get": {
+        "tags": [
+          "streams"
+        ],
+        "summary": "Stream Stats",
+        "description": "SSE stream of system status metrics (every 10 s).",
+        "operationId": "stream_stats_api_v3_stream_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/stream/display": {
+      "get": {
+        "tags": [
+          "streams"
+        ],
+        "summary": "Stream Display",
+        "description": "SSE stream of display preview snapshots (~2 Hz).",
+        "operationId": "stream_display_api_v3_stream_display_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v3/stream/logs": {
+      "get": {
+        "tags": [
+          "streams"
+        ],
+        "summary": "Stream Logs",
+        "description": "SSE stream of journalctl log entries (every 5 s).",
+        "operationId": "stream_logs_api_v3_stream_logs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Index",
+        "description": "Main v3 interface page.",
+        "operationId": "index_v3__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/partials/{partial_name}": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Load Partial",
+        "description": "Load HTMX partials dynamically.",
+        "operationId": "load_partial_v3_partials__partial_name__get",
+        "parameters": [
+          {
+            "name": "partial_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Partial Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/partials/plugin-config/{plugin_id}": {
+      "get": {
+        "tags": [
+          "pages"
+        ],
+        "summary": "Load Plugin Config",
+        "description": "Load plugin configuration partial \u2014 server-side rendered form.",
+        "operationId": "load_plugin_config_v3_partials_plugin_config__plugin_id__get",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_upload_app_api_v3_starlark_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "app_id": {
+            "type": "string",
+            "title": "App Id"
+          },
+          "render_interval": {
+            "type": "integer",
+            "title": "Render Interval",
+            "default": 300
+          },
+          "display_duration": {
+            "type": "integer",
+            "title": "Display Duration",
+            "default": 15
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "name",
+          "app_id"
+        ],
+        "title": "Body_upload_app_api_v3_starlark_upload_post"
+      },
+      "Body_upload_assets_api_v3_plugins_assets_upload_post": {
+        "properties": {
+          "plugin_id": {
+            "type": "string",
+            "title": "Plugin Id"
+          },
+          "files": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plugin_id",
+          "files"
+        ],
+        "title": "Body_upload_assets_api_v3_plugins_assets_upload_post"
+      },
+      "Body_upload_calendar_credentials_api_v3_plugins_calendar_upload_credentials_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_calendar_credentials_api_v3_plugins_calendar_upload_credentials_post"
+      },
+      "Body_upload_font_api_v3_fonts_upload_post": {
+        "properties": {
+          "font_file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Font File"
+          },
+          "font_family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Font Family"
+          }
+        },
+        "type": "object",
+        "required": [
+          "font_file"
+        ],
+        "title": "Body_upload_font_api_v3_fonts_upload_post"
+      },
+      "Body_upload_of_the_day_json_api_v3_plugins_of_the_day_json_upload_post": {
+        "properties": {
+          "files": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "Body_upload_of_the_day_json_api_v3_plugins_of_the_day_json_upload_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "config",
+      "description": "Display and system configuration management"
+    },
+    {
+      "name": "system",
+      "description": "System status, health checks, and version info"
+    },
+    {
+      "name": "plugins",
+      "description": "Plugin lifecycle management \u2014 enable, disable, configure"
+    },
+    {
+      "name": "store",
+      "description": "Plugin store \u2014 browse, install, and update plugins"
+    },
+    {
+      "name": "fonts",
+      "description": "Font management for LED matrix text rendering"
+    },
+    {
+      "name": "wifi",
+      "description": "Wi-Fi network scanning and configuration"
+    },
+    {
+      "name": "streams",
+      "description": "Server-Sent Event streams for real-time updates"
+    },
+    {
+      "name": "starlark",
+      "description": "Starlark script evaluation and management"
+    },
+    {
+      "name": "assets",
+      "description": "Plugin static assets \u2014 logos, images, and files"
+    },
+    {
+      "name": "pages",
+      "description": "HTMX page routes for the web dashboard UI"
+    }
+  ]
+}
