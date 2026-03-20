@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from src.api.dependencies import get_config_manager, get_plugin_manager
-from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
+from src.api.models.common import API_RESPONSES
 from src.config_manager import ConfigManager
 from src.logging_config import get_logger
 from src.plugin_system.plugin_manager import PluginManager
