@@ -1,12 +1,14 @@
 """FastAPI application factory and lifespan management."""
 
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import FileResponse, RedirectResponse, Response
 
 from src.api.dependencies import init_services, shutdown_services
 from src.api.middleware import register_middleware
@@ -93,6 +95,37 @@ def create_app() -> FastAPI:
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon() -> Response:
         return Response(status_code=204)
+
+    # Mount Angular SPA (when built) — single catch-all serves both
+    # static assets and index.html fallback for client-side routing.
+    # Computed inside create_app() so PROJECT_ROOT can be patched in tests.
+    spa_dist_dir = PROJECT_ROOT / "frontend" / "dist" / "ledmatrix" / "browser"
+    if spa_dist_dir.is_dir():
+        _SPA_RESERVED_PREFIXES = (
+            "/api/", "/docs", "/redoc", "/static", "/v3",
+            "/openapi.json", "/favicon.ico",
+        )
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def spa_catch_all(full_path: str) -> Response:
+            """Serve SPA static files or index.html for client-side routing."""
+            request_path = f"/{full_path}"
+            for prefix in _SPA_RESERVED_PREFIXES:
+                if request_path.startswith(prefix):
+                    return Response(status_code=404)
+
+            # Serve static file if it exists (JS, CSS, images, etc.)
+            if full_path and ".." not in full_path:
+                file_path = spa_dist_dir / full_path
+                if file_path.is_file():
+                    media_type = mimetypes.guess_type(str(file_path))[0]
+                    return FileResponse(file_path, media_type=media_type)
+
+            # Fall back to index.html for Angular client-side routing
+            index_file = spa_dist_dir / "index.html"
+            if index_file.is_file():
+                return HTMLResponse(content=index_file.read_text())
+            return Response(status_code=404)
 
     return app
 
