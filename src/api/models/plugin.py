@@ -37,9 +37,7 @@ class PluginConfigResponse(BaseModel):
 
     plugin_id: str = Field(..., description="Plugin identifier")
     config: dict[str, Any] = Field(..., description="Current plugin configuration")
-    schema_: dict[str, Any] = Field(
-        default_factory=dict, alias="schema", description="JSON Schema for plugin config"
-    )
+    schema_: dict[str, Any] = Field(default_factory=dict, alias="schema", description="JSON Schema for plugin config")
 
 
 class PluginToggleRequest(BaseModel):
