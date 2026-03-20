@@ -5,7 +5,7 @@ import sys
 # Get project root directory (parent of scripts/utils/)
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CONFIG_FILE = os.path.join(PROJECT_DIR, 'config', 'config.json')
-WEB_INTERFACE_SCRIPT = os.path.join(PROJECT_DIR, 'web_interface', 'start.py')
+WEB_INTERFACE_SCRIPT = os.path.join(PROJECT_DIR, 'src', 'api', 'start.py')
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
             # Replace the current process with web_interface.py using the current Python.
             # This is important for systemd to correctly manage the web server process.
             # The WorkingDirectory in systemd service handles imports for web_interface.py.
-            print(f"Launching web interface v3: {sys.executable} {WEB_INTERFACE_SCRIPT}")
+            print(f"Launching web interface (FastAPI): {sys.executable} {WEB_INTERFACE_SCRIPT}")
             os.execvp(sys.executable, [sys.executable, WEB_INTERFACE_SCRIPT])
         except Exception as e:
             print(f"Failed to exec web interface: {e}")

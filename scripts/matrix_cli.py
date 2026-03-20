@@ -323,7 +323,7 @@ def web() -> None:
     """Start the web interface on localhost:5000."""
     console.print(Rule("[green]web interface[/green]"))
     console.print("  [dim]http://localhost:5000[/dim]")
-    sys.exit(_run([PYTHON, str(LEDMATRIX_ROOT / "web_interface" / "start.py")]))
+    sys.exit(_run([PYTHON, str(LEDMATRIX_ROOT / "src" / "api" / "start.py")]))
 
 
 # ---------------------------------------------------------------------------
