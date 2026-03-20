@@ -1,0 +1,13 @@
+<nav class="sidebar-nav" aria-label="Main navigation">
+  @for (item of navItems; track item.routerLink) {
+    <a
+      [routerLink]="item.routerLink"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="item.routerLink === '/' ? { exact: true } : { exact: false }"
+      class="nav-item"
+    >
+      <i [class]="item.icon"></i>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  }
+</nav>
