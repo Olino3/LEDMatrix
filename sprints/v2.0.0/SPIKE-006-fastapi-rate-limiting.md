@@ -1,6 +1,6 @@
 # SPIKE-006 — FastAPI Rate Limiting via slowapi
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Spike
 **Depends on:** [BACK-004](BACK-004-middleware-stack.md), [BACK-007](BACK-007-sse-migration.md)
@@ -17,11 +17,11 @@ The Flask app uses `flask-limiter` for basic rate limiting (1000 req/min default
 
 ## Scope
 
-- Add `slowapi>=0.1.9` to `pyproject.toml`
-- Create `src/api/middleware/rate_limit.py` with default 1000/min limit
-- Apply 20/min limit to SSE streaming endpoints
-- Wire into `register_middleware()`
-- Tests for rate limit headers and 429 responses
+- [x] Add `slowapi>=0.1.9` to `pyproject.toml`
+- [x] Create `src/api/middleware/rate_limit.py` with default 1000/min limit
+- [x] Apply 20/min limit to SSE streaming endpoints
+- [x] Wire into `register_middleware()` (SlowAPIMiddleware + 429 handler)
+- [x] Tests for rate limit setup, SSE limits, and 429 handler (8 tests)
 
 ## Notes
 
