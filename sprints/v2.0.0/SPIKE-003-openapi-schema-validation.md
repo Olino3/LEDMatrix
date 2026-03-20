@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Chore
 **Depends on:** [BACK-006](BACK-006-api-routes-plugins.md), [BACK-007](BACK-007-sse-migration.md)
@@ -18,12 +18,12 @@ One of the key benefits of FastAPI is auto-generated OpenAPI documentation. Afte
 
 ## Acceptance Criteria
 
-- [ ] All API endpoints appear in the OpenAPI schema at `/docs`
-- [ ] Every endpoint has a summary and description
-- [ ] Request/response models have field descriptions and examples
-- [ ] `openapi.json` is exported to `docs/openapi.json` for reference
-- [ ] Tags group endpoints logically (config, system, plugins, store, fonts, wifi, streams, starlark)
-- [ ] Error responses (400, 404, 422, 500) are documented in the schema
+- [x] All API endpoints appear in the OpenAPI schema at `/docs`
+- [x] Every endpoint has a summary and description
+- [x] Request/response models have field descriptions and examples
+- [x] `openapi.json` is exported to `docs/openapi.json` for reference
+- [x] Tags group endpoints logically (config, system, plugins, store, fonts, wifi, streams, starlark, assets, pages)
+- [ ] Error responses (400, 404, 422, 500) are documented in the schema — deferred to [SPIKE-008](SPIKE-008-openapi-response-models.md)
 
 ---
 
