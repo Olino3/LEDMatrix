@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v3.0.0 — Frontend Modernization
 **Type:** Feat
 **Depends on:** [FRONT-001](FRONT-001-angular-project-scaffold.md)
