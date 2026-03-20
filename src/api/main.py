@@ -36,12 +36,28 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Factory function that builds and returns the FastAPI application."""
+    openapi_tags = [
+        {"name": "config", "description": "Display and system configuration management"},
+        {"name": "system", "description": "System status, health checks, and version info"},
+        {"name": "plugins", "description": "Plugin lifecycle management — enable, disable, configure"},
+        {"name": "store", "description": "Plugin store — browse, install, and update plugins"},
+        {"name": "fonts", "description": "Font management for LED matrix text rendering"},
+        {"name": "wifi", "description": "Wi-Fi network scanning and configuration"},
+        {"name": "streams", "description": "Server-Sent Event streams for real-time updates"},
+        {"name": "starlark", "description": "Starlark script evaluation and management"},
+        {"name": "assets", "description": "Plugin static assets — logos, images, and files"},
+        {"name": "pages", "description": "HTMX page routes for the web dashboard UI"},
+    ]
+
     app = FastAPI(
-        title="LED Matrix",
+        title="LEDMatrix API",
         description="LED Matrix display controller API",
         version="2.0.0",
+        contact={"name": "LEDMatrix", "url": "https://github.com/Olino3/LEDMatrix"},
+        license_info={"name": "MIT"},
         docs_url="/docs",
         redoc_url="/redoc",
+        openapi_tags=openapi_tags,
         lifespan=lifespan,
     )
 
