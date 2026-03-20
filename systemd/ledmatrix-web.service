@@ -13,7 +13,6 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=__PROJECT_ROOT_DIR__
-Environment=USE_THREADING=1
 ExecStart=__VENV_PYTHON__ __PROJECT_ROOT_DIR__/scripts/utils/start_web_conditionally.py
 Restart=on-failure
 RestartSec=10
