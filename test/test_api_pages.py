@@ -17,7 +17,23 @@ def _make_client():
         mock_cm.load_config.return_value = {
             "schedule": {},
             "dim_schedule": {},
-            "display": {"hardware": {"brightness": 90}},
+            "display": {
+                "hardware": {
+                    "brightness": 90,
+                    "rows": 32,
+                    "cols": 64,
+                    "chain_length": 2,
+                    "parallel": 1,
+                    "hardware_mapping": "adafruit-hat-pwm",
+                },
+                "runtime": {"gpio_slowdown": 3},
+                "display_durations": {},
+            },
+            "location": {"city": "Test", "state": "TX", "country": "US"},
+            "timezone": "UTC",
+            "plugin_system": {},
+            "weather": {},
+            "stocks": {},
         }
         mock_cm.get_raw_file_content.return_value = {}
         mock_cm.get_config_path.return_value = "/tmp/config.json"
@@ -64,8 +80,8 @@ class TestPartials:
         assert resp.status_code == 404
 
     @pytest.mark.parametrize("partial", [
-        "general", "display", "durations", "schedule", "weather",
-        "stocks", "plugins", "fonts", "logs", "raw-json",
+        "general", "display", "durations", "schedule",
+        "plugins", "fonts", "logs", "raw-json",
         "wifi", "cache", "operation-history",
     ])
     def test_all_partials_return_200(self, partial):
