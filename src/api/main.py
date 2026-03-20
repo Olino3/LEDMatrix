@@ -102,8 +102,13 @@ def create_app() -> FastAPI:
     spa_dist_dir = PROJECT_ROOT / "frontend" / "dist" / "ledmatrix" / "browser"
     if spa_dist_dir.is_dir():
         _SPA_RESERVED_PREFIXES = (
-            "/api/", "/docs", "/redoc", "/static", "/v3",
-            "/openapi.json", "/favicon.ico",
+            "/api/",
+            "/docs",
+            "/redoc",
+            "/static",
+            "/v3",
+            "/openapi.json",
+            "/favicon.ico",
         )
 
         @app.get("/{full_path:path}", include_in_schema=False)
