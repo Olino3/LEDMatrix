@@ -173,7 +173,6 @@ module = [
     "freetype.*",
     "pytz.*",
     "requests.*",
-    "Flask.*",
     "google.*",
     "spotipy.*",
 ]
