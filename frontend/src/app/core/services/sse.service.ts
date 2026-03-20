@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { inject, Injectable, NgZone } from '@angular/core';
 import { Observable, share } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type {
@@ -10,8 +10,7 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class SseService {
   private readonly baseUrl = environment.apiBase;
-
-  constructor(private readonly zone: NgZone) {}
+  private readonly zone = inject(NgZone);
 
   connect<T>(endpoint: string): Observable<T> {
     return new Observable<T>((subscriber) => {

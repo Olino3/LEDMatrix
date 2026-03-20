@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import type { SuccessResponse } from '../models/common.model';
@@ -10,7 +10,7 @@ import type {
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
-  constructor(private readonly api: ApiService) {}
+  private readonly api = inject(ApiService);
 
   getMainConfig(): Observable<SuccessResponse<SystemConfigResponse>> {
     return this.api.get('/config/main');
