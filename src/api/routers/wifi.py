@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from src.api.models.common import API_RESPONSES
 from src.logging_config import get_logger
 
 logger = get_logger("api.wifi")
@@ -67,7 +68,7 @@ def _write_wifi_config(data: dict) -> None:
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/status", response_model=None)
+@router.get("/status", response_model=None, responses=API_RESPONSES)
 async def get_wifi_status() -> dict[str, Any] | JSONResponse:
     """Return current WiFi connection status."""
     try:
@@ -79,7 +80,7 @@ async def get_wifi_status() -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.get("/scan", response_model=None)
+@router.get("/scan", response_model=None, responses=API_RESPONSES)
 async def scan_networks() -> dict[str, Any] | JSONResponse:
     """Scan for available WiFi networks."""
     try:
@@ -91,7 +92,7 @@ async def scan_networks() -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/connect", response_model=None)
+@router.post("/connect", response_model=None, responses=API_RESPONSES)
 async def connect_to_network(request: Request) -> dict[str, Any] | JSONResponse:
     """Connect to a WiFi network. Expects {ssid, password}."""
     try:
@@ -116,7 +117,7 @@ async def connect_to_network(request: Request) -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/disconnect", response_model=None)
+@router.post("/disconnect", response_model=None, responses=API_RESPONSES)
 async def disconnect_from_network() -> dict[str, Any] | JSONResponse:
     """Disconnect from the current WiFi network."""
     try:
@@ -130,7 +131,7 @@ async def disconnect_from_network() -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/ap/enable", response_model=None)
+@router.post("/ap/enable", response_model=None, responses=API_RESPONSES)
 async def enable_ap_mode() -> dict[str, Any] | JSONResponse:
     """Enable access point mode."""
     try:
@@ -144,7 +145,7 @@ async def enable_ap_mode() -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/ap/disable", response_model=None)
+@router.post("/ap/disable", response_model=None, responses=API_RESPONSES)
 async def disable_ap_mode() -> dict[str, Any] | JSONResponse:
     """Disable access point mode."""
     try:
@@ -158,7 +159,7 @@ async def disable_ap_mode() -> dict[str, Any] | JSONResponse:
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.get("/ap/auto-enable", response_model=None)
+@router.get("/ap/auto-enable", response_model=None, responses=API_RESPONSES)
 async def get_ap_auto_enable() -> dict[str, Any] | JSONResponse:
     """Read auto_enable_ap_mode setting from wifi_config.json."""
     try:
@@ -173,7 +174,7 @@ async def get_ap_auto_enable() -> dict[str, Any] | JSONResponse:
         return _error("CONFIG_ERROR", str(exc), 500)
 
 
-@router.post("/ap/auto-enable", response_model=None)
+@router.post("/ap/auto-enable", response_model=None, responses=API_RESPONSES)
 async def set_ap_auto_enable(request: Request) -> dict[str, Any] | JSONResponse:
     """Update auto_enable_ap_mode setting in wifi_config.json."""
     try:
