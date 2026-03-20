@@ -3,6 +3,10 @@
 **Goal:** Replace the Flask web interface with FastAPI, introduce Pydantic settings and typed request/response models, and migrate SSE streaming to async generators.
 
 **ROADMAP phase:** Phase 2
+**Status:** COMPLETE -- 17/17 tickets Done
+**Completed:** 2026-03-20
+**Test count:** 1291 passed, 0 failed
+**mypy src/api/:** 0 errors (30 source files, strict mode)
 
 ---
 
@@ -26,7 +30,7 @@
 | [SPIKE-006](SPIKE-006-fastapi-rate-limiting.md) | FastAPI rate limiting via slowapi | Done | BACK-004, BACK-007 |
 | [SPIKE-006](SPIKE-006-cleanup-src-web-interface-flask-utils.md) | Clean up Flask-coupled utilities in `src/web_interface/` | Done | BACK-008 |
 | [SPIKE-007](SPIKE-007-missing-partial-templates.md) | Create missing partial templates (weather, stocks) | Done | SPIKE-002 |
-| [SPIKE-008](SPIKE-008-openapi-response-models.md) | OpenAPI response model retrofit | Open | SPIKE-003 |
+| [SPIKE-008](SPIKE-008-openapi-response-models.md) | OpenAPI response model retrofit | Done | SPIKE-003 |
 
 ## Dependency Graph
 
@@ -43,7 +47,7 @@ BACK-001 (FastAPI scaffold) [Done]
   |     |     |     |     |     +-- SPIKE-005 (CI update) [Done]
   |     |     |     |     |     +-- SPIKE-006-cleanup (Flask utils cleanup) [Done]
   |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Done]
-  |     |     |     |     |     +-- SPIKE-008 (response models) [Open]
+  |     |     |     |     |     +-- SPIKE-008 (response models) [Done]
   |     |     |     |     +-- SPIKE-004 (mypy strict) [Done]
   |     |     |     +-- BACK-007 (SSE migration) [Done]
   |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Done]
@@ -54,15 +58,9 @@ BACK-001 (FastAPI scaffold) [Done]
         +-- BACK-006 (plugin routes) [Done]
 ```
 
-## Remaining Work
+## Sprint Complete
 
-Only one ticket remains open:
-
-```
-SPIKE-008 (OpenAPI response model retrofit) [Open] -- depends on SPIKE-003 (Done)
-```
-
-This ticket is unblocked and can be started immediately.
+All 17 tickets are Done. No remaining work. Sprint closed on 2026-03-20.
 
 ## Definition of Done (Phase 2)
 
