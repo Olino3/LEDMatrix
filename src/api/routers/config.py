@@ -72,7 +72,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -84,10 +84,10 @@ def _success(data: Any = None, message: str | None = None):
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/main")
+@router.get("/main", response_model=None)
 async def get_main_config(
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Return full config."""
     try:
         config = config_manager.load_config()
@@ -96,11 +96,11 @@ async def get_main_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/main")
+@router.post("/main", response_model=None)
 async def save_main_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Accept a partial config update, merge, and save atomically."""
     try:
         body = await request.json()
@@ -125,10 +125,10 @@ async def save_main_config(
     return _success(message="Configuration saved successfully")
 
 
-@router.get("/schedule")
+@router.get("/schedule", response_model=None)
 async def get_schedule_config(
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Return schedule section of config."""
     try:
         config = config_manager.load_config()
@@ -137,11 +137,11 @@ async def get_schedule_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/schedule")
+@router.post("/schedule", response_model=None)
 async def save_schedule_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Validate and save schedule config (global or per-day)."""
     try:
         body = await request.json()
@@ -194,10 +194,10 @@ async def save_schedule_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.get("/dim-schedule")
+@router.get("/dim-schedule", response_model=None)
 async def get_dim_schedule_config(
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Return dim-schedule section, with sensible defaults."""
     default = {
         "enabled": False,
@@ -214,11 +214,11 @@ async def get_dim_schedule_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/dim-schedule")
+@router.post("/dim-schedule", response_model=None)
 async def save_dim_schedule_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Validate and save dim-schedule config."""
     try:
         body = await request.json()
@@ -284,10 +284,10 @@ async def save_dim_schedule_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.get("/secrets")
+@router.get("/secrets", response_model=None)
 async def get_secrets_config(
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Return secrets config."""
     try:
         data = config_manager.get_raw_file_content("secrets")
@@ -296,11 +296,11 @@ async def get_secrets_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/raw/main")
+@router.post("/raw/main", response_model=None)
 async def save_raw_main_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Overwrite main config with raw JSON."""
     try:
         data = await request.json()
@@ -314,12 +314,12 @@ async def save_raw_main_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.post("/raw/secrets")
+@router.post("/raw/secrets", response_model=None)
 async def save_raw_secrets_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
     plugin_store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Overwrite secrets config with raw JSON and reload GitHub token."""
     try:
         data = await request.json()

@@ -166,6 +166,11 @@ module = "src.exceptions"
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
+module = "src.api.*"
+disallow_untyped_defs = true
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
 module = [
     "rgbmatrix.*",
     "RGBMatrixEmulator.*",

@@ -36,7 +36,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -64,11 +64,11 @@ def _scan_fonts(directory: Path) -> list[dict[str, Any]]:
     return fonts
 
 
-def _read_overrides() -> dict:
-    """Read font_overrides.json, returning empty dict if not found."""
+def _read_overrides() -> dict[str, Any]:
     if FONT_OVERRIDES_FILE.exists():
         try:
-            return json.loads(FONT_OVERRIDES_FILE.read_text())
+            data: dict[str, Any] = json.loads(FONT_OVERRIDES_FILE.read_text())
+            return data
         except (json.JSONDecodeError, OSError) as exc:
             logger.warning("Failed to read font overrides: %s", exc)
     return {}
@@ -83,8 +83,8 @@ def _write_overrides(data: dict) -> None:
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/catalog")
-async def get_font_catalog():
+@router.get("/catalog", response_model=None)
+async def get_font_catalog() -> dict[str, Any] | JSONResponse:
     """List available font files from system and user directories."""
     try:
         system_fonts = _scan_fonts(FONTS_DIR)
@@ -95,14 +95,14 @@ async def get_font_catalog():
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.get("/tokens")
-async def get_design_tokens():
+@router.get("/tokens", response_model=None)
+async def get_design_tokens() -> dict[str, Any] | JSONResponse:
     """Return hardcoded design token sizes."""
     return _success(data={"tokens": DESIGN_TOKENS})
 
 
-@router.get("/overrides")
-async def get_font_overrides():
+@router.get("/overrides", response_model=None)
+async def get_font_overrides() -> dict[str, Any] | JSONResponse:
     """Read font overrides configuration."""
     try:
         overrides = _read_overrides()
@@ -112,8 +112,8 @@ async def get_font_overrides():
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.post("/overrides")
-async def save_font_overrides(request: Request):
+@router.post("/overrides", response_model=None)
+async def save_font_overrides(request: Request) -> dict[str, Any] | JSONResponse:
     """Write font overrides configuration."""
     try:
         body = await request.json()
@@ -128,8 +128,8 @@ async def save_font_overrides(request: Request):
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.delete("/overrides/{element_key}")
-async def delete_font_override(element_key: str):
+@router.delete("/overrides/{element_key}", response_model=None)
+async def delete_font_override(element_key: str) -> dict[str, Any] | JSONResponse:
     """Remove a single key from font overrides."""
     try:
         overrides = _read_overrides()
@@ -143,11 +143,11 @@ async def delete_font_override(element_key: str):
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=None)
 async def upload_font(
     font_file: UploadFile = File(...),
     font_family: str | None = Form(None),
-):
+) -> dict[str, Any] | JSONResponse:
     """Upload a font file to the user fonts directory."""
     if not font_file.filename:
         return _error("INVALID_INPUT", "No filename provided")
@@ -181,14 +181,14 @@ async def upload_font(
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.get("/preview")
+@router.get("/preview", response_model=None)
 async def preview_font(
     font: str = Query(..., description="Font filename or path"),
     text: str = Query("Hello", description="Text to render"),
     bg: str = Query("#000000", description="Background color"),
     fg: str = Query("#FFFFFF", description="Foreground color"),
     size: int = Query(16, description="Font size in pixels"),
-):
+) -> dict[str, Any] | JSONResponse:
     """Render a text preview using the specified font. Returns base64 PNG."""
     try:
         from PIL import Image, ImageDraw, ImageFont
@@ -210,6 +210,7 @@ async def preview_font(
             font_path = candidate
 
     try:
+        pil_font: Any
         if font_path and font_path.suffix.lower() in (".ttf", ".otf"):
             pil_font = ImageFont.truetype(str(font_path), size)
         else:
@@ -234,8 +235,8 @@ async def preview_font(
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.delete("/{font_family}")
-async def delete_font(font_family: str):
+@router.delete("/{font_family}", response_model=None)
+async def delete_font(font_family: str) -> dict[str, Any] | JSONResponse:
     """Delete a user-uploaded font. System fonts cannot be deleted."""
     if not USER_FONTS_DIR.exists():
         return _error("NOT_FOUND", "No user fonts directory", 404)

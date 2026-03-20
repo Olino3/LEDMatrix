@@ -6,10 +6,12 @@ These routes are temporary (Phase 2) and will be replaced by an Angular SPA in P
 
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from starlette.responses import Response
 
 from src.api.dependencies import (
     get_config_manager,
@@ -53,7 +55,7 @@ _STATIC_PARTIALS = {
 async def index(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
-):
+) -> Response:
     """Main v3 interface page."""
     try:
         main_config = config_manager.load_config()
@@ -88,7 +90,7 @@ async def load_partial(
     config_manager: ConfigManager = Depends(get_config_manager),
     plugin_manager: PluginManager = Depends(get_plugin_manager),
     plugin_store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
-):
+) -> Response:
     """Load HTMX partials dynamically."""
     try:
         # Simple partials: just pass main_config
@@ -103,7 +105,7 @@ async def load_partial(
         if partial_name in _STATIC_PARTIALS:
             template = _STATIC_PARTIALS[partial_name]
             # fonts partial expects a fonts dict
-            ctx = {"request": request}
+            ctx: dict[str, Any] = {"request": request}
             if partial_name == "fonts":
                 ctx["fonts"] = {}
             return templates.TemplateResponse(template, ctx)
@@ -137,7 +139,7 @@ async def load_plugin_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
     plugin_manager: PluginManager = Depends(get_plugin_manager),
-):
+) -> Response:
     """Load plugin configuration partial — server-side rendered form."""
     try:
         # Handle starlark app config
@@ -222,7 +224,7 @@ async def load_plugin_config(
 # ---------------------------------------------------------------------------
 
 
-def _render_schedule(request: Request, config_manager: ConfigManager):
+def _render_schedule(request: Request, config_manager: ConfigManager) -> Response:
     main_config = config_manager.load_config()
     return templates.TemplateResponse(
         "v3/partials/schedule.html",
@@ -240,14 +242,16 @@ def _render_plugins(
     config_manager: ConfigManager,
     plugin_manager: PluginManager,
     plugin_store_manager: PluginStoreManager,
-):
+) -> Response:
     plugins_data = []
     try:
         all_plugin_info = plugin_manager.get_all_plugin_info()
         full_config = config_manager.load_config()
 
         for plugin_info in all_plugin_info:
-            plugin_id = plugin_info.get("id")
+            plugin_id: str | None = plugin_info.get("id")
+            if not plugin_id:
+                continue
 
             # Re-read manifest from disk for fresh metadata
             manifest_path = Path(plugin_manager.plugins_dir) / plugin_id / "manifest.json"
@@ -302,7 +306,7 @@ def _render_plugins(
     )
 
 
-def _render_raw_json(request: Request, config_manager: ConfigManager):
+def _render_raw_json(request: Request, config_manager: ConfigManager) -> Response:
     main_config_data = config_manager.get_raw_file_content("main")
     secrets_config_data = config_manager.get_raw_file_content("secrets")
     return templates.TemplateResponse(
@@ -317,7 +321,7 @@ def _render_raw_json(request: Request, config_manager: ConfigManager):
     )
 
 
-def _render_starlark_config(request: Request, app_id: str, plugin_manager: PluginManager):
+def _render_starlark_config(request: Request, app_id: str, plugin_manager: PluginManager) -> Response:
     """Render configuration for a Starlark app."""
     starlark_plugin = plugin_manager.get_plugin("starlark-apps")
 
