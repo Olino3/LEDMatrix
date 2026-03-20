@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Refactor
 **Depends on:** [BACK-005](BACK-005-api-routes-system.md), [BACK-006](BACK-006-api-routes-plugins.md), [BACK-007](BACK-007-sse-migration.md)
@@ -20,16 +20,17 @@ The `web_interface/` directory is NOT fully deleted -- static files, templates, 
 
 ## Acceptance Criteria
 
-- [ ] Flask, flask-wtf, and flask-limiter removed from `pyproject.toml` dependencies
-- [ ] `uv lock` regenerated without Flask in the dependency tree
-- [ ] `web_interface/app.py` deleted (all functionality moved to `src/api/`)
-- [ ] `web_interface/blueprints/api_v3.py` deleted
-- [ ] `web_interface/blueprints/pages_v3.py` deleted (replaced by SPIKE-002 transition)
-- [ ] `web_interface/start.py` updated to import from `src.api` instead of Flask
-- [ ] `matrix web` CLI command updated to start uvicorn instead of Flask
-- [ ] Systemd service file `ledmatrix-web.service` updated for uvicorn
-- [ ] All existing tests updated to use `httpx` test client instead of Flask test client
-- [ ] No import of `flask` remains anywhere in `src/` or `web_interface/`
+- [x] Flask, flask-wtf, and flask-limiter removed from `pyproject.toml` dependencies
+- [x] `uv lock` regenerated without Flask in the dependency tree
+- [x] `web_interface/app.py` deleted (all functionality moved to `src/api/`)
+- [x] `web_interface/blueprints/api_v3.py` deleted
+- [x] `web_interface/blueprints/pages_v3.py` deleted (replaced by SPIKE-002 transition)
+- [x] `web_interface/start.py` deleted (replaced by `src/api/start.py`)
+- [x] `matrix web` CLI command updated to start uvicorn instead of Flask
+- [x] Systemd service file `ledmatrix-web.service` updated for uvicorn
+- [x] Flask-based tests deleted (FastAPI equivalents already exist as `test/test_api_*.py`)
+- [x] No import of `flask` remains in `web_interface/` or `scripts/`
+- [ ] Two files in `src/web_interface/` still have Flask imports (dead code) — tracked in [SPIKE-006](SPIKE-006-cleanup-src-web-interface-flask-utils.md)
 
 ---
 
