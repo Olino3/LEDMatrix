@@ -17,11 +17,10 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-# Import the API counter function from web interface
+# Import the API counter function
 try:
-    from web_interface_v2 import increment_api_counter
+    from src.api.services.api_counter import increment_api_counter
 except ImportError:
-    # Fallback if web interface is not available
     def increment_api_counter(kind: str, count: int = 1):
         pass
 
