@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v3.0.0 — Frontend Modernization
 **Type:** Feat
 **Depends on:** _(none -- start here)_
@@ -25,13 +25,13 @@ The FastAPI backend is complete (`src/api/`) with typed Pydantic models, OpenAPI
 
 ## Acceptance Criteria
 
-- [ ] `frontend/` directory contains a valid Angular 17+ project created via `ng new`
-- [ ] `angular.json` configures output to `frontend/dist/ledmatrix/`
-- [ ] `ng build` produces a production bundle in `frontend/dist/ledmatrix/`
-- [ ] `ng serve` starts dev server on port 4200 with proxy to FastAPI at port 5000
-- [ ] `proxy.conf.json` routes `/api/v3/*` and `/stream/*` to `http://localhost:5000`
-- [ ] `package.json` includes scripts: `start`, `build`, `test`, `lint`
-- [ ] `.gitignore` in `frontend/` ignores `node_modules/`, `dist/`, `.angular/`
+- [x] `frontend/` directory contains a valid Angular 21 project created via `ng new`
+- [x] `angular.json` configures output to `frontend/dist/ledmatrix/`
+- [x] `ng build` produces a production bundle in `frontend/dist/ledmatrix/`
+- [x] `ng serve` starts dev server on port 4200 with proxy to FastAPI at port 5000
+- [x] `proxy.conf.json` routes `/api/v3/*` and `/stream/*` to `http://localhost:5000`
+- [x] `package.json` includes scripts: `start`, `build`, `test`, `lint`
+- [x] `.gitignore` in `frontend/` ignores `node_modules/`, `dist/`, `.angular/`
 
 ---
 
@@ -39,38 +39,35 @@ The FastAPI backend is complete (`src/api/`) with typed Pydantic models, OpenAPI
 
 ### 1. Generate Angular project
 
-- [ ] Run `ng new ledmatrix --directory frontend --routing --style scss --ssr false --standalone`
-- [ ] Verify Angular version is 17+ in `package.json`
-- [ ] Remove default Angular boilerplate content from `app.component.html`
+- [x] Run `ng new ledmatrix --directory frontend --routing --style scss --ssr false --skip-git` (Angular 21)
+- [x] Verify Angular version is 21 in `package.json`
+- [x] Remove default Angular boilerplate content from `app.html` (Angular 21 naming)
 
 ### 2. Configure build output
 
-- [ ] Edit `angular.json` to set `outputPath` to `dist/ledmatrix`
-- [ ] Verify `ng build` produces `frontend/dist/ledmatrix/browser/index.html`
+- [x] `outputPath` defaults to `dist/ledmatrix` (no change needed)
+- [x] Verify `ng build` produces `frontend/dist/ledmatrix/browser/index.html`
 
 ### 3. Configure dev proxy
 
-- [ ] Create `frontend/proxy.conf.json` routing `/api/v3` and `/stream` to `http://localhost:5000`
-- [ ] Update `angular.json` serve target to use `proxyConfig: "proxy.conf.json"`
-- [ ] Verify `ng serve` proxies API calls to FastAPI
+- [x] Create `frontend/proxy.conf.json` routing `/api/v3` and `/stream` to `http://localhost:5000`
+- [x] Update `angular.json` serve target to use `proxyConfig: "proxy.conf.json"`
+- [x] Verify `ng serve` proxies API calls to FastAPI
 
 ### 4. Add environment files
 
-- [ ] Create `frontend/src/environments/environment.ts` with `apiBase: '/api/v3'`
-- [ ] Create `frontend/src/environments/environment.prod.ts` with same `apiBase`
+- [x] Create `frontend/src/environments/environment.ts` with `apiBase: '/api/v3'`
+- [x] Create `frontend/src/environments/environment.prod.ts` with same `apiBase`
 
 ### 5. Wire FastAPI to serve SPA in production
 
-- [ ] Update `src/api/main.py` to mount `frontend/dist/ledmatrix/browser/` at `/` when the directory exists
-- [ ] Add a catch-all route for Angular client-side routing (returns `index.html` for non-API, non-static paths)
-- [ ] Keep existing `/static/` mount and `/v3` page routes working alongside the SPA mount
+- [x] Update `src/api/main.py` with catch-all route serving SPA static files and `index.html` fallback
+- [x] Catch-all does NOT intercept `/api/v3/`, `/docs`, `/redoc`, `/static/`, `/v3/`
+- [x] Keep existing `/static/` mount and `/v3` page routes working alongside the SPA mount
 
 ### 6. Commit
 
-```bash
-git add frontend/ src/api/main.py
-git commit -m "feat(frontend): scaffold Angular 17 project with FastAPI SPA serving"
-```
+Done across multiple commits on `feature/angular-scaffold` branch.
 
 ---
 
