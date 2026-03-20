@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-008](BACK-008-flask-removal-cleanup.md)
@@ -20,12 +20,13 @@ This ticket ports the `pages_v3.py` routes to a FastAPI router that continues to
 
 ## Acceptance Criteria
 
-- [ ] `src/api/routers/pages.py` contains all routes from `pages_v3.py`
-- [ ] Jinja2 templates render correctly via FastAPI's `Jinja2Templates`
-- [ ] All HTMX partial routes (`/v3/partials/{partial_name}`) work
-- [ ] `GET /v3` renders the main `v3/index.html` template
-- [ ] Template context data is identical to what Flask provided
-- [ ] Flash messages are handled (or replaced with a suitable alternative)
+- [x] `src/api/routers/pages.py` contains all routes from `pages_v3.py`
+- [x] Jinja2 templates render correctly via FastAPI's `Jinja2Templates`
+- [x] All HTMX partial routes (`/v3/partials/{partial_name}`) work
+- [x] `GET /v3` renders the main `v3/index.html` template
+- [x] Template context data is identical to what Flask provided
+- [x] Flash messages: not needed — no `get_flashed_messages()` in any template; errors returned as HTML status 500
+- [ ] Note: `weather.html` and `stocks.html` templates never existed — those partials return 500 (same as Flask behavior). Tracked in SPIKE-007.
 
 ---
 
