@@ -5,19 +5,15 @@ Uses Click's CliRunner + unittest.mock to test the uninstall command
 without touching the real filesystem, network, or subprocesses.
 """
 
-import json
-import os
 import sys
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, patch
 
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import matrix_cli
 from matrix_cli import cli
-
 
 # ---------------------------------------------------------------------------
 # Helpers

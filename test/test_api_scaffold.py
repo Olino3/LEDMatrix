@@ -1,7 +1,8 @@
 """Tests for the FastAPI application scaffold (BACK-001)."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 

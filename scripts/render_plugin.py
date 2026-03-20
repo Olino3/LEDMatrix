@@ -12,10 +12,10 @@ Usage:
     python scripts/render_plugin.py --plugin football-scoreboard --mock-data mock_scores.json --output /tmp/football.png
 """
 
-import sys
-import os
-import json
 import argparse
+import json
+import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Union
 
@@ -28,6 +28,7 @@ os.environ['EMULATOR'] = 'true'
 
 # Import logger after path setup so src.logging_config is importable
 from src.logging_config import get_logger  # noqa: E402
+
 logger = get_logger("[Render Plugin]")
 
 MIN_DIMENSION = 1
@@ -140,8 +141,8 @@ def main() -> int:
             mock_data = json.load(f)
 
     # Create visual display manager and mocks
-    from src.plugin_system.testing import VisualTestDisplayManager, MockCacheManager, MockPluginManager
     from src.plugin_system.plugin_loader import PluginLoader
+    from src.plugin_system.testing import MockCacheManager, MockPluginManager, VisualTestDisplayManager
 
     display_manager = VisualTestDisplayManager(width=args.width, height=args.height)
     cache_manager = MockCacheManager()

@@ -9,4 +9,4 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from src.display_controller import main
 
 if __name__ == "__main__":
-    main() 
+    main()

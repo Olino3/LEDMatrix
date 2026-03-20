@@ -2,9 +2,9 @@
 
 import asyncio
 import json
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch
 
 
 @pytest.mark.unit
@@ -116,6 +116,7 @@ class TestDisplayGenerator:
     def test_display_event_reads_dimensions_from_config(self):
         """Config manager provides display dimensions."""
         from unittest.mock import MagicMock
+
         from src.api.routers.streams import _generate_display_event
 
         mock_cm = MagicMock()
@@ -232,6 +233,7 @@ class TestStreamModuleUsesAsyncPatterns:
     def test_no_time_sleep_in_module(self):
         """streams.py must not use blocking time.sleep()."""
         import inspect
+
         import src.api.routers.streams as mod
 
         source = inspect.getsource(mod)
@@ -240,6 +242,7 @@ class TestStreamModuleUsesAsyncPatterns:
     def test_uses_asyncio_sleep(self):
         """streams.py must use asyncio.sleep()."""
         import inspect
+
         import src.api.routers.streams as mod
 
         source = inspect.getsource(mod)
@@ -248,6 +251,7 @@ class TestStreamModuleUsesAsyncPatterns:
     def test_uses_event_source_response(self):
         """streams.py must use sse-starlette's EventSourceResponse."""
         import inspect
+
         import src.api.routers.streams as mod
 
         source = inspect.getsource(mod)

@@ -5,14 +5,16 @@ Handles interaction with the Tronbyte apps repository on GitHub.
 Fetches app listings, metadata, and downloads .star files.
 """
 
+import json
 import logging
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import requests
 import yaml
-import threading
-from typing import Dict, Any, Optional, List, Tuple
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -359,11 +361,11 @@ class TronbyteRepository:
         """
         # Validate inputs for path traversal
         if '..' in app_id or '/' in app_id or '\\' in app_id:
-            return False, f"Invalid app_id: contains path traversal characters"
+            return False, "Invalid app_id: contains path traversal characters"
 
         star_filename = filename or f"{app_id}.star"
         if '..' in star_filename or '/' in star_filename or '\\' in star_filename:
-            return False, f"Invalid filename: contains path traversal characters"
+            return False, "Invalid filename: contains path traversal characters"
 
         # Validate output_path to prevent path traversal
         import tempfile
@@ -440,17 +442,17 @@ class TronbyteRepository:
         """
         # Validate app_id for path traversal
         if '..' in app_id or '/' in app_id or '\\' in app_id:
-            return False, f"Invalid app_id: contains path traversal characters"
+            return False, "Invalid app_id: contains path traversal characters"
 
         try:
             # Get directory listing for the app
             url = f"{self.base_url}/repos/{self.REPO_OWNER}/{self.REPO_NAME}/contents/{self.APPS_PATH}/{app_id}"
             data = self._make_request(url)
             if not data:
-                return False, f"Failed to fetch app directory listing"
+                return False, "Failed to fetch app directory listing"
 
             if not isinstance(data, list):
-                return False, f"Invalid directory listing format"
+                return False, "Invalid directory listing format"
 
             # Find directories that contain assets (images, sources, etc.)
             asset_dirs = []

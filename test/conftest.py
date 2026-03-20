@@ -4,12 +4,12 @@ Pytest configuration and fixtures for LEDMatrix tests.
 Provides common fixtures for mocking core components and test setup.
 """
 
-import pytest
-import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -38,19 +38,19 @@ def mock_cache_manager():
     mock._memory_cache = {}
     mock._memory_cache_timestamps = {}
     mock.cache_dir = "/tmp/test_cache"
-    
+
     def mock_get(key: str, max_age: int = 300) -> Optional[Dict]:
         return mock._memory_cache.get(key)
-    
+
     def mock_set(key: str, data: Dict, ttl: Optional[int] = None) -> None:
         mock._memory_cache[key] = data
-    
+
     def mock_clear(key: Optional[str] = None) -> None:
         if key:
             mock._memory_cache.pop(key, None)
         else:
             mock._memory_cache.clear()
-    
+
     mock.get = Mock(side_effect=mock_get)
     mock.set = Mock(side_effect=mock_set)
     mock.clear = Mock(side_effect=mock_clear)
@@ -58,7 +58,7 @@ def mock_cache_manager():
     mock.save_cache = Mock(side_effect=mock_set)
     mock.load_cache = Mock(side_effect=mock_get)
     mock.get_cache_dir = Mock(return_value=mock.cache_dir)
-    
+
     return mock
 
 
@@ -70,23 +70,23 @@ def mock_config_manager():
     mock.config_path = "config/config.json"
     mock.secrets_path = "config/config_secrets.json"
     mock.template_path = "config/config.template.json"
-    
+
     def mock_load_config() -> Dict[str, Any]:
         return mock.config
-    
+
     def mock_get_config() -> Dict[str, Any]:
         return mock.config
-    
+
     def mock_get_secret(key: str) -> Optional[Any]:
         secrets = mock.config.get('_secrets', {})
         return secrets.get(key)
-    
+
     mock.load_config = Mock(side_effect=mock_load_config)
     mock.get_config = Mock(side_effect=mock_get_config)
     mock.get_secret = Mock(side_effect=mock_get_secret)
     mock.get_config_path = Mock(return_value=mock.config_path)
     mock.get_secrets_path = Mock(return_value=mock.secrets_path)
-    
+
     return mock
 
 
@@ -156,7 +156,7 @@ def reset_logging():
 def mock_plugin_instance(mock_display_manager, mock_cache_manager, mock_config_manager):
     """Create a mock plugin instance with all required methods."""
     from unittest.mock import MagicMock
-    
+
     mock_plugin = MagicMock()
     mock_plugin.plugin_id = "test_plugin"
     mock_plugin.config = {"enabled": True, "display_duration": 30}
@@ -164,12 +164,12 @@ def mock_plugin_instance(mock_display_manager, mock_cache_manager, mock_config_m
     mock_plugin.cache_manager = mock_cache_manager
     mock_plugin.plugin_manager = MagicMock()
     mock_plugin.enabled = True
-    
+
     # Required methods
     mock_plugin.update = MagicMock(return_value=None)
     mock_plugin.display = MagicMock(return_value=True)
     mock_plugin.get_display_duration = MagicMock(return_value=30.0)
-    
+
     # Optional methods
     mock_plugin.supports_dynamic_duration = MagicMock(return_value=False)
     mock_plugin.get_dynamic_duration_cap = MagicMock(return_value=None)
@@ -179,7 +179,7 @@ def mock_plugin_instance(mock_display_manager, mock_cache_manager, mock_config_m
     mock_plugin.has_live_content = MagicMock(return_value=False)
     mock_plugin.get_live_modes = MagicMock(return_value=[])
     mock_plugin.on_config_change = MagicMock(return_value=None)
-    
+
     return mock_plugin
 
 
@@ -245,15 +245,15 @@ def test_config_with_plugins(test_config):
 @pytest.fixture
 def test_plugin_manager(mock_config_manager, mock_display_manager, mock_cache_manager):
     """Create a test PluginManager instance."""
-    from unittest.mock import patch, MagicMock
     import tempfile
     from pathlib import Path
-    
+    from unittest.mock import MagicMock, patch
+
     # Create temporary plugin directory
     with tempfile.TemporaryDirectory() as tmpdir:
         plugin_dir = Path(tmpdir) / "plugins"
         plugin_dir.mkdir()
-        
+
         with patch('src.plugin_system.plugin_manager.PluginManager') as MockPM:
             pm = MagicMock()
             pm.plugins = {}
@@ -310,19 +310,20 @@ def fake_config_path(tmp_path):
 def test_display_controller(mock_config_manager, mock_display_manager, mock_cache_manager,
                             test_config_with_plugins, emulator_mode):
     """Create a test DisplayController instance with mocked dependencies."""
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import MagicMock, patch
+
     from src.display_controller import DisplayController
-    
+
     # Set up config manager to return test config
     mock_config_manager.get_config.return_value = test_config_with_plugins
     mock_config_manager.load_config.return_value = test_config_with_plugins
-    
+
     with patch('src.display_controller.ConfigManager', return_value=mock_config_manager), \
          patch('src.display_controller.DisplayManager', return_value=mock_display_manager), \
          patch('src.display_controller.CacheManager', return_value=mock_cache_manager), \
          patch('src.display_controller.FontManager'), \
          patch('src.plugin_system.PluginManager') as mock_pm_class:
-        
+
         # Set up plugin manager mock
         mock_pm = MagicMock()
         mock_pm.discover_plugins = MagicMock(return_value=[])
@@ -335,11 +336,11 @@ def test_display_controller(mock_config_manager, mock_display_manager, mock_cach
         mock_pm.plugin_executor = MagicMock()
         mock_pm.health_tracker = None
         mock_pm_class.return_value = mock_pm
-        
+
         # Create controller
         controller = DisplayController()
         yield controller
-        
+
         # Cleanup
         try:
             controller.cleanup()

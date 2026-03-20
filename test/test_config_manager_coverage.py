@@ -7,17 +7,14 @@ handling, and deep-merge behaviour.
 """
 
 import json
-import os
-import stat
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.config_manager import ConfigManager
 from src.config_manager_atomic import SaveResult, SaveResultStatus
 from src.exceptions import ConfigError
-
 
 # ---------------------------------------------------------------------------
 # Helpers

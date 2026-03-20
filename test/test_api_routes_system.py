@@ -1,6 +1,6 @@
 """Tests for FastAPI system routes (BACK-005)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient

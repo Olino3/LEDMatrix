@@ -18,14 +18,13 @@ Covers:
 """
 
 import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 from PIL import Image
 
 from src.common.scroll_helper import ScrollHelper
-
 
 # ---------------------------------------------------------------------------
 # Helpers

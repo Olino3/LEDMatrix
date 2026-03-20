@@ -9,27 +9,24 @@ Tests:
 - Thread safety
 """
 
-import pytest
-import time
+import sys
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock, patch
-import threading
-import sys
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from src.error_aggregator import (
+from src.error_aggregator import (  # noqa: E402
     ErrorAggregator,
-    ErrorRecord,
     ErrorPattern,
+    ErrorRecord,
     get_error_aggregator,
-    record_error
+    record_error,
 )
-from src.exceptions import PluginError, ConfigError
+from src.exceptions import PluginError  # noqa: E402
 
 
 class TestErrorRecording:

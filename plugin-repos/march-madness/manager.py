@@ -7,11 +7,10 @@ round, with seeds, round logos, live scores, and upset highlighting.
 import re
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pytz
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -480,7 +479,7 @@ class MarchMadnessPlugin(BasePlugin):
             grouped.setdefault(rnd, []).append(game)
 
         # Sort each round's games by region then seed matchup
-        for rnd, round_games in grouped.items():
+        for _rnd, round_games in grouped.items():
             round_games.sort(
                 key=lambda g: (
                     REGION_ORDER.get(g.get("tournament_region", ""), 4),

@@ -5,14 +5,12 @@ Covers validation logic for configuration, cache directory, display config,
 plugin configurations, and the raise_on_errors method.
 """
 
-import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch, Mock, mock_open
 
-from src.startup_validator import StartupValidator
 from src.exceptions import CacheError, ConfigError, PluginError
-
+from src.startup_validator import StartupValidator
 
 # ---------------------------------------------------------------------------
 # Fixtures

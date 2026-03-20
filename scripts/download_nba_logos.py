@@ -2,9 +2,9 @@
 """
 Script to download all NBA team logos from ESPN API and save them in assets/sports/nba_logos/
 """
-import sys
-import os
 import logging
+import os
+import sys
 from typing import Tuple
 
 # Add the src directory to Python path so we can import the logo downloader
@@ -31,7 +31,7 @@ def download_nba_logos(force_download: bool = False) -> Tuple[int, int]:
         from logo_downloader import download_all_logos_for_league
 
         logger.info("🏀 Starting NBA logo download...")
-        logger.info(f"Target directory: assets/sports/nba_logos/")
+        logger.info("Target directory: assets/sports/nba_logos/")
         logger.info(f"Force download: {force_download}")
 
         # Use the existing function to download all NBA logos

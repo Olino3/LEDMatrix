@@ -2,11 +2,10 @@
 """
 Comprehensive test script to verify NBA Manager, Leaderboard, and Odds Manager integration.
 """
-import sys
-import os
-import logging
 import json
-from typing import Dict, Any
+import logging
+import os
+import sys
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,19 +20,19 @@ def test_nba_api_connectivity():
         teams_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams"
         response = requests.get(teams_url, timeout=10)
         response.raise_for_status()
-        teams_data = response.json()
+        response.json()
 
         # Test standings endpoint
         standings_url = "https://site.api.espn.com/apis/v2/sports/basketball/nba/standings"
         response = requests.get(standings_url, timeout=10)
         response.raise_for_status()
-        standings_data = response.json()
+        response.json()
 
         # Test live games endpoint
         live_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
         response = requests.get(live_url, timeout=10)
         response.raise_for_status()
-        live_data = response.json()
+        response.json()
 
         logger.info("✅ NBA API connectivity test PASSED")
         return True
@@ -51,7 +50,7 @@ def test_odds_api_connectivity():
         odds_url = "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/events/401585515/competitions/401585515/odds"
         response = requests.get(odds_url, timeout=10)
         response.raise_for_status()
-        odds_data = response.json()
+        response.json()
 
         logger.info("✅ Odds API connectivity test PASSED")
         return True
@@ -96,16 +95,16 @@ def test_nba_manager_initialization():
         logger.info(f"✅ Base NBA Manager initialized: {base_manager.league}")
 
         # Test live manager
-        live_manager = NBALiveManager(config, display_manager, cache_manager)
-        logger.info(f"✅ NBA Live Manager initialized")
+        NBALiveManager(config, display_manager, cache_manager)
+        logger.info("✅ NBA Live Manager initialized")
 
         # Test recent manager
-        recent_manager = NBARecentManager(config, display_manager, cache_manager)
-        logger.info(f"✅ NBA Recent Manager initialized")
+        NBARecentManager(config, display_manager, cache_manager)
+        logger.info("✅ NBA Recent Manager initialized")
 
         # Test upcoming manager
-        upcoming_manager = NBAUpcomingManager(config, display_manager, cache_manager)
-        logger.info(f"✅ NBA Upcoming Manager initialized")
+        NBAUpcomingManager(config, display_manager, cache_manager)
+        logger.info("✅ NBA Upcoming Manager initialized")
 
         return True
 
@@ -144,7 +143,7 @@ def test_leaderboard_nba_integration():
 
         # Test initialization
         display_manager = MockDisplayManager()
-        cache_manager = MockCacheManager()
+        MockCacheManager()
 
         leaderboard = LeaderboardManager(config, display_manager)
 
@@ -177,9 +176,9 @@ def test_odds_manager_integration():
 
         # Test initialization
         cache_manager = MockCacheManager()
-        odds_manager = OddsManager(cache_manager)
+        OddsManager(cache_manager)
 
-        logger.info(f"✅ Odds Manager initialized")
+        logger.info("✅ Odds Manager initialized")
 
         # Test NBA odds URL construction (without actual API call)
         test_event_id = "401585515"  # Sample NBA game ID

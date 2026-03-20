@@ -8,22 +8,18 @@ without touching the real filesystem, network, or subprocesses.
 import json
 import os
 import sys
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 import matrix_cli
 from matrix_cli import (
-    cli,
     _to_class_name,
     _to_display_name,
-    _read_config,
-    _write_config,
-    _read_manifest,
 )
-
 
 # ---------------------------------------------------------------------------
 # Task 1 — String helpers
@@ -441,7 +437,7 @@ class TestPluginNew:
 
     def test_new_creates_required_files(self, tmp_path):
         with patch('subprocess.run', return_value=MagicMock(returncode=0)):
-            result = CliRunner().invoke(
+            CliRunner().invoke(
                 matrix_cli.cli,
                 ['plugin', 'new', 'my-plugin', '--path', str(tmp_path), '--no-interactive']
             )
@@ -748,7 +744,7 @@ class TestPluginUpdate:
         with patch('matrix_cli._detect_web', return_value=True), \
              patch('matrix_cli.requests') as r:
             r.post.return_value = resp
-            result = CliRunner().invoke(matrix_cli.cli, ['plugin', 'update', 'clock-simple'])
+            CliRunner().invoke(matrix_cli.cli, ['plugin', 'update', 'clock-simple'])
         assert r.post.call_count == 1
         payload = r.post.call_args[1].get('json', {})
         assert payload.get('plugin_id') == 'clock-simple'

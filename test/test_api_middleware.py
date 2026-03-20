@@ -1,7 +1,7 @@
 """Tests for the FastAPI middleware stack (BACK-004)."""
 
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -181,11 +181,11 @@ class TestRegisterMiddleware:
         assert callable(register_middleware)
 
     def test_individual_middleware_importable(self):
-        from src.api.middleware.security import SecurityHeadersMiddleware
-        from src.api.middleware.request_id import RequestIdMiddleware
-        from src.api.middleware.timing import RequestTimingMiddleware
         from src.api.middleware.caching import CachingMiddleware
         from src.api.middleware.captive_portal import CaptivePortalMiddleware
+        from src.api.middleware.request_id import RequestIdMiddleware
+        from src.api.middleware.security import SecurityHeadersMiddleware
+        from src.api.middleware.timing import RequestTimingMiddleware
         assert all(callable(cls) for cls in [
             SecurityHeadersMiddleware, RequestIdMiddleware,
             RequestTimingMiddleware, CachingMiddleware, CaptivePortalMiddleware,

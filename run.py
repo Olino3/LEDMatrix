@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import logging
-import sys
-import os
 import argparse
+import logging
+import os
+import sys
 
 # Prevent Python from creating __pycache__ directories in plugin dirs.
 # The root service loads plugins via importlib, and root-owned __pycache__
@@ -51,7 +51,7 @@ if debug_mode:
 
         # Try to import the plugin system directly to get better error info
         print("DEBUG: Attempting to import src.plugin_system...", flush=True)
-        from src.plugin_system import PluginManager
+        from src.plugin_system import PluginManager  # noqa: F401
         print("DEBUG: Plugin system import successful", flush=True)
     except ImportError as e:
         print(f"DEBUG: Plugin system import failed: {e}", flush=True)
@@ -61,14 +61,14 @@ if debug_mode:
 
 # Configure logging before importing any other modules
 # Use centralized logging configuration
-from src.logging_config import setup_logging
+from src.logging_config import setup_logging  # noqa: E402
 
 log_level = logging.DEBUG if debug_mode else logging.INFO
 format_type = 'readable'  # Use 'json' for structured logging in production
 setup_logging(level=log_level, format_type=format_type, include_location=debug_mode)
 
 # Now import the display controller
-from src.display_controller import main
+from src.display_controller import main  # noqa: E402
 
 if __name__ == "__main__":
-    main() 
+    main()

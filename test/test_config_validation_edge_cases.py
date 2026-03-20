@@ -9,22 +9,20 @@ Tests scenarios that commonly cause user configuration errors:
 - Array validation
 """
 
-import pytest
-import json
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
-import os
 
 # Add project root to path
 import sys
+from pathlib import Path
+
+import pytest
+
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from src.config_manager import ConfigManager
-from src.exceptions import ConfigError
-from src.plugin_system.schema_manager import SchemaManager
+from src.config_manager import ConfigManager  # noqa: E402
+from src.exceptions import ConfigError  # noqa: E402
+from src.plugin_system.schema_manager import SchemaManager  # noqa: E402
 
 
 class TestInvalidJson:

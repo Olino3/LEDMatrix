@@ -9,6 +9,7 @@ import sys
 import warnings
 from pathlib import Path
 
+
 def install_via_apt(package_name):
     """Try to install a package via apt."""
     try:
@@ -28,21 +29,21 @@ def install_via_apt(package_name):
             'websockets': 'python3-websockets',
             'websocket-client': 'python3-websocket-client'
         }
-        
+
         apt_package = apt_package_map.get(package_name, f'python3-{package_name}')
-        
+
         print(f"Trying to install {apt_package} via apt...")
         subprocess.check_call([
             'sudo', 'apt', 'update'
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
+
         subprocess.check_call([
             'sudo', 'apt', 'install', '-y', apt_package
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
+
         print(f"Successfully installed {apt_package} via apt")
         return True
-        
+
     except subprocess.CalledProcessError:
         print(f"Failed to install {package_name} via apt, will try pip")
         return False
@@ -81,7 +82,7 @@ def check_package_installed(package_name):
 def main():
     """Main installation function."""
     print("Installing dependencies for LED Matrix Web Interface V2...")
-    
+
     # List of required packages
     required_packages = [
         'flask',
@@ -98,19 +99,19 @@ def main():
         'websockets',
         'websocket-client'
     ]
-    
+
     failed_packages = []
-    
+
     for package in required_packages:
         if check_package_installed(package):
             print(f"{package} is already installed")
             continue
-            
+
         # Try apt first, then pip
         if not install_via_apt(package):
             if not install_via_pip(package):
                 failed_packages.append(package)
-    
+
     # Install packages that don't have apt equivalents
     special_packages = [
         'timezonefinder>=6.5.0,<7.0.0',
@@ -122,11 +123,11 @@ def main():
         'python-socketio>=5.11.0,<6.0.0',
         'python-engineio>=4.9.0,<5.0.0'
     ]
-    
+
     for package in special_packages:
         if not install_via_pip(package):
             failed_packages.append(package)
-    
+
     # Install rgbmatrix module from local source (optional - may already be installed in Step 6)
     # Check if already installed first
     if check_package_installed('rgbmatrix'):
@@ -159,7 +160,7 @@ def main():
             print("  This is normal if rgbmatrix hasn't been built yet (Step 6).")
             print("  The web interface will work without it.")
             # Don't add to failed_packages since it's optional
-    
+
     if failed_packages:
         print(f"\nFailed to install the following packages: {failed_packages}")
         print("You may need to install them manually or check your system configuration.")
