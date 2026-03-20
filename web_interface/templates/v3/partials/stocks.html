@@ -1,0 +1,93 @@
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900">Stocks Settings</h2>
+        <p class="mt-1 text-sm text-gray-600">Configure stock ticker display preferences. These settings are used by stock plugins.</p>
+    </div>
+
+    <form hx-post="/api/v3/config/main"
+          hx-ext="json-enc"
+          hx-headers='{"Content-Type": "application/json"}'
+          hx-swap="none"
+          hx-on:htmx:after-request="
+              var xhr = event.detail.xhr;
+              var isSuccess = xhr.status >= 200 && xhr.status < 300;
+              var message = '';
+              var status = 'success';
+              try {
+                  var data = JSON.parse(xhr.responseText);
+                  message = data.message || '';
+                  status = data.status || status;
+              } catch (e) {}
+              if (isSuccess) {
+                  message = message || 'Stock settings saved';
+              } else {
+                  message = message || 'Failed to save stock settings';
+                  status = 'error';
+              }
+              showNotification(message, status);
+          "
+          class="space-y-6">
+
+        <!-- Ticker Symbols -->
+        <div class="form-group">
+            <label for="stock_symbols" class="block text-sm font-medium text-gray-700">Ticker Symbols</label>
+            <input type="text"
+                   id="stock_symbols"
+                   name="stocks.symbols"
+                   value="{{ main_config.get('stocks', {}).get('symbols', '') }}"
+                   placeholder="AAPL, MSFT, GOOGL, TSLA"
+                   class="form-control mt-1">
+            <p class="mt-1 text-sm text-gray-600">Comma-separated list of stock ticker symbols to display.</p>
+        </div>
+
+        <!-- Show Change Percentage -->
+        <div class="form-group">
+            <label class="flex items-center">
+                <input type="checkbox"
+                       name="stocks.show_change_percent"
+                       value="true"
+                       {% if main_config.get('stocks', {}).get('show_change_percent', true) %}checked{% endif %}
+                       class="form-control h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm font-medium text-gray-900">Show Change Percentage</span>
+            </label>
+            <p class="mt-1 text-sm text-gray-600">Display the daily change percentage alongside the price.</p>
+        </div>
+
+        <!-- Show Market Cap -->
+        <div class="form-group">
+            <label class="flex items-center">
+                <input type="checkbox"
+                       name="stocks.show_market_cap"
+                       value="true"
+                       {% if main_config.get('stocks', {}).get('show_market_cap', false) %}checked{% endif %}
+                       class="form-control h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm font-medium text-gray-900">Show Market Cap</span>
+            </label>
+            <p class="mt-1 text-sm text-gray-600">Display the market capitalization for each ticker.</p>
+        </div>
+
+        <!-- Info Note -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        Stock data API keys are configured per-plugin. Go to the
+                        <strong>Plugins</strong> tab to configure individual stock plugins.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end mt-6">
+            <button type="submit"
+                    class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                <i class="fas fa-save mr-2"></i>
+                Save Stock Settings
+            </button>
+        </div>
+    </form>
+</div>
