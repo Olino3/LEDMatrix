@@ -17,6 +17,8 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
 
+from src.api.middleware.rate_limit import limiter
+
 try:
     import psutil
 except ImportError:  # pragma: no cover
@@ -213,12 +215,14 @@ async def _logs_stream() -> AsyncGenerator[str, None]:
 
 
 @router.get("/stats")
-async def stream_stats() -> EventSourceResponse:
+@limiter.limit("20/minute")
+async def stream_stats(request: Request) -> EventSourceResponse:
     """SSE stream of system status metrics (every 10 s)."""
     return EventSourceResponse(_stats_stream())
 
 
 @router.get("/display")
+@limiter.limit("20/minute")
 async def stream_display(request: Request) -> EventSourceResponse:
     """SSE stream of display preview snapshots (~2 Hz)."""
     config_mgr = getattr(request.app.state, "config_manager", None)
@@ -226,6 +230,7 @@ async def stream_display(request: Request) -> EventSourceResponse:
 
 
 @router.get("/logs")
-async def stream_logs() -> EventSourceResponse:
+@limiter.limit("20/minute")
+async def stream_logs(request: Request) -> EventSourceResponse:
     """SSE stream of journalctl log entries (every 5 s)."""
     return EventSourceResponse(_logs_stream())
