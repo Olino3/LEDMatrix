@@ -2,11 +2,10 @@
 """
 Core functionality test for NBA components without hardware dependencies.
 """
-import sys
-import os
-import logging
 import json
-from typing import Dict, Any
+import logging
+import os
+import sys
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

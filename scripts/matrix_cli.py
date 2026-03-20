@@ -21,7 +21,7 @@ import click
 import requests
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
@@ -853,7 +853,6 @@ def install(no_services: bool, emulator: bool, permissions: bool,
         return
 
     is_pi = _is_raspberry_pi()
-    pi_flags_requested = permissions or extra_services or prerequisites
 
     # Step 0: Prerequisites (apt packages, Pi only)
     if prerequisites:
@@ -1533,10 +1532,14 @@ def plugin_render(id: str, output: Optional[str], width: Optional[int],
         sys.exit(1)
 
     cmd = [PYTHON, str(render_script), "--plugin", id]
-    if output:     cmd += ["--output", output]
-    if width:      cmd += ["--width",  str(width)]
-    if height:     cmd += ["--height", str(height)]
-    if skip_update: cmd += ["--skip-update"]
+    if output:
+        cmd += ["--output", output]
+    if width:
+        cmd += ["--width", str(width)]
+    if height:
+        cmd += ["--height", str(height)]
+    if skip_update:
+        cmd += ["--skip-update"]
 
     console.print(Rule(f"[green]render — {id}[/green]"))
     out_path = output or "/tmp/plugin_render.png"
@@ -1700,7 +1703,7 @@ def _toggle_plugin(plugin_id: str, enabled: bool) -> None:
 
     state = "[green]enabled[/green]" if enabled else "[dim]disabled[/dim]"
     console.print(f"  [bold]{plugin_id}[/bold] → {state}")
-    console.print(f"  [dim]Takes effect on next display loop cycle.[/dim]")
+    console.print("  [dim]Takes effect on next display loop cycle.[/dim]")
 
 
 # ---------------------------------------------------------------------------

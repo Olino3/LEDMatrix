@@ -9,14 +9,14 @@ Tests cover:
 """
 
 import sys
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import matrix_cli
-from matrix_cli import cli, _install_rgbmatrix_hardware, _RGBMATRIX_APT_DEPS
+from matrix_cli import _RGBMATRIX_APT_DEPS, _install_rgbmatrix_hardware, cli
 
 
 @pytest.mark.unit
@@ -102,7 +102,6 @@ class TestInstallHardwareFlag:
     def test_build_failure_shows_error(self, mock_run, mock_venv, mock_subprocess,
                                        mock_which, mock_machine):
         """Failed build should print error with troubleshooting steps."""
-        call_count = [0]
 
         def subprocess_side_effect(cmd, **kwargs):
             mock_result = MagicMock()

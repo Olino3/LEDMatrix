@@ -2,12 +2,10 @@
 """
 Simple test script to verify NBA data structure includes team ID fields.
 """
-import sys
-import os
-import requests
 import logging
-import json
-from typing import Dict, Any
+import sys
+
+import requests
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -6,6 +6,7 @@ Direct fix for import issues - manually edit the app.py file
 import os
 from pathlib import Path
 
+
 def fix_imports():
     app_py_path = Path.home() / 'LEDMatrix' / 'web_interface' / 'app.py'
 

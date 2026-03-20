@@ -5,20 +5,18 @@ Uses Click's CliRunner + unittest.mock to exercise all fix/clean commands
 without touching the real filesystem.
 """
 
-import json
 import os
-import sys
 import stat
-import pytest
+import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch
 
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import matrix_cli
 from matrix_cli import cli
-
 
 # ---------------------------------------------------------------------------
 # Helpers

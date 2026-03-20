@@ -7,19 +7,20 @@ Provides seamless widget import without modification.
 API Version: 1.0.0
 """
 
+import fcntl
 import json
 import os
 import re
 import time
-import fcntl
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
-from PIL import Image
+from typing import Any, Dict, List, Optional, Tuple
 
-from src.plugin_system.base_plugin import BasePlugin, VegasDisplayMode
-from src.logging_config import get_logger
-from pixlet_renderer import PixletRenderer
 from frame_extractor import FrameExtractor
+from PIL import Image
+from pixlet_renderer import PixletRenderer
+
+from src.logging_config import get_logger
+from src.plugin_system.base_plugin import BasePlugin, VegasDisplayMode
 
 logger = get_logger(__name__)
 
@@ -164,7 +165,7 @@ class StarlarkApp:
             interval = int(value)
         except (ValueError, TypeError):
             interval = default
-        
+
         # Clamp to safe range: min 5, max 3600
         return max(5, min(interval, 3600))
 
@@ -176,7 +177,7 @@ class StarlarkApp:
             duration = int(value)
         except (ValueError, TypeError):
             duration = default
-        
+
         # Clamp to safe range: min 1, max 600
         return max(1, min(duration, 600))
 
@@ -240,10 +241,10 @@ class StarlarkAppsPlugin(BasePlugin):
     def modes(self) -> List[str]:
         """
         Return list of display modes (one per installed Starlark app).
-        
+
         This allows each installed app to appear as a separate display mode
         in the schedule/rotation system.
-        
+
         Returns:
             List of app IDs that can be used as display modes
         """
@@ -588,7 +589,7 @@ class StarlarkAppsPlugin(BasePlugin):
                 fcntl.flock(lock_fd, fcntl.LOCK_UN)
                 os.close(lock_fd)
 
-        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError):
             self.logger.exception("Error saving manifest while writing manifest file", exc_info=True)
             # Clean up temp file if it exists
             if temp_file is not None and temp_file.exists():
@@ -655,7 +656,7 @@ class StarlarkAppsPlugin(BasePlugin):
                 fcntl.flock(lock_fd, fcntl.LOCK_UN)
                 os.close(lock_fd)
 
-        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError):
             self.logger.exception("Error updating manifest during read-modify-write cycle", exc_info=True)
             # Clean up temp file if it exists
             if temp_file is not None and temp_file.exists():

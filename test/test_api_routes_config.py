@@ -1,6 +1,5 @@
 """Tests for FastAPI config routes (BACK-005)."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest

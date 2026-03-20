@@ -2,13 +2,14 @@
 Pytest fixtures for plugin integration tests.
 """
 
-import pytest
+import json
 import os
 import sys
-import json
 from pathlib import Path
+from typing import Any, Dict
 from unittest.mock import MagicMock, Mock
-from typing import Any, Dict, Generator, Optional
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -68,19 +69,19 @@ def mock_cache_manager() -> Any:
     """Create a mock CacheManager for plugin tests."""
     mock = MagicMock()
     mock._memory_cache = {}
-    
+
     def mock_get(key: str, max_age: int = 300) -> Any:
         return mock._memory_cache.get(key)
-    
+
     def mock_set(key: str, data: Any, ttl: int = None) -> None:
         mock._memory_cache[key] = data
-    
+
     def mock_clear(key: str = None) -> None:
         if key:
             mock._memory_cache.pop(key, None)
         else:
             mock._memory_cache.clear()
-    
+
     mock.get = Mock(side_effect=mock_get)
     mock.set = Mock(side_effect=mock_set)
     mock.clear = Mock(side_effect=mock_clear)
@@ -110,7 +111,7 @@ def load_plugin_manifest(plugin_id: str, plugins_dir: Path) -> Dict[str, Any]:
     manifest_path = plugins_dir / plugin_id / 'manifest.json'
     if not manifest_path.exists():
         pytest.skip(f"Manifest not found for {plugin_id}")
-    
+
     with open(manifest_path, 'r') as f:
         return json.load(f)
 

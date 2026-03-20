@@ -6,10 +6,9 @@ without touching the real filesystem, network, or subprocesses.
 """
 
 import json
-import os
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -18,7 +17,6 @@ from click.testing import CliRunner
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import matrix_cli
 from matrix_cli import cli
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -64,7 +62,6 @@ class TestDiagnoseWeb:
                  autostart=True, svc_exists=False, svc_active="active"):
         """Run ``diagnose web`` with configurable mocked conditions."""
         # Build patches
-        patches = {}
 
         with patch.object(matrix_cli, "_check_port_open", return_value=port_open), \
              patch.object(matrix_cli, "_check_url") as mock_url, \

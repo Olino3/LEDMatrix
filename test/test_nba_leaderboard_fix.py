@@ -3,10 +3,9 @@
 Test script to verify that the NBA leaderboard fix works correctly.
 This script simulates the leaderboard manager's data fetching process.
 """
-import sys
-import os
 import logging
-from typing import Dict, Any
+import os
+import sys
 
 # Add the src directory to Python path so we can import the leaderboard manager
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -18,10 +17,12 @@ logger = logging.getLogger(__name__)
 def test_nba_standings_data():
     """Test that NBA standings data includes team ID fields."""
     try:
-        from leaderboard_manager import LeaderboardManager
-        from display_manager import DisplayManager
-        from cache_manager import CacheManager
         import json
+
+        from leaderboard_manager import LeaderboardManager
+
+        from cache_manager import CacheManager
+        from display_manager import DisplayManager
 
         # Load config
         with open('config/config.json', 'r') as f:
@@ -29,7 +30,7 @@ def test_nba_standings_data():
 
         # Create mock display and cache managers
         display_manager = DisplayManager(config)
-        cache_manager = CacheManager()
+        CacheManager()
 
         # Create leaderboard manager
         leaderboard_manager = LeaderboardManager(config, display_manager)

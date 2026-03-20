@@ -12,22 +12,20 @@ Tests various failure modes that can occur during plugin loading:
 - Dependencies installation failure
 """
 
-import pytest
 import json
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
 import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from src.plugin_system.plugin_manager import PluginManager
-from src.plugin_system.plugin_loader import PluginLoader
-from src.plugin_system.plugin_state import PluginState
-from src.exceptions import PluginError
+from src.plugin_system.plugin_manager import PluginManager  # noqa: E402
+from src.plugin_system.plugin_state import PluginState  # noqa: E402
 
 
 @pytest.fixture

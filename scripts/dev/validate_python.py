@@ -13,9 +13,9 @@ Usage: python tools/validate_python.py <python_file>
 """
 
 import ast
-import sys
 import os
-from pathlib import Path
+import sys
+
 
 def validate_file(filepath: str) -> bool:
     """Validate a Python file for common issues."""
@@ -71,7 +71,7 @@ def validate_directory(directory: str) -> bool:
     """Validate all Python files in a directory."""
     all_passed = True
 
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for file in files:
             if file.endswith('.py'):
                 filepath = os.path.join(root, file)

@@ -1,33 +1,31 @@
 """Tests for API counter service and web_interface_v2 compatibility shim."""
 import warnings
 
-import pytest
-
 
 class TestApiCounter:
     """Tests for src.api.services.api_counter."""
 
     def test_increment_adds_to_counter(self):
-        from src.api.services.api_counter import increment_api_counter, get_api_counts, _counts
+        from src.api.services.api_counter import _counts, get_api_counts, increment_api_counter
         _counts.clear()
         increment_api_counter("test_kind")
         assert get_api_counts()["test_kind"] == 1
 
     def test_increment_with_count(self):
-        from src.api.services.api_counter import increment_api_counter, get_api_counts, _counts
+        from src.api.services.api_counter import _counts, get_api_counts, increment_api_counter
         _counts.clear()
         increment_api_counter("bulk", 5)
         assert get_api_counts()["bulk"] == 5
 
     def test_increment_accumulates(self):
-        from src.api.services.api_counter import increment_api_counter, get_api_counts, _counts
+        from src.api.services.api_counter import _counts, get_api_counts, increment_api_counter
         _counts.clear()
         increment_api_counter("acc", 2)
         increment_api_counter("acc", 3)
         assert get_api_counts()["acc"] == 5
 
     def test_get_counts_returns_copy(self):
-        from src.api.services.api_counter import get_api_counts, _counts
+        from src.api.services.api_counter import _counts, get_api_counts
         _counts.clear()
         counts = get_api_counts()
         counts["injected"] = 999

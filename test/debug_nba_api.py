@@ -2,10 +2,10 @@
 """
 Diagnostic script to examine NBA API data structure and identify the missing 'id' field issue.
 """
-import requests
-import json
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
+import requests
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +21,7 @@ def fetch_nba_teams_data() -> Dict[str, Any]:
         response.raise_for_status()
         data = response.json()
 
-        logger.info(f"Successfully fetched NBA teams data")
+        logger.info("Successfully fetched NBA teams data")
         logger.info(f"Response structure keys: {list(data.keys())}")
 
         # Examine the structure
@@ -80,7 +80,7 @@ def fetch_nba_standings_data() -> Dict[str, Any]:
         response.raise_for_status()
         data = response.json()
 
-        logger.info(f"Successfully fetched NBA standings data")
+        logger.info("Successfully fetched NBA standings data")
         logger.info(f"Response structure keys: {list(data.keys())}")
 
         # Check if standings has entries (direct structure)
@@ -153,10 +153,10 @@ def main():
     logger.info("Starting NBA API data structure diagnosis")
 
     # Fetch teams data
-    teams_data = fetch_nba_teams_data()
+    fetch_nba_teams_data()
 
     # Fetch standings data
-    standings_data = fetch_nba_standings_data()
+    fetch_nba_standings_data()
 
     # Summary
     logger.info("Diagnosis complete")

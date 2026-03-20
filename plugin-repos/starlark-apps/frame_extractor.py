@@ -6,7 +6,8 @@ Handles both static images and animated WebP files.
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
+
 from PIL import Image
 
 logger = logging.getLogger(__name__)

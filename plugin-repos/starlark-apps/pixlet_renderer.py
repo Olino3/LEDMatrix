@@ -5,7 +5,6 @@ Handles execution of Pixlet CLI to render .star files into WebP animations.
 Supports bundled binaries and system-installed Pixlet.
 """
 
-import json
 import logging
 import os
 import platform
@@ -13,7 +12,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -422,8 +421,8 @@ class PixletRenderer:
                 break
 
             field_type = match.group(1)
-            field_start = pos + match.start()
-            field_end = pos + match.end()
+            pos + match.start()
+            pos + match.end()
 
             # Handle nested parentheses properly
             paren_count = 1

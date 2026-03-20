@@ -24,13 +24,11 @@ Targets uncovered code paths not exercised by test_display_manager.py:
 - _draw_test_pattern (hardware and fallback paths)
 """
 
-import os
-import time
 import datetime
-import pytest
-from unittest.mock import MagicMock, patch, Mock, call, PropertyMock
-from PIL import Image, ImageDraw, ImageFont
+import time
+from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -216,7 +214,7 @@ class TestSetupMatrix:
              patch("src.display_manager.freetype"), \
              patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
              patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
-            dm = DisplayManager(config=config, suppress_test_pattern=True)
+            DisplayManager(config=config, suppress_test_pattern=True)
         assert mock_options_instance.scan_mode == 1
         assert mock_options_instance.pwm_dither_bits == 2
         assert mock_options_instance.inverse_colors is True
@@ -234,7 +232,7 @@ class TestSetupMatrix:
              patch("src.display_manager.ImageFont.load_default",
                    return_value=MagicMock()) as mock_default, \
              patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
-            dm = DisplayManager(suppress_test_pattern=True)
+            DisplayManager(suppress_test_pattern=True)
         # load_default() should have been called for the initial font
         mock_default.assert_called()
 
@@ -249,7 +247,7 @@ class TestSetupMatrix:
              patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
              patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp, \
              patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
-            dm = DisplayManager(config=hardware_config, suppress_test_pattern=True)
+            DisplayManager(config=hardware_config, suppress_test_pattern=True)
         mock_tp.assert_not_called()
 
     def test_test_pattern_drawn_when_not_suppressed(self, hardware_config):
@@ -263,7 +261,7 @@ class TestSetupMatrix:
              patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
              patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp, \
              patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
-            dm = DisplayManager(config=hardware_config, suppress_test_pattern=False)
+            DisplayManager(config=hardware_config, suppress_test_pattern=False)
         mock_tp.assert_called_once()
 
 
@@ -537,7 +535,6 @@ class TestLoadFonts:
         from src.display_manager import DisplayManager
         _reset_singleton()
 
-        real_truetype = ImageFont.truetype
 
         def selective_truetype(path, size):
             if "PressStart" in path:
@@ -588,6 +585,7 @@ class TestGetTextWidth:
     def test_get_text_width_freetype_font(self, dm_hardware):
         """Test get_text_width with a freetype.Face-like font (freetype branch)."""
         import freetype as ft
+
         import src.display_manager as dm_mod
         dm, _ = dm_hardware
 
@@ -1282,7 +1280,7 @@ class TestWriteSnapshotIfDue:
         dm._last_snapshot_ts = 0.0  # never written
         dm._snapshot_path = "/tmp/test_led_preview.png"
 
-        with patch("src.display_manager.os.replace") as mock_replace, \
+        with patch("src.display_manager.os.replace"), \
              patch("pathlib.Path"), \
              patch("src.common.permission_utils.ensure_directory_permissions"), \
              patch("src.common.permission_utils.ensure_file_permissions"), \
@@ -1357,7 +1355,6 @@ class TestCleanup:
     def test_cleanup_resets_image(self, dm_hardware):
         from src.display_manager import DisplayManager
         dm, mat = dm_hardware
-        old_image = dm.image
         dm.cleanup()
         # Image should be a fresh black one after cleanup
         # (cleanup resets image, then _instance is cleared)

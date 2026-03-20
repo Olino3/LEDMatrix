@@ -8,14 +8,10 @@ add/remove font, validate_font, performance stats, and error paths.
 """
 
 import json
-import os
-import tempfile
-from pathlib import Path
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Module-level freetype mock so the C extension is never imported in tests.
@@ -229,7 +225,6 @@ class TestGetFont:
         assert fm.performance_stats["cache_misses"] == 0
 
     def test_cache_miss_increments_counter(self):
-        from PIL import ImageFont as _ImageFont
         fm = _make_font_manager()
         fm.font_catalog["arial"] = "arial.ttf"
 
@@ -967,7 +962,7 @@ class TestOverrideManagement:
         # Test the real method in isolation
         with patch("os.path.exists", return_value=True), \
              patch("builtins.open", m), \
-             patch("src.font_manager.Path") as mock_path_cls, \
+             patch("src.font_manager.Path"), \
              patch("src.font_manager.FontManager._save_overrides", autospec=True) as mock_save:
             mock_save(fm)
         mock_save.assert_called_once()

@@ -6,13 +6,13 @@ without touching the real filesystem, network, or subprocesses.
 """
 
 import sys
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import matrix_cli
 from matrix_cli import cli
 
 

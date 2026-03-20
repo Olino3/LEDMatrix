@@ -12,20 +12,19 @@ Tests cover:
 """
 
 import sys
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
 from click.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import matrix_cli
 from matrix_cli import (
-    cli,
+    _PI_APT_PACKAGES,
     _is_raspberry_pi,
     _run_install_script,
-    _PI_APT_PACKAGES,
+    cli,
 )
-
 
 # ---------------------------------------------------------------------------
 # _is_raspberry_pi() helper

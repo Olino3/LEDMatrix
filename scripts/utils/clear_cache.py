@@ -4,16 +4,15 @@ Cache clearing utility for LEDMatrix
 This script allows manual clearing of specific cache keys or all cache data.
 """
 
+import argparse
 import os
 import sys
-import json
-import argparse
-from pathlib import Path
 
 # Add the src directory to the path so we can import our modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from cache_manager import CacheManager
+
 
 def list_cache_keys(cache_manager):
     """List all available cache keys."""
@@ -21,12 +20,12 @@ def list_cache_keys(cache_manager):
     if not cache_dir or not os.path.exists(cache_dir):
         print(f"Cache directory does not exist: {cache_dir}")
         return []
-    
+
     cache_files = []
     for file in os.listdir(cache_dir):
         if file.endswith('.json'):
             cache_files.append(file[:-5])  # Remove .json extension
-    
+
     return cache_files
 
 def clear_specific_cache(cache_manager, key):
@@ -80,7 +79,7 @@ def show_cache_info(cache_manager, key=None):
 
 def main():
     parser = argparse.ArgumentParser(description='Clear LEDMatrix cache data')
-    parser.add_argument('--list', '-l', action='store_true', 
+    parser.add_argument('--list', '-l', action='store_true',
                        help='List all available cache keys')
     parser.add_argument('--clear-all', '-a', action='store_true',
                        help='Clear all cache data')
@@ -88,12 +87,12 @@ def main():
                        help='Clear a specific cache key')
     parser.add_argument('--info', '-i', type=str, metavar='KEY',
                        help='Show information about a specific cache key')
-    
+
     args = parser.parse_args()
-    
+
     # Initialize cache manager
     cache_manager = CacheManager()
-    
+
     if args.list:
         show_cache_info(cache_manager)
     elif args.clear_all:
@@ -121,7 +120,7 @@ def main():
         print("  python clear_cache.py --clear-all")
         print("  python clear_cache.py --info milb_upcoming_api_data")
         print()
-        
+
         # Show current cache status
         show_cache_info(cache_manager)
 
