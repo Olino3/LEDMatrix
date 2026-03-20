@@ -20,7 +20,7 @@ class TestCreateApp:
         from src.api import create_app
 
         app = create_app()
-        assert app.title == "LED Matrix"
+        assert app.title == "LEDMatrix API"
         assert app.version == "2.0.0"
 
     def test_docs_url_configured(self):
