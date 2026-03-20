@@ -2,7 +2,7 @@ name: Type Check
 
 on:
   pull_request:
-    branches: [master, develop]
+    branches: [main, develop]
 
 jobs:
   mypy:
@@ -22,7 +22,10 @@ jobs:
           version: "latest"
 
       - name: Install dev dependencies
-        run: uv sync --extra dev --frozen
+        run: uv sync --extra dev --extra emulator --frozen
 
-      - name: Type check
+      - name: Type check (src/)
         run: uv run mypy src/ --ignore-missing-imports
+
+      - name: Type check strict (src/api/)
+        run: uv run mypy src/api/ --ignore-missing-imports

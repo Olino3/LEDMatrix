@@ -144,7 +144,7 @@ async def load_plugin_config(
     try:
         # Handle starlark app config
         if plugin_id.startswith("starlark:"):
-            return _render_starlark_config(request, plugin_id[len("starlark:"):], plugin_manager)
+            return _render_starlark_config(request, plugin_id[len("starlark:") :], plugin_manager)
 
         plugin_info = plugin_manager.get_plugin_info(plugin_id)
         if not plugin_info:
@@ -283,20 +283,22 @@ def _render_plugins(
                 last_commit = last_commit or store_info.get("last_commit") or store_info.get("last_commit_sha")
                 branch = branch or store_info.get("branch") or store_info.get("default_branch")
 
-            plugins_data.append({
-                "id": plugin_id,
-                "name": plugin_info.get("name", plugin_id),
-                "author": plugin_info.get("author", "Unknown"),
-                "category": plugin_info.get("category", "General"),
-                "description": plugin_info.get("description", "No description available"),
-                "tags": plugin_info.get("tags", []),
-                "enabled": enabled,
-                "verified": verified,
-                "loaded": plugin_info.get("loaded", False),
-                "last_updated": last_updated,
-                "last_commit": last_commit,
-                "branch": branch,
-            })
+            plugins_data.append(
+                {
+                    "id": plugin_id,
+                    "name": plugin_info.get("name", plugin_id),
+                    "author": plugin_info.get("author", "Unknown"),
+                    "category": plugin_info.get("category", "General"),
+                    "description": plugin_info.get("description", "No description available"),
+                    "tags": plugin_info.get("tags", []),
+                    "enabled": enabled,
+                    "verified": verified,
+                    "loaded": plugin_info.get("loaded", False),
+                    "last_updated": last_updated,
+                    "last_commit": last_commit,
+                    "branch": branch,
+                }
+            )
     except Exception as e:
         logger.error(f"Error loading plugin data: {e}")
 
