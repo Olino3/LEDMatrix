@@ -3,11 +3,11 @@
 This document tracks planned improvements, features, and large-scale refactors for the LEDMatrix project.
 Items are organized into versioned phases. Each phase delivers a cohesive set of changes before the next begins.
 
-Current version: **v1.1.0**
+Current version: **v2.0.0**
 
 ---
 
-## Phase 1 — Foundation `v1.1.0`
+## Phase 1 — Foundation `v1.1.0` COMPLETE
 
 > Python modernization, developer tooling, and CI infrastructure. No breaking changes to public APIs or behavior.
 
@@ -44,7 +44,7 @@ Current version: **v1.1.0**
 
 ---
 
-## Phase 2 — Backend Modernization `v2.0.0`
+## Phase 2 — Backend Modernization `v2.0.0` COMPLETE
 
 > Full Flask → FastAPI rewrite. Breaking change: API response formats and endpoint paths may change.
 
