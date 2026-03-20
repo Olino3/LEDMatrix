@@ -1,0 +1,34 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  padding-top: 60px;
+  background: var(--p-surface-card);
+  border-right: 1px solid var(--p-surface-border);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.app-content {
+  flex: 1;
+  padding: 1.5rem;
+  margin-top: 60px;
+  transition: margin-left 0.2s;
+
+  &.sidebar-open {
+    margin-left: 240px;
+  }
+}
+
+.drawer-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
