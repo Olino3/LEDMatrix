@@ -8,12 +8,14 @@ from src.api.routers.starlark import router as starlark_router
 from src.api.routers.store import router as store_router
 from src.api.routers.streams import router as streams_router
 from src.api.routers.system import router as system_router
+from src.api.routers.pages import router as pages_router
 from src.api.routers.wifi import router as wifi_router
 
 __all__ = [
     "assets_router",
     "config_router",
     "fonts_router",
+    "pages_router",
     "plugins_router",
     "starlark_router",
     "store_router",
