@@ -15,15 +15,18 @@
 | [BACK-003](BACK-003-pydantic-settings.md) | Pydantic settings and config models | Done | BACK-001 |
 | [BACK-004](BACK-004-middleware-stack.md) | FastAPI middleware stack | Done | BACK-001, BACK-002 |
 | [BACK-005](BACK-005-api-routes-system.md) | Migrate system and config API routes | Done | BACK-002, BACK-003, BACK-004 |
-| [BACK-006](BACK-006-api-routes-plugins.md) | Migrate plugin API routes | In Progress | BACK-003, BACK-005 |
+| [BACK-006](BACK-006-api-routes-plugins.md) | Migrate plugin API routes | Done | BACK-003, BACK-005 |
 | [BACK-007](BACK-007-sse-migration.md) | Migrate SSE streaming endpoints | Done | BACK-005 |
-| [BACK-008](BACK-008-flask-removal-cleanup.md) | Flask removal and cleanup | Blocked | BACK-005, BACK-006, BACK-007 |
-| [SPIKE-001](SPIKE-001-web-interface-v2-shim.md) | Compatibility shim for `web_interface_v2` import | Blocked | BACK-008 |
-| [SPIKE-002](SPIKE-002-pages-v3-transition.md) | HTMX pages transition to FastAPI | Blocked | BACK-008 |
-| [SPIKE-003](SPIKE-003-openapi-schema-validation.md) | OpenAPI schema validation and documentation | Blocked | BACK-006, BACK-007 |
-| [SPIKE-004](SPIKE-004-mypy-strict-api.md) | Enforce strict typing for `src/api/` | Blocked | BACK-006 |
-| [SPIKE-005](SPIKE-005-update-ci-for-fastapi.md) | Update CI pipeline for FastAPI | Blocked | BACK-008 |
-| [SPIKE-006](SPIKE-006-fastapi-rate-limiting.md) | FastAPI rate limiting via slowapi | Open | BACK-004, BACK-007 |
+| [BACK-008](BACK-008-flask-removal-cleanup.md) | Flask removal and cleanup | Done | BACK-005, BACK-006, BACK-007 |
+| [SPIKE-001](SPIKE-001-web-interface-v2-shim.md) | Compatibility shim for `web_interface_v2` import | Done | BACK-008 |
+| [SPIKE-002](SPIKE-002-pages-v3-transition.md) | HTMX pages transition to FastAPI | Done | BACK-008 |
+| [SPIKE-003](SPIKE-003-openapi-schema-validation.md) | OpenAPI schema validation and documentation | Done | BACK-006, BACK-007 |
+| [SPIKE-004](SPIKE-004-mypy-strict-api.md) | Enforce strict typing for `src/api/` | Done | BACK-006 |
+| [SPIKE-005](SPIKE-005-update-ci-for-fastapi.md) | Update CI pipeline for FastAPI | Done | BACK-008 |
+| [SPIKE-006](SPIKE-006-fastapi-rate-limiting.md) | FastAPI rate limiting via slowapi | Done | BACK-004, BACK-007 |
+| [SPIKE-006](SPIKE-006-cleanup-src-web-interface-flask-utils.md) | Clean up Flask-coupled utilities in `src/web_interface/` | Done | BACK-008 |
+| [SPIKE-007](SPIKE-007-missing-partial-templates.md) | Create missing partial templates (weather, stocks) | Done | SPIKE-002 |
+| [SPIKE-008](SPIKE-008-openapi-response-models.md) | OpenAPI response model retrofit | Open | SPIKE-003 |
 
 ## Dependency Graph
 
@@ -32,51 +35,50 @@ BACK-001 (FastAPI scaffold) [Done]
   +-- BACK-002 (dependency updates) [Done]
   |     +-- BACK-004 (middleware stack) [Done]
   |     |     +-- BACK-005 (system/config routes) [Done]
-  |     |     |     +-- BACK-006 (plugin routes) [In Progress]
-  |     |     |     |     +-- BACK-008 (Flask removal) [Blocked]
-  |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Blocked]
-  |     |     |     |     +-- SPIKE-004 (mypy strict) [Blocked]
+  |     |     |     +-- BACK-006 (plugin routes) [Done]
+  |     |     |     |     +-- BACK-008 (Flask removal) [Done]
+  |     |     |     |     |     +-- SPIKE-001 (web_interface_v2 shim) [Done]
+  |     |     |     |     |     +-- SPIKE-002 (HTMX pages transition) [Done]
+  |     |     |     |     |     |     +-- SPIKE-007 (missing templates) [Done]
+  |     |     |     |     |     +-- SPIKE-005 (CI update) [Done]
+  |     |     |     |     |     +-- SPIKE-006-cleanup (Flask utils cleanup) [Done]
+  |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Done]
+  |     |     |     |     |     +-- SPIKE-008 (response models) [Open]
+  |     |     |     |     +-- SPIKE-004 (mypy strict) [Done]
   |     |     |     +-- BACK-007 (SSE migration) [Done]
-  |     |     |     |     +-- BACK-008 (Flask removal) [Blocked]
-  |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Blocked]
-  |     |     |     +-- BACK-008 (Flask removal) [Blocked]
-  |     |     |           +-- SPIKE-001 (web_interface_v2 shim) [Blocked]
-  |     |     |           +-- SPIKE-002 (HTMX pages transition) [Blocked]
-  |     |     |           +-- SPIKE-005 (CI update) [Blocked]
-  |     |     +-- SPIKE-006 (rate limiting) [Open -- unblocked]
+  |     |     |     |     +-- SPIKE-003 (OpenAPI docs) [Done]
+  |     |     |     |     +-- SPIKE-006 (rate limiting) [Done]
+  |     |     +-- SPIKE-006 (rate limiting) [Done]
   +-- BACK-003 (Pydantic settings) [Done]
         +-- BACK-005 (system/config routes) [Done]
-        +-- BACK-006 (plugin routes) [In Progress]
+        +-- BACK-006 (plugin routes) [Done]
 ```
 
-## Critical Path
+## Remaining Work
 
-The longest dependency chain is:
+Only one ticket remains open:
 
 ```
-BACK-001 -> BACK-002 -> BACK-004 -> BACK-005 -> BACK-006 -> BACK-008 -> SPIKE-001
+SPIKE-008 (OpenAPI response model retrofit) [Open] -- depends on SPIKE-003 (Done)
 ```
 
-Work can be parallelized:
-- BACK-003 (Pydantic models) can proceed alongside BACK-002 + BACK-004
-- BACK-007 (SSE) can proceed alongside BACK-006 (both depend on BACK-005)
-- SPIKE-003, SPIKE-004 can proceed alongside BACK-008
+This ticket is unblocked and can be started immediately.
 
 ## Definition of Done (Phase 2)
 
-- [ ] FastAPI application serves all endpoints previously handled by Flask
+- [x] FastAPI application serves all endpoints previously handled by Flask
 - [x] All API route handlers use `async def`
 - [x] Pydantic request/response models validate all API inputs and outputs
 - [x] SSE streaming uses `sse-starlette` with async generators
 - [x] OpenAPI docs available at `/docs` and `/redoc`
 - [x] CORS middleware configured for Angular frontend origin
 - [x] Request ID middleware attaches correlation IDs to all responses
-- [ ] Flask, flask-wtf, and flask-limiter removed from dependencies
-- [ ] `web_interface_v2` compatibility shim in place with deprecation warning
-- [ ] `SHIMS.md` created documenting active compatibility shims
-- [ ] `mypy src/api/` passes with `disallow_untyped_defs = true`
-- [ ] All existing tests pass (updated to use `httpx` test client)
-- [ ] CI pipeline updated and passing
+- [x] Flask, flask-wtf, and flask-limiter removed from dependencies
+- [x] `web_interface_v2` compatibility shim in place with deprecation warning
+- [x] `SHIMS.md` created documenting active compatibility shims
+- [x] `mypy src/api/` passes with `disallow_untyped_defs = true`
+- [x] All existing tests pass (updated to use `httpx` test client)
+- [x] CI pipeline updated and passing
 - [x] Plugin config continues to be delivered as plain `dict` (no Pydantic model exposure to plugins)
 
 ## Architecture Notes

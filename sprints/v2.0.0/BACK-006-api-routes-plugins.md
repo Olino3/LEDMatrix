@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** In Progress
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-003](BACK-003-pydantic-settings.md), [BACK-005](BACK-005-api-routes-system.md)
@@ -20,15 +20,15 @@ This is the largest single ticket in the sprint. Each router file should be unde
 
 ## Acceptance Criteria
 
-- [ ] `src/api/routers/plugins.py` -- plugin CRUD, toggle, state, health, metrics (~25 endpoints)
-- [ ] `src/api/routers/store.py` -- plugin store, install, update, uninstall (~10 endpoints)
-- [ ] `src/api/routers/fonts.py` -- font catalog, upload, preview, delete (~8 endpoints)
-- [ ] `src/api/routers/wifi.py` -- WiFi status, scan, connect, AP mode (~8 endpoints)
-- [ ] `src/api/routers/assets.py` -- plugin asset upload, delete, list, calendar credentials (~6 endpoints)
-- [ ] `src/api/routers/starlark.py` -- Starlark app management (~10 endpoints)
-- [ ] All handlers use `async def` and Pydantic request/response models
-- [ ] File uploads use FastAPI's `UploadFile` type
-- [ ] All routers mounted under `/api/v3/` prefix
+- [x] `src/api/routers/plugins.py` -- plugin CRUD, toggle, state, health, metrics (~25 endpoints)
+- [x] `src/api/routers/store.py` -- plugin store, install, update, uninstall (~10 endpoints)
+- [x] `src/api/routers/fonts.py` -- font catalog, upload, preview, delete (~8 endpoints)
+- [x] `src/api/routers/wifi.py` -- WiFi status, scan, connect, AP mode (~8 endpoints)
+- [x] `src/api/routers/assets.py` -- plugin asset upload, delete, list, calendar credentials (~6 endpoints)
+- [x] `src/api/routers/starlark.py` -- Starlark app management (~10 endpoints)
+- [x] All handlers use `async def` and Pydantic request/response models
+- [x] File uploads use FastAPI's `UploadFile` type
+- [x] All routers mounted under `/api/v3/` prefix
 
 ---
 
