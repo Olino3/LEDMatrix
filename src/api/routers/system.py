@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from src.api.dependencies import get_config_manager, get_plugin_manager
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.config_manager import ConfigManager
 from src.logging_config import get_logger
 from src.plugin_system.plugin_manager import PluginManager
@@ -107,7 +108,7 @@ def _get_git_version() -> str:
 # ---- system routes ----------------------------------------------------------
 
 
-@router.get("/system/status", response_model=None)
+@router.get("/system/status", response_model=None, responses=API_RESPONSES)
 async def get_system_status() -> dict[str, Any] | JSONResponse:
     """Return system metrics (CPU, memory, disk, temp)."""
     try:
@@ -150,7 +151,7 @@ async def get_system_status() -> dict[str, Any] | JSONResponse:
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.get("/system/version", response_model=None)
+@router.get("/system/version", response_model=None, responses=API_RESPONSES)
 async def get_system_version() -> dict[str, Any]:
     """Return version info."""
     return _success(
@@ -162,7 +163,7 @@ async def get_system_version() -> dict[str, Any]:
     )
 
 
-@router.post("/system/action", response_model=None)
+@router.post("/system/action", response_model=None, responses=API_RESPONSES)
 async def execute_system_action(request: Request) -> dict[str, Any] | JSONResponse:
     """Execute a system action (start/stop/restart service, reboot, git pull)."""
     try:
@@ -251,7 +252,7 @@ async def _handle_git_pull() -> dict[str, Any] | JSONResponse:
 # ---- health -----------------------------------------------------------------
 
 
-@router.get("/health", response_model=None)
+@router.get("/health", response_model=None, responses=API_RESPONSES)
 async def get_health(
     config_manager: ConfigManager = Depends(get_config_manager),
     plugin_manager: PluginManager = Depends(get_plugin_manager),
@@ -310,7 +311,7 @@ async def get_health(
 # ---- logs -------------------------------------------------------------------
 
 
-@router.get("/logs", response_model=None)
+@router.get("/logs", response_model=None, responses=API_RESPONSES)
 async def get_logs() -> dict[str, Any] | JSONResponse:
     """Fetch recent ledmatrix service logs via journalctl."""
     rc, stdout, stderr = await _run_cmd(
@@ -340,7 +341,7 @@ def _get_aggregator() -> Any:
     return get_error_aggregator()
 
 
-@router.get("/errors/summary", response_model=None)
+@router.get("/errors/summary", response_model=None, responses=API_RESPONSES)
 async def get_error_summary() -> dict[str, Any] | JSONResponse:
     """Return error aggregator summary."""
     try:
@@ -350,7 +351,7 @@ async def get_error_summary() -> dict[str, Any] | JSONResponse:
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.get("/errors/plugin/{plugin_id}", response_model=None)
+@router.get("/errors/plugin/{plugin_id}", response_model=None, responses=API_RESPONSES)
 async def get_plugin_errors(plugin_id: str) -> dict[str, Any] | JSONResponse:
     """Return error health for a specific plugin."""
     try:
@@ -360,7 +361,7 @@ async def get_plugin_errors(plugin_id: str) -> dict[str, Any] | JSONResponse:
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.post("/errors/clear", response_model=None)
+@router.post("/errors/clear", response_model=None, responses=API_RESPONSES)
 async def clear_errors(request: Request) -> dict[str, Any] | JSONResponse:
     """Clear error records older than max_age_hours."""
     try:

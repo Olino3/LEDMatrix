@@ -45,6 +45,20 @@ class ErrorResponse(BaseModel):
     details: dict[str, Any] | None = Field(None, description="Additional error context")
 
 
+# Reusable OpenAPI responses dicts for route decorators.
+# Using model classes so FastAPI generates $ref entries in components/schemas.
+API_RESPONSES: dict[int | str, dict[str, Any]] = {
+    200: {"description": "Successful operation", "model": SuccessResponse},
+    400: {"description": "Invalid input", "model": ErrorResponse},
+    500: {"description": "Internal server error", "model": ErrorResponse},
+}
+
+API_RESPONSES_WITH_404: dict[int | str, dict[str, Any]] = {
+    **API_RESPONSES,
+    404: {"description": "Resource not found", "model": ErrorResponse},
+}
+
+
 class PaginatedResponse(BaseModel):
     """Paginated list envelope."""
 

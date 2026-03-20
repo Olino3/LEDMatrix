@@ -14,6 +14,7 @@ from src.api.dependencies import (
     get_plugin_store_manager,
     get_saved_repositories_manager,
 )
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.logging_config import get_logger
 from src.plugin_system.operation_queue import PluginOperationQueue
 from src.plugin_system.plugin_manager import PluginManager
@@ -48,7 +49,7 @@ def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
 # ---- store browsing ---------------------------------------------------------
 
 
-@router.get("/store/list", response_model=None)
+@router.get("/store/list", response_model=None, responses=API_RESPONSES)
 async def list_store_plugins(
     query: str = Query("", description="Search query"),
     category: str = Query("", description="Filter by category"),
@@ -73,7 +74,7 @@ async def list_store_plugins(
         return _error("STORE_LIST_FAILED", str(exc), 500)
 
 
-@router.get("/store/github-status", response_model=None)
+@router.get("/store/github-status", response_model=None, responses=API_RESPONSES)
 async def get_github_auth_status(
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -117,7 +118,7 @@ async def get_github_auth_status(
         return _error("GITHUB_STATUS_FAILED", str(exc), 500)
 
 
-@router.post("/store/refresh", response_model=None)
+@router.post("/store/refresh", response_model=None, responses=API_RESPONSES)
 async def refresh_store(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -143,7 +144,7 @@ async def refresh_store(
 # ---- install / update / uninstall ------------------------------------------
 
 
-@router.post("/install", response_model=None)
+@router.post("/install", response_model=None, responses=API_RESPONSES)
 async def install_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -176,7 +177,7 @@ async def install_plugin(
         return _error("INSTALL_FAILED", str(exc), 500)
 
 
-@router.post("/install-from-url", response_model=None)
+@router.post("/install-from-url", response_model=None, responses=API_RESPONSES)
 async def install_from_url(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -212,7 +213,7 @@ async def install_from_url(
         return _error("INSTALL_FAILED", str(exc), 500)
 
 
-@router.post("/update", response_model=None)
+@router.post("/update", response_model=None, responses=API_RESPONSES)
 async def update_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -242,7 +243,7 @@ async def update_plugin(
         return _error("UPDATE_FAILED", str(exc), 500)
 
 
-@router.post("/uninstall", response_model=None)
+@router.post("/uninstall", response_model=None, responses=API_RESPONSES)
 async def uninstall_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -277,7 +278,7 @@ async def uninstall_plugin(
 # ---- registry from URL ------------------------------------------------------
 
 
-@router.post("/registry-from-url", response_model=None)
+@router.post("/registry-from-url", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_registry_from_url(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
@@ -308,7 +309,7 @@ async def get_registry_from_url(
 # ---- saved repositories ----------------------------------------------------
 
 
-@router.get("/saved-repositories", response_model=None)
+@router.get("/saved-repositories", response_model=None, responses=API_RESPONSES)
 async def list_saved_repositories(
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -320,7 +321,7 @@ async def list_saved_repositories(
         return _error("REPOS_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/saved-repositories", response_model=None)
+@router.post("/saved-repositories", response_model=None, responses=API_RESPONSES)
 async def add_saved_repository(
     request: Request,
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
@@ -345,7 +346,7 @@ async def add_saved_repository(
         return _error("REPO_ADD_FAILED", str(exc), 500)
 
 
-@router.delete("/saved-repositories", response_model=None)
+@router.delete("/saved-repositories", response_model=None, responses=API_RESPONSES_WITH_404)
 async def remove_saved_repository(
     request: Request,
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),

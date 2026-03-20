@@ -20,6 +20,7 @@ from src.api.dependencies import (
     get_plugin_state_manager,
     get_schema_manager,
 )
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.config_manager import ConfigManager
 from src.logging_config import get_logger
 from src.plugin_system.operation_history import OperationHistory
@@ -109,7 +110,7 @@ async def _run_script(
     return proc.returncode == 0, stdout.decode()
 
 
-@router.get("/installed", response_model=None)
+@router.get("/installed", response_model=None, responses=API_RESPONSES)
 async def get_installed_plugins(
     pm: PluginManager = Depends(get_plugin_manager),
     cm: ConfigManager = Depends(get_config_manager),
@@ -128,7 +129,7 @@ async def get_installed_plugins(
         return _error("PLUGIN_LIST_FAILED", str(exc), 500)
 
 
-@router.post("/toggle", response_model=None)
+@router.post("/toggle", response_model=None, responses=API_RESPONSES)
 async def toggle_plugin(
     request: Request,
     cm: ConfigManager = Depends(get_config_manager),
@@ -153,7 +154,7 @@ async def toggle_plugin(
         return _error("TOGGLE_FAILED", str(exc), 500)
 
 
-@router.get("/config", response_model=None)
+@router.get("/config", response_model=None, responses=API_RESPONSES)
 async def get_plugin_config(
     plugin_id: str = Query(...),
     cm: ConfigManager = Depends(get_config_manager),
@@ -167,7 +168,7 @@ async def get_plugin_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/config", response_model=None)
+@router.post("/config", response_model=None, responses=API_RESPONSES)
 async def save_plugin_config(
     request: Request,
     cm: ConfigManager = Depends(get_config_manager),
@@ -223,7 +224,7 @@ async def save_plugin_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.post("/config/reset", response_model=None)
+@router.post("/config/reset", response_model=None, responses=API_RESPONSES)
 async def reset_plugin_config(
     request: Request,
     cm: ConfigManager = Depends(get_config_manager),
@@ -260,7 +261,7 @@ async def reset_plugin_config(
         return _error("CONFIG_RESET_FAILED", str(exc), 500)
 
 
-@router.get("/schema", response_model=None)
+@router.get("/schema", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_plugin_schema(
     plugin_id: str = Query(...), sm: SchemaManager = Depends(get_schema_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -273,7 +274,7 @@ async def get_plugin_schema(
         return _error("SCHEMA_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/action", response_model=None)
+@router.post("/action", response_model=None, responses=API_RESPONSES_WITH_404)
 async def execute_plugin_action(
     request: Request, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -303,7 +304,7 @@ async def execute_plugin_action(
         return _error("ACTION_FAILED", str(exc), 500)
 
 
-@router.get("/health", response_model=None)
+@router.get("/health", response_model=None, responses=API_RESPONSES)
 async def get_all_plugin_health(pm: PluginManager = Depends(get_plugin_manager)) -> dict[str, Any] | JSONResponse:
     tracker = getattr(pm, "health_tracker", None)
     if not tracker:
@@ -314,7 +315,7 @@ async def get_all_plugin_health(pm: PluginManager = Depends(get_plugin_manager))
         return _error("HEALTH_FETCH_FAILED", str(exc), 500)
 
 
-@router.get("/health/{plugin_id}", response_model=None)
+@router.get("/health/{plugin_id}", response_model=None, responses=API_RESPONSES)
 async def get_plugin_health(
     plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -327,7 +328,7 @@ async def get_plugin_health(
         return _error("HEALTH_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/health/{plugin_id}/reset", response_model=None)
+@router.post("/health/{plugin_id}/reset", response_model=None, responses=API_RESPONSES)
 async def reset_plugin_health(
     plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -341,7 +342,7 @@ async def reset_plugin_health(
         return _error("HEALTH_RESET_FAILED", str(exc), 500)
 
 
-@router.get("/metrics", response_model=None)
+@router.get("/metrics", response_model=None, responses=API_RESPONSES)
 async def get_all_plugin_metrics(pm: PluginManager = Depends(get_plugin_manager)) -> dict[str, Any] | JSONResponse:
     monitor = getattr(pm, "resource_monitor", None)
     if not monitor:
@@ -352,7 +353,7 @@ async def get_all_plugin_metrics(pm: PluginManager = Depends(get_plugin_manager)
         return _error("METRICS_FETCH_FAILED", str(exc), 500)
 
 
-@router.get("/metrics/{plugin_id}", response_model=None)
+@router.get("/metrics/{plugin_id}", response_model=None, responses=API_RESPONSES)
 async def get_plugin_metrics(
     plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -365,7 +366,7 @@ async def get_plugin_metrics(
         return _error("METRICS_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/metrics/{plugin_id}/reset", response_model=None)
+@router.post("/metrics/{plugin_id}/reset", response_model=None, responses=API_RESPONSES)
 async def reset_plugin_metrics(
     plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -379,7 +380,7 @@ async def reset_plugin_metrics(
         return _error("METRICS_RESET_FAILED", str(exc), 500)
 
 
-@router.get("/limits/{plugin_id}", response_model=None)
+@router.get("/limits/{plugin_id}", response_model=None, responses=API_RESPONSES)
 async def get_resource_limits(
     plugin_id: str, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -393,7 +394,7 @@ async def get_resource_limits(
         return _error("LIMITS_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/limits/{plugin_id}", response_model=None)
+@router.post("/limits/{plugin_id}", response_model=None, responses=API_RESPONSES)
 async def set_resource_limits(
     plugin_id: str, request: Request, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -421,7 +422,7 @@ async def set_resource_limits(
         return _error("LIMITS_SET_FAILED", str(exc), 500)
 
 
-@router.get("/operation/{operation_id}", response_model=None)
+@router.get("/operation/{operation_id}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_operation_status(
     operation_id: str, oq: PluginOperationQueue = Depends(get_operation_queue)
 ) -> dict[str, Any] | JSONResponse:
@@ -434,7 +435,7 @@ async def get_operation_status(
         return _error("OPERATION_FETCH_FAILED", str(exc), 500)
 
 
-@router.get("/operation/history", response_model=None)
+@router.get("/operation/history", response_model=None, responses=API_RESPONSES)
 async def get_operation_history_list(
     limit: int = Query(50, ge=1, le=500),
     plugin_id: str | None = Query(None),
@@ -448,7 +449,7 @@ async def get_operation_history_list(
         return _error("HISTORY_FETCH_FAILED", str(exc), 500)
 
 
-@router.delete("/operation/history", response_model=None)
+@router.delete("/operation/history", response_model=None, responses=API_RESPONSES)
 async def clear_operation_history(
     history: OperationHistory = Depends(get_operation_history),
 ) -> dict[str, Any] | JSONResponse:
@@ -459,7 +460,7 @@ async def clear_operation_history(
         return _error("HISTORY_CLEAR_FAILED", str(exc), 500)
 
 
-@router.get("/state", response_model=None)
+@router.get("/state", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_plugin_state(
     plugin_id: str | None = Query(None),
     sm: PluginStateManager = Depends(get_plugin_state_manager),
@@ -475,7 +476,7 @@ async def get_plugin_state(
         return _error("STATE_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/state/reconcile", response_model=None)
+@router.post("/state/reconcile", response_model=None, responses=API_RESPONSES)
 async def reconcile_state(
     pm: PluginManager = Depends(get_plugin_manager),
     sm: PluginStateManager = Depends(get_plugin_state_manager),
@@ -498,7 +499,7 @@ async def reconcile_state(
         return _error("RECONCILE_FAILED", str(exc), 500)
 
 
-@router.post("/authenticate/spotify", response_model=None)
+@router.post("/authenticate/spotify", response_model=None, responses=API_RESPONSES_WITH_404)
 async def authenticate_spotify(
     request: Request, pm: PluginManager = Depends(get_plugin_manager)
 ) -> dict[str, Any] | JSONResponse:
@@ -555,7 +556,7 @@ async def authenticate_spotify(
             return _error("AUTH_FAILED", f"Error generating auth URL: {exc}", 500)
 
 
-@router.post("/authenticate/ytm", response_model=None)
+@router.post("/authenticate/ytm", response_model=None, responses=API_RESPONSES_WITH_404)
 async def authenticate_ytm(pm: PluginManager = Depends(get_plugin_manager)) -> dict[str, Any] | JSONResponse:
     """Run YouTube Music authentication script."""
     plugin_id = "ledmatrix-music"

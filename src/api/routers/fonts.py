@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
 
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.logging_config import get_logger
 
 logger = get_logger("api.fonts")
@@ -83,7 +84,7 @@ def _write_overrides(data: dict) -> None:
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/catalog", response_model=None)
+@router.get("/catalog", response_model=None, responses=API_RESPONSES)
 async def get_font_catalog() -> dict[str, Any] | JSONResponse:
     """List available font files from system and user directories."""
     try:
@@ -95,13 +96,13 @@ async def get_font_catalog() -> dict[str, Any] | JSONResponse:
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.get("/tokens", response_model=None)
+@router.get("/tokens", response_model=None, responses=API_RESPONSES)
 async def get_design_tokens() -> dict[str, Any] | JSONResponse:
     """Return hardcoded design token sizes."""
     return _success(data={"tokens": DESIGN_TOKENS})
 
 
-@router.get("/overrides", response_model=None)
+@router.get("/overrides", response_model=None, responses=API_RESPONSES)
 async def get_font_overrides() -> dict[str, Any] | JSONResponse:
     """Read font overrides configuration."""
     try:
@@ -112,7 +113,7 @@ async def get_font_overrides() -> dict[str, Any] | JSONResponse:
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.post("/overrides", response_model=None)
+@router.post("/overrides", response_model=None, responses=API_RESPONSES)
 async def save_font_overrides(request: Request) -> dict[str, Any] | JSONResponse:
     """Write font overrides configuration."""
     try:
@@ -128,7 +129,7 @@ async def save_font_overrides(request: Request) -> dict[str, Any] | JSONResponse
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.delete("/overrides/{element_key}", response_model=None)
+@router.delete("/overrides/{element_key}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def delete_font_override(element_key: str) -> dict[str, Any] | JSONResponse:
     """Remove a single key from font overrides."""
     try:
@@ -143,7 +144,7 @@ async def delete_font_override(element_key: str) -> dict[str, Any] | JSONRespons
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.post("/upload", response_model=None)
+@router.post("/upload", response_model=None, responses=API_RESPONSES)
 async def upload_font(
     font_file: UploadFile = File(...),
     font_family: str | None = Form(None),
@@ -181,7 +182,7 @@ async def upload_font(
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.get("/preview", response_model=None)
+@router.get("/preview", response_model=None, responses=API_RESPONSES)
 async def preview_font(
     font: str = Query(..., description="Font filename or path"),
     text: str = Query("Hello", description="Text to render"),
@@ -235,7 +236,7 @@ async def preview_font(
         return _error("FONT_ERROR", str(exc), 500)
 
 
-@router.delete("/{font_family}", response_model=None)
+@router.delete("/{font_family}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def delete_font(font_family: str) -> dict[str, Any] | JSONResponse:
     """Delete a user-uploaded font. System fonts cannot be deleted."""
     if not USER_FONTS_DIR.exists():
