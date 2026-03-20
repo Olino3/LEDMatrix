@@ -237,7 +237,7 @@ class AtomicConfigManager:
         Returns:
             List of BackupInfo objects, sorted by timestamp (newest first)
         """
-        backups = []
+        backups: List[BackupInfo] = []
 
         if not self.backup_dir.exists():
             return backups
@@ -414,8 +414,8 @@ class AtomicConfigManager:
         - Valid JSON format
         - Can be parsed successfully
         """
-        errors = []
-        warnings = []
+        errors: List[str] = []
+        warnings: List[str] = []
 
         if not config_path.exists():
             errors.append(f"Config file does not exist: {config_path}")
@@ -523,7 +523,7 @@ class AtomicConfigManager:
             except Exception as e:
                 self.logger.warning(f"Error removing old backup {backup.path}: {e}")
 
-    def _cleanup_temp_files(self, *temp_paths: Path) -> None:
+    def _cleanup_temp_files(self, *temp_paths: Optional[Path]) -> None:
         """Clean up temporary files."""
         for temp_path in temp_paths:
             if temp_path and temp_path.exists():

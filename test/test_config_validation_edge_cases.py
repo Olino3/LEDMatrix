@@ -9,7 +9,6 @@ Tests scenarios that commonly cause user configuration errors:
 - Array validation
 """
 
-
 # Add project root to path
 import sys
 from pathlib import Path
@@ -63,19 +62,12 @@ class TestTypeValidation:
         """String value where number expected should be handled."""
         schema_manager = SchemaManager()
 
-        schema = {
-            "type": "object",
-            "properties": {
-                "display_duration": {"type": "number", "default": 15}
-            }
-        }
+        schema = {"type": "object", "properties": {"display_duration": {"type": "number", "default": 15}}}
 
         config = {"display_duration": "invalid_string"}
 
         # Validation should fail
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
         assert len(errors) > 0
 
@@ -83,18 +75,11 @@ class TestTypeValidation:
         """Number value where string expected should be handled."""
         schema_manager = SchemaManager()
 
-        schema = {
-            "type": "object",
-            "properties": {
-                "team_name": {"type": "string", "default": ""}
-            }
-        }
+        schema = {"type": "object", "properties": {"team_name": {"type": "string", "default": ""}}}
 
         config = {"team_name": 12345}
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
         assert len(errors) > 0
 
@@ -108,19 +93,18 @@ class TestTypeValidation:
             "properties": {
                 "api_key": {"type": "string"}  # string type doesn't allow null
             },
-            "required": ["api_key"]
+            "required": ["api_key"],
         }
 
         config = {"api_key": None}
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         # JSON Schema Draft 7: null is not a valid string type
         assert not is_valid, "Null value should fail validation for string type"
         assert errors, "Should have validation errors"
-        assert any("api_key" in str(e).lower() or "null" in str(e).lower() or "type" in str(e).lower() for e in errors), \
-            f"Error should mention api_key, null, or type issue: {errors}"
+        assert any(
+            "api_key" in str(e).lower() or "null" in str(e).lower() or "type" in str(e).lower() for e in errors
+        ), f"Error should mention api_key, null, or type issue: {errors}"
 
 
 class TestNestedValidation:
@@ -135,20 +119,15 @@ class TestNestedValidation:
             "properties": {
                 "nfl": {
                     "type": "object",
-                    "properties": {
-                        "enabled": {"type": "boolean", "default": True},
-                        "api_key": {"type": "string"}
-                    },
-                    "required": ["api_key"]
+                    "properties": {"enabled": {"type": "boolean", "default": True}, "api_key": {"type": "string"}},
+                    "required": ["api_key"],
                 }
-            }
+            },
         }
 
         config = {"nfl": {"enabled": True}}  # Missing api_key
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
 
     def test_deeply_nested_validation(self):
@@ -161,22 +140,15 @@ class TestNestedValidation:
                 "level1": {
                     "type": "object",
                     "properties": {
-                        "level2": {
-                            "type": "object",
-                            "properties": {
-                                "value": {"type": "number", "minimum": 0}
-                            }
-                        }
-                    }
+                        "level2": {"type": "object", "properties": {"value": {"type": "number", "minimum": 0}}}
+                    },
                 }
-            }
+            },
         }
 
         config = {"level1": {"level2": {"value": -5}}}  # Invalid: negative
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
 
 
@@ -189,20 +161,12 @@ class TestArrayValidation:
 
         schema = {
             "type": "object",
-            "properties": {
-                "teams": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "minItems": 1
-                }
-            }
+            "properties": {"teams": {"type": "array", "items": {"type": "string"}, "minItems": 1}},
         }
 
         config = {"teams": []}  # Empty array, minItems is 1
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
 
     def test_array_max_items(self):
@@ -211,20 +175,12 @@ class TestArrayValidation:
 
         schema = {
             "type": "object",
-            "properties": {
-                "teams": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "maxItems": 2
-                }
-            }
+            "properties": {"teams": {"type": "array", "items": {"type": "string"}, "maxItems": 2}},
         }
 
         config = {"teams": ["A", "B", "C", "D"]}  # 4 items, maxItems is 2
 
-        is_valid, errors = schema_manager.validate_config_against_schema(
-            config, schema, "test-plugin"
-        )
+        is_valid, errors = schema_manager.validate_config_against_schema(config, schema, "test-plugin")
         assert not is_valid
 
 
@@ -276,11 +232,7 @@ class TestDefaultMerging:
         """Missing fields should get default values from schema."""
         schema_manager = SchemaManager()
 
-        defaults = {
-            "enabled": True,
-            "display_duration": 15,
-            "nfl": {"enabled": True}
-        }
+        defaults = {"enabled": True, "display_duration": 15, "nfl": {"enabled": True}}
 
         config = {"display_duration": 30}  # Only override one field
 

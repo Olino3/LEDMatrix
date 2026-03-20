@@ -13,28 +13,28 @@ class TestCustomExceptions:
         error = CacheError("Cache failed", cache_key="test_key")
         # CacheError includes context in string representation
         assert "Cache failed" in str(error)
-        assert error.context.get('cache_key') == "test_key"
+        assert error.context.get("cache_key") == "test_key"
 
     def test_config_error(self):
         """Test ConfigError initialization."""
-        error = ConfigError("Config invalid", config_path='config.json')
+        error = ConfigError("Config invalid", config_path="config.json")
         # ConfigError includes context in string representation
         assert "Config invalid" in str(error)
-        assert error.context.get('config_path') == 'config.json'
+        assert error.context.get("config_path") == "config.json"
 
     def test_plugin_error(self):
         """Test PluginError initialization."""
-        error = PluginError("Plugin crashed", plugin_id='weather')
+        error = PluginError("Plugin crashed", plugin_id="weather")
         # PluginError includes context in string representation
         assert "Plugin crashed" in str(error)
-        assert error.context.get('plugin_id') == 'weather'
+        assert error.context.get("plugin_id") == "weather"
 
     def test_display_error(self):
         """Test DisplayError initialization."""
-        error = DisplayError("Display not found", display_mode='adafruit')
+        error = DisplayError("Display not found", display_mode="adafruit")
         # DisplayError includes context in string representation
         assert "Display not found" in str(error)
-        assert error.context.get('display_mode') == 'adafruit'
+        assert error.context.get("display_mode") == "adafruit"
 
 
 class TestErrorHandlerUtilities:
@@ -46,10 +46,7 @@ class TestErrorHandlerUtilities:
         test_file.write_text("test content")
 
         result = handle_file_operation(
-            lambda: test_file.read_text(),
-            "Read failed",
-            logging.getLogger(__name__),
-            default=""
+            lambda: test_file.read_text(), "Read failed", logging.getLogger(__name__), default=""
         )
         assert result == "test content"
 
@@ -58,10 +55,7 @@ class TestErrorHandlerUtilities:
         non_existent = tmp_path / "nonexistent.txt"
 
         result = handle_file_operation(
-            lambda: non_existent.read_text(),
-            "Read failed",
-            logging.getLogger(__name__),
-            default="fallback"
+            lambda: non_existent.read_text(), "Read failed", logging.getLogger(__name__), default="fallback"
         )
         assert result == "fallback"
 
@@ -71,49 +65,37 @@ class TestErrorHandlerUtilities:
         test_file.write_text('{"key": "value"}')
 
         result = handle_json_operation(
-            lambda: json.loads(test_file.read_text()),
-            "JSON parse failed",
-            logging.getLogger(__name__),
-            default={}
+            lambda: json.loads(test_file.read_text()), "JSON parse failed", logging.getLogger(__name__), default={}
         )
         assert result == {"key": "value"}
 
     def test_handle_json_operation_failure(self, tmp_path):
         """Test JSON parse failure."""
         test_file = tmp_path / "invalid.json"
-        test_file.write_text('invalid json {')
+        test_file.write_text("invalid json {")
 
         result = handle_json_operation(
             lambda: json.loads(test_file.read_text()),
             "JSON parse failed",
             logging.getLogger(__name__),
-            default={"default": True}
+            default={"default": True},
         )
         assert result == {"default": True}
 
     def test_safe_execute_success(self):
         """Test successful execution with safe_execute."""
+
         def success_func():
             return "success"
 
-        result = safe_execute(
-            success_func,
-            "Execution failed",
-            logging.getLogger(__name__),
-            default="failed"
-        )
+        result = safe_execute(success_func, "Execution failed", logging.getLogger(__name__), default="failed")
         assert result == "success"
 
     def test_safe_execute_failure(self):
         """Test failure handling with safe_execute."""
+
         def failing_func():
             raise ValueError("Something went wrong")
 
-        result = safe_execute(
-            failing_func,
-            "Execution failed",
-            logging.getLogger(__name__),
-            default="fallback"
-        )
+        result = safe_execute(failing_func, "Execution failed", logging.getLogger(__name__), default="fallback")
         assert result == "fallback"
-

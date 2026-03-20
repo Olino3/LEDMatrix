@@ -2,14 +2,16 @@
 """
 Core functionality test for NBA components without hardware dependencies.
 """
+
 import json
 import logging
 import os
 import sys
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def test_nba_data_structure():
     """Test NBA data structure and team ID field presence."""
@@ -23,24 +25,24 @@ def test_nba_data_structure():
         teams_data = response.json()
 
         # Extract first team to check structure
-        sports = teams_data.get('sports', [])
+        sports = teams_data.get("sports", [])
         if not sports:
             logger.error("No sports data found")
             return False
 
-        leagues = sports[0].get('leagues', [])
+        leagues = sports[0].get("leagues", [])
         if not leagues:
             logger.error("No leagues data found")
             return False
 
-        teams = leagues[0].get('teams', [])
+        teams = leagues[0].get("teams", [])
         if not teams:
             logger.error("No teams data found")
             return False
 
-        first_team = teams[0].get('team', {})
-        team_id = first_team.get('id')
-        team_abbr = first_team.get('abbreviation')
+        first_team = teams[0].get("team", {})
+        team_id = first_team.get("id")
+        team_abbr = first_team.get("abbreviation")
 
         logger.info(f"Sample team: ID={team_id}, ABBR={team_abbr}")
 
@@ -54,6 +56,7 @@ def test_nba_data_structure():
     except Exception as e:
         logger.error(f"❌ NBA data structure test FAILED: {e}")
         return False
+
 
 def test_odds_data_structure():
     """Test odds data structure."""
@@ -69,7 +72,7 @@ def test_odds_data_structure():
         logger.info(f"Odds data structure keys: {list(odds_data.keys())}")
 
         # Check if odds data has expected structure
-        if 'items' in odds_data:
+        if "items" in odds_data:
             logger.info("✅ Odds data has expected structure")
             return True
         else:
@@ -79,6 +82,7 @@ def test_odds_data_structure():
     except Exception as e:
         logger.error(f"❌ Odds data structure test FAILED: {e}")
         return False
+
 
 def test_nba_standings_structure():
     """Test NBA standings data structure for team IDs."""
@@ -92,24 +96,24 @@ def test_nba_standings_structure():
         standings_data = response.json()
 
         # Check children structure (Eastern/Western conferences)
-        children = standings_data.get('children', [])
+        children = standings_data.get("children", [])
         if not children:
             logger.error("No children (conferences) found in standings")
             return False
 
         # Check first conference for team data
         first_conference = children[0]
-        standings = first_conference.get('standings', {})
-        entries = standings.get('entries', [])
+        standings = first_conference.get("standings", {})
+        entries = standings.get("entries", [])
 
         if not entries:
             logger.error("No standings entries found")
             return False
 
         # Check first team for ID field
-        first_team = entries[0].get('team', {})
-        team_id = first_team.get('id')
-        team_abbr = first_team.get('abbreviation')
+        first_team = entries[0].get("team", {})
+        team_id = first_team.get("id")
+        team_abbr = first_team.get("abbreviation")
 
         logger.info(f"Standings team: ID={team_id}, ABBR={team_abbr}")
 
@@ -124,14 +128,15 @@ def test_nba_standings_structure():
         logger.error(f"❌ NBA standings structure test FAILED: {e}")
         return False
 
+
 def test_configuration_analysis():
     """Analyze current NBA configuration."""
     try:
-        with open('config/config.json', 'r') as f:
+        with open("config/config.json", "r") as f:
             config = json.load(f)
 
         # Analyze NBA scoreboard config
-        nba_scoreboard = config.get('nba_scoreboard', {})
+        nba_scoreboard = config.get("nba_scoreboard", {})
         logger.info("NBA Scoreboard Configuration:")
         logger.info(f"  Enabled: {nba_scoreboard.get('enabled', False)}")
         logger.info(f"  Show Odds: {nba_scoreboard.get('show_odds', False)}")
@@ -139,8 +144,8 @@ def test_configuration_analysis():
         logger.info(f"  Logo Directory: {nba_scoreboard.get('logo_dir', 'N/A')}")
 
         # Analyze leaderboard config
-        leaderboard = config.get('leaderboard', {})
-        nba_leaderboard = leaderboard.get('enabled_sports', {}).get('nba', {})
+        leaderboard = config.get("leaderboard", {})
+        nba_leaderboard = leaderboard.get("enabled_sports", {}).get("nba", {})
 
         logger.info("\nLeaderboard NBA Configuration:")
         logger.info(f"  Leaderboard Enabled: {leaderboard.get('enabled', False)}")
@@ -150,10 +155,10 @@ def test_configuration_analysis():
         # Check for potential issues
         issues = []
 
-        if not nba_scoreboard.get('enabled', False) and nba_scoreboard.get('show_odds', False):
+        if not nba_scoreboard.get("enabled", False) and nba_scoreboard.get("show_odds", False):
             issues.append("⚠️ NBA scoreboard disabled but odds enabled")
 
-        if leaderboard.get('enabled', False) and not nba_leaderboard.get('enabled', False):
+        if leaderboard.get("enabled", False) and not nba_leaderboard.get("enabled", False):
             issues.append("ℹ️ Leaderboard enabled but NBA disabled")
 
         if issues:
@@ -168,6 +173,7 @@ def test_configuration_analysis():
     except Exception as e:
         logger.error(f"❌ Configuration analysis FAILED: {e}")
         return False
+
 
 def test_nba_logo_path_construction():
     """Test NBA logo path construction logic."""
@@ -188,7 +194,7 @@ def test_nba_logo_path_construction():
         # Test team ID mapping (simulate what we fixed)
         sample_teams = [
             ("LAL", "13"),  # Lakers
-            ("BOS", "2"),   # Celtics
+            ("BOS", "2"),  # Celtics
             ("MIA", "14"),  # Heat
         ]
 
@@ -201,6 +207,7 @@ def test_nba_logo_path_construction():
     except Exception as e:
         logger.error(f"❌ NBA logo path construction test FAILED: {e}")
         return False
+
 
 def main():
     """Run core functionality tests."""
@@ -256,6 +263,7 @@ def main():
     else:
         logger.error(f"❌ {failed} test(s) failed. Please check the issues above.")
         return False
+
 
 if __name__ == "__main__":
     success = main()

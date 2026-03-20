@@ -21,9 +21,7 @@ def _make_config_manager(config=None, load_config=None):
     """Return a mock ConfigManager."""
     cm = MagicMock()
     default_config = {
-        "display": {
-            "hardware": {"rows": 32, "cols": 64}
-        },
+        "display": {"hardware": {"rows": 32, "cols": 64}},
         "timezone": "America/New_York",
     }
     cm.load_config.return_value = load_config if load_config is not None else default_config
@@ -231,8 +229,7 @@ class TestValidateCacheDirectory:
         with patch("src.cache_manager.CacheManager") as MockCM:
             instance = MockCM.return_value
             instance.get_cache_dir.return_value = str(tmp_path)
-            with patch("os.path.exists", return_value=True), \
-                 patch("os.access", return_value=False):
+            with patch("os.path.exists", return_value=True), patch("os.access", return_value=False):
                 validator = StartupValidator(cm)
                 validator._validate_cache_directory()
         assert any("not writable" in e for e in validator.errors)
@@ -243,9 +240,11 @@ class TestValidateCacheDirectory:
         with patch("src.cache_manager.CacheManager") as MockCM:
             instance = MockCM.return_value
             instance.get_cache_dir.return_value = str(tmp_path)
-            with patch("os.path.exists", return_value=True), \
-                 patch("os.access", return_value=True), \
-                 patch("builtins.open", side_effect=IOError("disk full")):
+            with (
+                patch("os.path.exists", return_value=True),
+                patch("os.access", return_value=True),
+                patch("builtins.open", side_effect=IOError("disk full")),
+            ):
                 validator = StartupValidator(cm)
                 validator._validate_cache_directory()
         assert any("Cannot write" in e for e in validator.errors)
@@ -275,9 +274,11 @@ class TestValidateCacheDirectory:
         with patch("src.cache_manager.CacheManager") as MockCM:
             instance = MockCM.return_value
             instance.get_cache_dir.return_value = str(tmp_path)
-            with patch("os.path.exists", return_value=True), \
-                 patch("os.access", return_value=True), \
-                 patch("builtins.open", side_effect=OSError("permission denied")):
+            with (
+                patch("os.path.exists", return_value=True),
+                patch("os.access", return_value=True),
+                patch("builtins.open", side_effect=OSError("permission denied")),
+            ):
                 validator = StartupValidator(cm)
                 validator._validate_cache_directory()
         assert any("Cannot write" in e for e in validator.errors)

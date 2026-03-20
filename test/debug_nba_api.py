@@ -2,14 +2,16 @@
 """
 Diagnostic script to examine NBA API data structure and identify the missing 'id' field issue.
 """
+
 import logging
 from typing import Any, Dict
 
 import requests
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def fetch_nba_teams_data() -> Dict[str, Any]:
     """Fetch NBA teams data from ESPN API."""
@@ -25,18 +27,18 @@ def fetch_nba_teams_data() -> Dict[str, Any]:
         logger.info(f"Response structure keys: {list(data.keys())}")
 
         # Examine the structure
-        sports = data.get('sports', [])
+        sports = data.get("sports", [])
         if sports:
             logger.info(f"Number of sports: {len(sports)}")
             sport = sports[0]
             logger.info(f"Sport keys: {list(sport.keys())}")
 
-            leagues = sport.get('leagues', [])
+            leagues = sport.get("leagues", [])
             if leagues:
                 league = leagues[0]
                 logger.info(f"League keys: {list(league.keys())}")
 
-                teams = league.get('teams', [])
+                teams = league.get("teams", [])
                 logger.info(f"Number of teams: {len(teams)}")
 
                 if teams:
@@ -44,13 +46,13 @@ def fetch_nba_teams_data() -> Dict[str, Any]:
                     first_team = teams[0]
                     logger.info(f"First team keys: {list(first_team.keys())}")
 
-                    team_data = first_team.get('team', {})
+                    team_data = first_team.get("team", {})
                     logger.info(f"Team data keys: {list(team_data.keys())}")
 
                     # Check for id field
-                    team_id = team_data.get('id')
-                    team_abbr = team_data.get('abbreviation')
-                    team_name = team_data.get('name')
+                    team_id = team_data.get("id")
+                    team_abbr = team_data.get("abbreviation")
+                    team_name = team_data.get("name")
 
                     logger.info(f"Sample team: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
@@ -61,14 +63,15 @@ def fetch_nba_teams_data() -> Dict[str, Any]:
 
                     # Check a few more teams to confirm structure
                     for i in range(min(5, len(teams))):
-                        team = teams[i].get('team', {})
-                        logger.info(f"Team {i+1}: ID={team.get('id')}, ABBR={team.get('abbreviation')}")
+                        team = teams[i].get("team", {})
+                        logger.info(f"Team {i + 1}: ID={team.get('id')}, ABBR={team.get('abbreviation')}")
 
         return data
 
     except Exception as e:
         logger.error(f"Error fetching NBA teams data: {e}")
         return {}
+
 
 def fetch_nba_standings_data() -> Dict[str, Any]:
     """Fetch NBA standings data from ESPN API."""
@@ -84,8 +87,8 @@ def fetch_nba_standings_data() -> Dict[str, Any]:
         logger.info(f"Response structure keys: {list(data.keys())}")
 
         # Check if standings has entries (direct structure)
-        if 'standings' in data and 'entries' in data['standings']:
-            entries = data['standings']['entries']
+        if "standings" in data and "entries" in data["standings"]:
+            entries = data["standings"]["entries"]
             logger.info(f"Number of standings entries (direct): {len(entries)}")
 
             if entries:
@@ -93,13 +96,13 @@ def fetch_nba_standings_data() -> Dict[str, Any]:
                 first_entry = entries[0]
                 logger.info(f"First entry keys: {list(first_entry.keys())}")
 
-                team_data = first_entry.get('team', {})
+                team_data = first_entry.get("team", {})
                 logger.info(f"Team data keys: {list(team_data.keys())}")
 
                 # Check for id field
-                team_id = team_data.get('id')
-                team_abbr = team_data.get('abbreviation')
-                team_name = team_data.get('displayName')
+                team_id = team_data.get("id")
+                team_abbr = team_data.get("abbreviation")
+                team_name = team_data.get("displayName")
 
                 logger.info(f"Sample standings team: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
@@ -109,44 +112,45 @@ def fetch_nba_standings_data() -> Dict[str, Any]:
                     logger.error("Standings team ID field is missing!")
 
         # Check children structure (divisions/conferences)
-        if 'children' in data:
-            children = data.get('children', [])
+        if "children" in data:
+            children = data.get("children", [])
             logger.info(f"Number of children (divisions/conferences): {len(children)}")
 
             for i, child in enumerate(children):
-                logger.info(f"Child {i+1} keys: {list(child.keys())}")
-                child_name = child.get('displayName', 'Unknown')
-                logger.info(f"Child {i+1} name: {child_name}")
+                logger.info(f"Child {i + 1} keys: {list(child.keys())}")
+                child_name = child.get("displayName", "Unknown")
+                logger.info(f"Child {i + 1} name: {child_name}")
 
-                if 'standings' in child and 'entries' in child['standings']:
-                    entries = child['standings']['entries']
-                    logger.info(f"Child {i+1} has {len(entries)} entries")
+                if "standings" in child and "entries" in child["standings"]:
+                    entries = child["standings"]["entries"]
+                    logger.info(f"Child {i + 1} has {len(entries)} entries")
 
                     if entries:
                         # Examine first entry in this child
                         first_entry = entries[0]
-                        logger.info(f"Child {i+1} first entry keys: {list(first_entry.keys())}")
+                        logger.info(f"Child {i + 1} first entry keys: {list(first_entry.keys())}")
 
-                        team_data = first_entry.get('team', {})
-                        logger.info(f"Child {i+1} team data keys: {list(team_data.keys())}")
+                        team_data = first_entry.get("team", {})
+                        logger.info(f"Child {i + 1} team data keys: {list(team_data.keys())}")
 
                         # Check for id field
-                        team_id = team_data.get('id')
-                        team_abbr = team_data.get('abbreviation')
-                        team_name = team_data.get('displayName')
+                        team_id = team_data.get("id")
+                        team_abbr = team_data.get("abbreviation")
+                        team_name = team_data.get("displayName")
 
-                        logger.info(f"Child {i+1} sample team: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
+                        logger.info(f"Child {i + 1} sample team: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
                         if team_id:
-                            logger.info(f"Child {i+1} team ID field exists: {team_id}")
+                            logger.info(f"Child {i + 1} team ID field exists: {team_id}")
                         else:
-                            logger.error(f"Child {i+1} team ID field is missing!")
+                            logger.error(f"Child {i + 1} team ID field is missing!")
 
         return data
 
     except Exception as e:
         logger.error(f"Error fetching NBA standings data: {e}")
         return {}
+
 
 def main():
     """Main diagnostic function."""
@@ -162,6 +166,7 @@ def main():
     logger.info("Diagnosis complete")
     logger.info("Check the logs above to see if team 'id' fields are present")
     logger.info("The leaderboard manager needs team 'id' fields for logo fetching")
+
 
 if __name__ == "__main__":
     main()

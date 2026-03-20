@@ -9,7 +9,7 @@ import os
 import sys
 
 # Add the src directory to the path so we can import our modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from cache_manager import CacheManager
 
@@ -23,10 +23,11 @@ def list_cache_keys(cache_manager):
 
     cache_files = []
     for file in os.listdir(cache_dir):
-        if file.endswith('.json'):
+        if file.endswith(".json"):
             cache_files.append(file[:-5])  # Remove .json extension
 
     return cache_files
+
 
 def clear_specific_cache(cache_manager, key):
     """Clear a specific cache key."""
@@ -38,6 +39,7 @@ def clear_specific_cache(cache_manager, key):
         print(f"✗ Error clearing cache key '{key}': {e}")
         return False
 
+
 def clear_all_cache(cache_manager):
     """Clear all cache data."""
     try:
@@ -48,6 +50,7 @@ def clear_all_cache(cache_manager):
         print(f"✗ Error clearing all cache: {e}")
         return False
 
+
 def show_cache_info(cache_manager, key=None):
     """Show information about cache entries."""
     if key:
@@ -57,7 +60,7 @@ def show_cache_info(cache_manager, key=None):
                 print(f"Cache key '{key}' exists with data type: {type(data)}")
                 if isinstance(data, dict):
                     print(f"  Keys: {list(data.keys())}")
-                    if 'games' in data:
+                    if "games" in data:
                         print(f"  Number of games: {len(data['games']) if isinstance(data['games'], dict) else 'N/A'}")
                 elif isinstance(data, list):
                     print(f"  Number of items: {len(data)}")
@@ -77,16 +80,13 @@ def show_cache_info(cache_manager, key=None):
         else:
             print("No cache keys found")
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Clear LEDMatrix cache data')
-    parser.add_argument('--list', '-l', action='store_true',
-                       help='List all available cache keys')
-    parser.add_argument('--clear-all', '-a', action='store_true',
-                       help='Clear all cache data')
-    parser.add_argument('--clear', '-c', type=str, metavar='KEY',
-                       help='Clear a specific cache key')
-    parser.add_argument('--info', '-i', type=str, metavar='KEY',
-                       help='Show information about a specific cache key')
+    parser = argparse.ArgumentParser(description="Clear LEDMatrix cache data")
+    parser.add_argument("--list", "-l", action="store_true", help="List all available cache keys")
+    parser.add_argument("--clear-all", "-a", action="store_true", help="Clear all cache data")
+    parser.add_argument("--clear", "-c", type=str, metavar="KEY", help="Clear a specific cache key")
+    parser.add_argument("--info", "-i", type=str, metavar="KEY", help="Show information about a specific cache key")
 
     args = parser.parse_args()
 
@@ -123,6 +123,7 @@ def main():
 
         # Show current cache status
         show_cache_info(cache_manager)
+
 
 if __name__ == "__main__":
     main()

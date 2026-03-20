@@ -36,15 +36,13 @@ class TestIsRaspberryPi:
     """Tests for Pi hardware detection helper."""
 
     def test_returns_true_when_dev_mem_exists(self):
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
-             patch("matrix_cli._PI_MODEL_PATH") as mock_model:
+        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, patch("matrix_cli._PI_MODEL_PATH") as mock_model:
             mock_dev_mem.exists.return_value = True
             mock_model.exists.return_value = False
             assert _is_raspberry_pi() is True
 
     def test_returns_false_when_nothing_present(self):
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
-             patch("matrix_cli._PI_MODEL_PATH") as mock_model:
+        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, patch("matrix_cli._PI_MODEL_PATH") as mock_model:
             mock_dev_mem.exists.return_value = False
             mock_model.exists.return_value = False
             assert _is_raspberry_pi() is False
@@ -52,16 +50,14 @@ class TestIsRaspberryPi:
     def test_returns_true_when_model_file_contains_raspberry(self, tmp_path):
         model_file = tmp_path / "model"
         model_file.write_text("Raspberry Pi 4 Model B Rev 1.4\n")
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
-             patch("matrix_cli._PI_MODEL_PATH", model_file):
+        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, patch("matrix_cli._PI_MODEL_PATH", model_file):
             mock_dev_mem.exists.return_value = False
             assert _is_raspberry_pi() is True
 
     def test_returns_false_when_model_file_not_raspberry(self, tmp_path):
         model_file = tmp_path / "model"
         model_file.write_text("Some Other Board\n")
-        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, \
-             patch("matrix_cli._PI_MODEL_PATH", model_file):
+        with patch("matrix_cli._PI_DEV_MEM") as mock_dev_mem, patch("matrix_cli._PI_MODEL_PATH", model_file):
             mock_dev_mem.exists.return_value = False
             assert _is_raspberry_pi() is False
 
@@ -79,8 +75,7 @@ class TestRunInstallScript:
         scripts_dir = tmp_path / "scripts" / "install"
         scripts_dir.mkdir(parents=True)
         (scripts_dir / "test_script.sh").write_text("#!/bin/bash\necho ok")
-        with patch("matrix_cli.LEDMATRIX_ROOT", tmp_path), \
-             patch("matrix_cli._run", return_value=0) as mock_run:
+        with patch("matrix_cli.LEDMATRIX_ROOT", tmp_path), patch("matrix_cli._run", return_value=0) as mock_run:
             rc = _run_install_script("test_script.sh")
             assert rc == 0
             mock_run.assert_called_once()
@@ -93,8 +88,7 @@ class TestRunInstallScript:
         scripts_dir = tmp_path / "scripts" / "install"
         scripts_dir.mkdir(parents=True)
         (scripts_dir / "test_script.sh").write_text("#!/bin/bash\necho ok")
-        with patch("matrix_cli.LEDMATRIX_ROOT", tmp_path), \
-             patch("matrix_cli._run", return_value=0) as mock_run:
+        with patch("matrix_cli.LEDMATRIX_ROOT", tmp_path), patch("matrix_cli._run", return_value=0) as mock_run:
             rc = _run_install_script("test_script.sh", use_sudo=False)
             assert rc == 0
             args = mock_run.call_args[0][0]
@@ -128,8 +122,12 @@ class TestInstallPermissions:
         (self.root / "config" / "config.json").write_text("{}")
         scripts_install = self.root / "scripts" / "install"
         scripts_install.mkdir(parents=True)
-        for script in ["setup_cache.sh", "configure_web_sudo.sh",
-                        "configure_wifi_permissions.sh", "install_service.sh"]:
+        for script in [
+            "setup_cache.sh",
+            "configure_web_sudo.sh",
+            "configure_wifi_permissions.sh",
+            "install_service.sh",
+        ]:
             (scripts_install / script).write_text("#!/bin/bash\necho ok")
 
     @patch("matrix_cli._is_raspberry_pi", return_value=True)
@@ -170,8 +168,7 @@ class TestInstallPermissions:
             assert "not a Raspberry Pi" in result.output
             # No permission scripts should have been called
             perms_called = any(
-                "setup_cache.sh" in str(c) or "configure_web_sudo.sh" in str(c)
-                for c in mock_run.call_args_list
+                "setup_cache.sh" in str(c) or "configure_web_sudo.sh" in str(c) for c in mock_run.call_args_list
             )
             assert not perms_called
 
@@ -206,8 +203,7 @@ class TestInstallExtraServices:
         (self.root / "config" / "config.json").write_text("{}")
         scripts_install = self.root / "scripts" / "install"
         scripts_install.mkdir(parents=True)
-        for script in ["install_service.sh", "install_web_service.sh",
-                        "install_wifi_monitor.sh"]:
+        for script in ["install_service.sh", "install_web_service.sh", "install_wifi_monitor.sh"]:
             (scripts_install / script).write_text("#!/bin/bash\necho ok")
 
     @patch("matrix_cli._is_raspberry_pi", return_value=True)
@@ -302,10 +298,12 @@ class TestInstallPrerequisites:
     @patch("matrix_cli._run")
     def test_prerequisites_apt_update_failure_continues(self, mock_run, mock_venv, mock_pi):
         """apt-get update failure should warn but not abort."""
+
         def side_effect(cmd, **kwargs):
             if "update" in cmd:
                 return 1
             return 0
+
         mock_run.side_effect = side_effect
         with patch("matrix_cli.LEDMATRIX_ROOT", self.root):
             result = self.runner.invoke(cli, ["install", "--prerequisites", "--no-services"])
@@ -332,9 +330,14 @@ class TestInstallFlagsCombined:
         (self.root / "config" / "config.json").write_text("{}")
         scripts_install = self.root / "scripts" / "install"
         scripts_install.mkdir(parents=True)
-        for script in ["install_service.sh", "install_web_service.sh",
-                        "install_wifi_monitor.sh", "setup_cache.sh",
-                        "configure_web_sudo.sh", "configure_wifi_permissions.sh"]:
+        for script in [
+            "install_service.sh",
+            "install_web_service.sh",
+            "install_wifi_monitor.sh",
+            "setup_cache.sh",
+            "configure_web_sudo.sh",
+            "configure_wifi_permissions.sh",
+        ]:
             (scripts_install / script).write_text("#!/bin/bash\necho ok")
 
     @patch("matrix_cli._is_raspberry_pi", return_value=True)
@@ -342,9 +345,7 @@ class TestInstallFlagsCombined:
     @patch("matrix_cli._run", return_value=0)
     def test_permissions_and_services_together(self, mock_run, mock_venv, mock_pi):
         with patch("matrix_cli.LEDMATRIX_ROOT", self.root):
-            result = self.runner.invoke(cli, [
-                "install", "--permissions", "--services", "--no-services"
-            ])
+            result = self.runner.invoke(cli, ["install", "--permissions", "--services", "--no-services"])
             assert result.exit_code == 0
             calls_str = str(mock_run.call_args_list)
             assert "setup_cache.sh" in calls_str
@@ -359,22 +360,24 @@ class TestInstallFlagsCombined:
             result = self.runner.invoke(cli, ["install", "--no-services"])
             assert result.exit_code == 0
             # No Pi-specific scripts should be called
-            pi_scripts = ["setup_cache.sh", "configure_web_sudo.sh",
-                          "install_web_service.sh", "install_wifi_monitor.sh"]
+            pi_scripts = [
+                "setup_cache.sh",
+                "configure_web_sudo.sh",
+                "install_web_service.sh",
+                "install_wifi_monitor.sh",
+            ]
             calls_str = str(mock_run.call_args_list)
             for script in pi_scripts:
-                assert script not in calls_str, \
-                    f"{script} should not be called without explicit flag"
+                assert script not in calls_str, f"{script} should not be called without explicit flag"
 
     @patch("matrix_cli._is_raspberry_pi", return_value=True)
     @patch("matrix_cli._sync_venv", return_value=0)
     @patch("matrix_cli._run", return_value=0)
     def test_all_flags_together(self, mock_run, mock_venv, mock_pi):
         with patch("matrix_cli.LEDMATRIX_ROOT", self.root):
-            result = self.runner.invoke(cli, [
-                "install", "--prerequisites", "--permissions", "--services",
-                "--no-services"
-            ])
+            result = self.runner.invoke(
+                cli, ["install", "--prerequisites", "--permissions", "--services", "--no-services"]
+            )
             assert result.exit_code == 0
             calls_str = str(mock_run.call_args_list)
             assert "apt-get" in calls_str

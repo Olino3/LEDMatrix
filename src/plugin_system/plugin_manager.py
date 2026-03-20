@@ -78,8 +78,8 @@ class PluginManager:
         self.plugin_last_update: Dict[str, float] = {}
 
         # Health tracking (optional, set by display_controller if available)
-        self.health_tracker = None
-        self.resource_monitor = None
+        self.health_tracker: Optional[Any] = None
+        self.resource_monitor: Optional[Any] = None
 
         # Ensure plugins directory exists with proper permissions
         try:
@@ -100,7 +100,7 @@ class PluginManager:
         Returns:
             List of plugin IDs found
         """
-        plugin_ids = []
+        plugin_ids: List[str] = []
 
         if not directory.exists():
             return plugin_ids
@@ -615,8 +615,10 @@ class PluginManager:
                     success = False
                     if self.resource_monitor:
                         # If resource monitor exists, wrap the call
-                        def monitored_update(_pid=plugin_id, _inst=plugin_instance):
-                            self.resource_monitor.monitor_call(_pid, _inst.update)
+                        _monitor = self.resource_monitor  # capture for closure
+
+                        def monitored_update(_pid=plugin_id, _inst=plugin_instance, _mon=_monitor):
+                            _mon.monitor_call(_pid, _inst.update)
 
                         success = self.plugin_executor.execute_update(
                             type("obj", (object,), {"update": monitored_update})(), plugin_id

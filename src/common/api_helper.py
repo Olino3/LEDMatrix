@@ -71,7 +71,7 @@ class APIHelper:
         )
 
         # Rate limiting
-        self._last_request_time = 0
+        self._last_request_time: float = 0
         self._min_request_interval = 1.0  # Minimum seconds between requests
 
     def get(
@@ -102,14 +102,14 @@ class APIHelper:
             cached = self._get_from_cache(cache_key)
             if cached is not None:
                 self.logger.debug(f"Using cached response for {cache_key}")
-                return cached
+                return cached  # type: ignore[no-any-return]
 
         # Rate limiting
         self._enforce_rate_limit()
 
         try:
             # Prepare request
-            request_headers = self.session.headers.copy()
+            request_headers = self.session.headers.copy()  # type: ignore[attr-defined]
             if headers:
                 request_headers.update(headers)
 
@@ -127,7 +127,7 @@ class APIHelper:
                 self._set_cache(cache_key, data, cache_ttl)
 
             self.logger.debug(f"Successfully fetched {url}")
-            return data
+            return data  # type: ignore[no-any-return]
 
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Request failed for {url}: {e}")
@@ -232,7 +232,7 @@ class APIHelper:
         self._enforce_rate_limit()
 
         try:
-            request_headers = self.session.headers.copy()
+            request_headers = self.session.headers.copy()  # type: ignore[attr-defined]
             if headers:
                 request_headers.update(headers)
 
@@ -241,7 +241,7 @@ class APIHelper:
             )
             response.raise_for_status()
 
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
 
         except requests.exceptions.RequestException as e:
             self.logger.error(f"POST request failed for {url}: {e}")

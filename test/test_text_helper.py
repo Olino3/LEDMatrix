@@ -31,8 +31,8 @@ class TestTextHelper:
         th = TextHelper()
         assert th.font_dir == pytest.importorskip("pathlib").Path("assets/fonts")
 
-    @patch('PIL.ImageFont.truetype')
-    @patch('PIL.ImageFont.load_default')
+    @patch("PIL.ImageFont.truetype")
+    @patch("PIL.ImageFont.load_default")
     def test_load_fonts_success(self, mock_default, mock_truetype, text_helper, tmp_path):
         """Test loading fonts successfully."""
         font_file = tmp_path / "test_font.ttf"
@@ -41,30 +41,20 @@ class TestTextHelper:
         mock_font = MagicMock()
         mock_truetype.return_value = mock_font
 
-        font_config = {
-            "regular": {
-                "file": "test_font.ttf",
-                "size": 12
-            }
-        }
+        font_config = {"regular": {"file": "test_font.ttf", "size": 12}}
 
         fonts = text_helper.load_fonts(font_config)
 
         assert "regular" in fonts
         assert fonts["regular"] == mock_font
 
-    @patch('PIL.ImageFont.load_default')
+    @patch("PIL.ImageFont.load_default")
     def test_load_fonts_file_not_found(self, mock_default, text_helper):
         """Test loading fonts when file doesn't exist."""
         mock_font = MagicMock()
         mock_default.return_value = mock_font
 
-        font_config = {
-            "regular": {
-                "file": "nonexistent.ttf",
-                "size": 12
-            }
-        }
+        font_config = {"regular": {"file": "nonexistent.ttf", "size": 12}}
 
         fonts = text_helper.load_fonts(font_config)
 
@@ -74,25 +64,26 @@ class TestTextHelper:
     def test_draw_text_with_outline(self, text_helper):
         """Test drawing text with outline."""
         # Create a mock image and draw object
-        mock_image = Image.new('RGB', (100, 100))
+        mock_image = Image.new("RGB", (100, 100))
         mock_draw = ImageDraw.Draw(mock_image)
         mock_font = ImageFont.load_default()
 
         # Should not raise an exception
-        text_helper.draw_text_with_outline(
-            mock_draw, "Hello", (10, 10), mock_font
-        )
+        text_helper.draw_text_with_outline(mock_draw, "Hello", (10, 10), mock_font)
 
     def test_get_text_dimensions(self, text_helper):
         """Test getting text dimensions."""
         from PIL import Image, ImageDraw
-        mock_image = Image.new('RGB', (100, 100))
+
+        mock_image = Image.new("RGB", (100, 100))
         ImageDraw.Draw(mock_image)
         mock_font = ImageFont.load_default()
 
         # Patch the draw object in the method
-        with patch.object(text_helper, 'get_text_width', return_value=50), \
-             patch.object(text_helper, 'get_text_height', return_value=10):
+        with (
+            patch.object(text_helper, "get_text_width", return_value=50),
+            patch.object(text_helper, "get_text_height", return_value=10),
+        ):
             width, height = text_helper.get_text_dimensions("Hello", mock_font)
             assert width == 50
             assert height == 10
@@ -101,20 +92,21 @@ class TestTextHelper:
         """Test centering text position."""
         mock_font = ImageFont.load_default()
 
-        with patch.object(text_helper, 'get_text_dimensions', return_value=(50, 10)):
+        with patch.object(text_helper, "get_text_dimensions", return_value=(50, 10)):
             x, y = text_helper.center_text("Hello", mock_font, 100, 20)
             assert x == 25  # (100 - 50) / 2
-            assert y == 5   # (20 - 10) / 2
+            assert y == 5  # (20 - 10) / 2
 
     def test_wrap_text(self, text_helper):
         """Test wrapping text to width."""
         mock_font = ImageFont.load_default()
         text = "This is a long line of text"
 
-        with patch.object(text_helper, 'get_text_width') as mock_width:
+        with patch.object(text_helper, "get_text_width") as mock_width:
             # Simulate width calculation
             def width_side_effect(text, font):
                 return len(text) * 5  # Simple width calculation
+
             mock_width.side_effect = width_side_effect
 
             lines = text_helper.wrap_text(text, mock_font, max_width=20)

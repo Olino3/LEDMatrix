@@ -75,7 +75,7 @@ class VisualTestDisplayManager:
         # Call tracking (preserves MockDisplayManager capabilities)
         self.clear_called = False
         self.update_called = False
-        self.draw_calls = []
+        self.draw_calls: list[dict[str, Any]] = []
 
         # Load fonts
         self._load_fonts()
@@ -154,7 +154,7 @@ class VisualTestDisplayManager:
 
         except (FileNotFoundError, OSError) as e:
             logger.debug("Font loading fallback: %s", e)
-            self.regular_font = ImageFont.load_default()
+            self.regular_font = ImageFont.load_default()  # type: ignore[assignment]
             self.small_font = self.regular_font
             self.font = self.regular_font
             self.calendar_font = self.regular_font
@@ -201,7 +201,7 @@ class VisualTestDisplayManager:
         try:
             # Normalize color to tuple (plugins may pass lists from JSON config)
             if isinstance(color, list):
-                color = tuple(color)
+                color = tuple(color)  # type: ignore[unreachable]
 
             # Select font
             if font:
@@ -313,7 +313,7 @@ class VisualTestDisplayManager:
                 return width
             else:
                 bbox = self.draw.textbbox((0, 0), text, font=font)
-                return bbox[2] - bbox[0]
+                return int(bbox[2] - bbox[0])
         except Exception:
             return 0
 
@@ -330,13 +330,13 @@ class VisualTestDisplayManager:
                 is_bdf = False
 
             if is_bdf:
-                return font.size.height >> 6
+                return font.size.height >> 6  # type: ignore[no-any-return]
             else:
                 ascent, descent = font.getmetrics()
-                return ascent + descent
+                return ascent + descent  # type: ignore[no-any-return]
         except Exception:
             if hasattr(font, "size"):
-                return font.size
+                return font.size  # type: ignore[no-any-return]
             return 8
 
     # ------------------------------------------------------------------
@@ -451,7 +451,12 @@ class VisualTestDisplayManager:
             self._draw_sun(x, y, size)
 
     def draw_text_with_icons(
-        self, text: str, icons: List[tuple] = None, x: int = None, y: int = None, color: tuple = (255, 255, 255)
+        self,
+        text: str,
+        icons: Optional[List[tuple]] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        color: tuple = (255, 255, 255),
     ):
         """Draw text with weather icons at specified positions."""
         self.draw_text(text, x, y, color)
@@ -472,7 +477,7 @@ class VisualTestDisplayManager:
 
     def is_currently_scrolling(self) -> bool:
         """Check if display is currently scrolling."""
-        return self._scrolling_state["is_scrolling"]
+        return self._scrolling_state["is_scrolling"]  # type: ignore[return-value]
 
     # ------------------------------------------------------------------
     # Utility methods

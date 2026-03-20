@@ -37,7 +37,7 @@ class PluginState:
     installed_at: Optional[datetime] = None
     last_updated: Optional[datetime] = None
     config_version: int = 1  # For detecting state corruption
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -49,9 +49,9 @@ class PluginState:
         # Convert enum to string
         result["status"] = self.status.value
         # Convert datetime to ISO string
-        if result.get("installed_at"):
+        if self.installed_at is not None:
             result["installed_at"] = self.installed_at.isoformat()
-        if result.get("last_updated"):
+        if self.last_updated is not None:
             result["last_updated"] = self.last_updated.isoformat()
         return result
 
@@ -102,7 +102,7 @@ class PluginStateManager:
         self._state_version = 1
 
         # State change callbacks
-        self._callbacks: Dict[str, List[Callable[[str, PluginState, PluginState], None]]] = {}
+        self._callbacks: Dict[str, List[Callable[[str, PluginState, Optional[PluginState]], None]]] = {}
 
         # Threading
         self._lock = threading.RLock()
@@ -260,7 +260,7 @@ class PluginStateManager:
         Returns:
             True if update successful
         """
-        updates = {"status": PluginStateStatus.ERROR}
+        updates: Dict[str, Any] = {"status": PluginStateStatus.ERROR}
         if error:
             updates["metadata"] = {"last_error": error}
 

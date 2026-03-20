@@ -62,7 +62,7 @@ class StarlarkApp:
         """Load app configuration from config.json."""
         if self.config_file.exists():
             try:
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file, "r") as f:
                     return json.load(f)
             except (OSError, json.JSONDecodeError) as e:
                 logger.warning(f"Could not load config for {self.app_id}: {e}")
@@ -72,7 +72,7 @@ class StarlarkApp:
         """Load app schema from schema.json."""
         if self.schema_file.exists():
             try:
-                with open(self.schema_file, 'r') as f:
+                with open(self.schema_file, "r") as f:
                     return json.load(f)
             except (OSError, json.JSONDecodeError) as e:
                 logger.warning(f"Could not load schema for {self.app_id}: {e}")
@@ -87,15 +87,15 @@ class StarlarkApp:
             return
 
         # Get fields from schema (handles both 'fields' and 'schema' keys)
-        fields = self.schema.get('fields') or self.schema.get('schema') or []
+        fields = self.schema.get("fields") or self.schema.get("schema") or []
         defaults_added = False
 
         for field in fields:
-            if isinstance(field, dict) and 'id' in field and 'default' in field:
-                field_id = field['id']
+            if isinstance(field, dict) and "id" in field and "default" in field:
+                field_id = field["id"]
                 # Only add if not already present in config
                 if field_id not in self.config:
-                    self.config[field_id] = field['default']
+                    self.config[field_id] = field["default"]
                     defaults_added = True
                     logger.debug(f"Added default value for {self.app_id}.{field_id}: {field['default']}")
 
@@ -112,11 +112,11 @@ class StarlarkApp:
         """
         for key, value in self.config.items():
             # Validate key format
-            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]{0,63}$', key):
+            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]{0,63}$", key):
                 return f"Invalid config key format: {key}"
 
             # Validate location fields (JSON format)
-            if isinstance(value, str) and value.strip().startswith('{'):
+            if isinstance(value, str) and value.strip().startswith("{"):
                 try:
                     loc = json.loads(value)
                 except json.JSONDecodeError as e:
@@ -124,12 +124,12 @@ class StarlarkApp:
 
                 # Validate lat/lng if present
                 try:
-                    if 'lat' in loc:
-                        lat = float(loc['lat'])
+                    if "lat" in loc:
+                        lat = float(loc["lat"])
                         if not -90 <= lat <= 90:
                             return f"Latitude {lat} out of range [-90, 90] for key {key}"
-                    if 'lng' in loc:
-                        lng = float(loc['lng'])
+                    if "lng" in loc:
+                        lng = float(loc["lng"])
                         if not -180 <= lng <= 180:
                             return f"Longitude {lng} out of range [-180, 180] for key {key}"
                 except ValueError as e:
@@ -146,7 +146,7 @@ class StarlarkApp:
                 logger.error(f"Config validation failed for {self.app_id}: {error}")
                 return False
 
-            with open(self.config_file, 'w') as f:
+            with open(self.config_file, "w") as f:
                 json.dump(self.config, f, indent=2)
             return True
         except Exception as e:
@@ -195,19 +195,13 @@ class StarlarkAppsPlugin(BasePlugin):
     Each installed app becomes a dynamic display mode.
     """
 
-    def __init__(self, plugin_id: str, config: Dict[str, Any],
-                 display_manager, cache_manager, plugin_manager):
+    def __init__(self, plugin_id: str, config: Dict[str, Any], display_manager, cache_manager, plugin_manager):
         """Initialize the Starlark Apps plugin."""
         super().__init__(plugin_id, config, display_manager, cache_manager, plugin_manager)
 
         # Initialize components
-        self.pixlet = PixletRenderer(
-            pixlet_path=config.get("pixlet_path"),
-            timeout=config.get("render_timeout", 30)
-        )
-        self.extractor = FrameExtractor(
-            default_frame_delay=config.get("default_frame_delay", 50)
-        )
+        self.pixlet = PixletRenderer(pixlet_path=config.get("pixlet_path"), timeout=config.get("render_timeout", 30))
+        self.extractor = FrameExtractor(default_frame_delay=config.get("default_frame_delay", 50))
 
         # App storage
         self.apps_dir = self._get_apps_directory()
@@ -229,8 +223,10 @@ class StarlarkAppsPlugin(BasePlugin):
         # Calculate optimal magnification based on display size
         self.calculated_magnify = self._calculate_optimal_magnify()
         if self.calculated_magnify > 1:
-            self.logger.info(f"Display size: {self.display_manager.width}x{self.display_manager.height}, "
-                           f"recommended magnify: {self.calculated_magnify}")
+            self.logger.info(
+                f"Display size: {self.display_manager.width}x{self.display_manager.height}, "
+                f"recommended magnify: {self.calculated_magnify}"
+            )
 
         # Load installed apps
         self._load_installed_apps()
@@ -334,9 +330,11 @@ class StarlarkAppsPlugin(BasePlugin):
             # Clamp to reasonable range (1-8)
             magnify = max(1, min(8, magnify))
 
-            self.logger.debug(f"Display: {display_width}x{display_height}, "
-                            f"Native: {NATIVE_WIDTH}x{NATIVE_HEIGHT}, "
-                            f"Calculated magnify: {magnify}")
+            self.logger.debug(
+                f"Display: {display_width}x{display_height}, "
+                f"Native: {NATIVE_WIDTH}x{NATIVE_HEIGHT}, "
+                f"Calculated magnify: {magnify}"
+            )
 
             return magnify
 
@@ -368,10 +366,10 @@ class StarlarkAppsPlugin(BasePlugin):
                 render_height = NATIVE_HEIGHT * magnify
 
                 # Check if this magnify fits perfectly
-                perfect_fit = (render_width == display_width and render_height == display_height)
+                perfect_fit = render_width == display_width and render_height == display_height
 
                 # Check if scaling is needed
-                needs_scaling = (render_width != display_width or render_height != display_height)
+                needs_scaling = render_width != display_width or render_height != display_height
 
                 # Calculate quality score (1-100)
                 if perfect_fit:
@@ -384,31 +382,29 @@ class StarlarkAppsPlugin(BasePlugin):
                     height_ratio = min(render_height, display_height) / max(render_height, display_height)
                     quality_score = int((width_ratio + height_ratio) / 2 * 100)
 
-                recommendations.append({
-                    'magnify': magnify,
-                    'render_size': f"{render_width}x{render_height}",
-                    'perfect_fit': perfect_fit,
-                    'needs_scaling': needs_scaling,
-                    'quality_score': quality_score,
-                    'recommended': magnify == self.calculated_magnify
-                })
+                recommendations.append(
+                    {
+                        "magnify": magnify,
+                        "render_size": f"{render_width}x{render_height}",
+                        "perfect_fit": perfect_fit,
+                        "needs_scaling": needs_scaling,
+                        "quality_score": quality_score,
+                        "recommended": magnify == self.calculated_magnify,
+                    }
+                )
 
             return {
-                'display_size': f"{display_width}x{display_height}",
-                'native_size': f"{NATIVE_WIDTH}x{NATIVE_HEIGHT}",
-                'calculated_magnify': self.calculated_magnify,
-                'width_scale': round(width_scale, 2),
-                'height_scale': round(height_scale, 2),
-                'recommendations': recommendations
+                "display_size": f"{display_width}x{display_height}",
+                "native_size": f"{NATIVE_WIDTH}x{NATIVE_HEIGHT}",
+                "calculated_magnify": self.calculated_magnify,
+                "width_scale": round(width_scale, 2),
+                "height_scale": round(height_scale, 2),
+                "recommendations": recommendations,
             }
 
         except Exception as e:
             self.logger.exception(f"Error getting magnify recommendation: {e}")
-            return {
-                'display_size': 'unknown',
-                'calculated_magnify': 1,
-                'recommendations': []
-            }
+            return {"display_size": "unknown", "calculated_magnify": 1, "recommendations": []}
 
     def _get_effective_magnify(self) -> int:
         """
@@ -468,10 +464,10 @@ class StarlarkAppsPlugin(BasePlugin):
 
         # Replace invalid characters with underscore
         # Allow only: lowercase letters, digits, underscore, period, hyphen
-        safe_slug = re.sub(r'[^a-z0-9_.-]', '_', app_id.lower())
+        safe_slug = re.sub(r"[^a-z0-9_.-]", "_", app_id.lower())
 
         # Remove leading/trailing dots, underscores, or hyphens
-        safe_slug = safe_slug.strip('._-')
+        safe_slug = safe_slug.strip("._-")
 
         # Ensure it's not empty after sanitization
         if not safe_slug:
@@ -496,9 +492,7 @@ class StarlarkAppsPlugin(BasePlugin):
 
             # Check if path is relative to base directory
             if not resolved_path.is_relative_to(resolved_base):
-                raise ValueError(
-                    f"Path traversal detected: {resolved_path} is not within {resolved_base}"
-                )
+                raise ValueError(f"Path traversal detected: {resolved_path} is not within {resolved_base}")
         except (ValueError, AttributeError) as e:
             # AttributeError for Python < 3.9 where is_relative_to doesn't exist
             # Fallback: check if resolved path starts with resolved base
@@ -508,9 +502,7 @@ class StarlarkAppsPlugin(BasePlugin):
             try:
                 resolved_path.relative_to(resolved_base)
             except ValueError:
-                raise ValueError(
-                    f"Path traversal detected: {resolved_path} is not within {resolved_base}"
-                ) from e
+                raise ValueError(f"Path traversal detected: {resolved_path} is not within {resolved_base}") from e
 
     def _load_installed_apps(self) -> None:
         """Load all installed apps from manifest."""
@@ -520,7 +512,7 @@ class StarlarkAppsPlugin(BasePlugin):
             return
 
         try:
-            with open(self.manifest_file, 'r') as f:
+            with open(self.manifest_file, "r") as f:
                 manifest = json.load(f)
 
             apps_data = manifest.get("apps", {})
@@ -574,9 +566,9 @@ class StarlarkAppsPlugin(BasePlugin):
 
             try:
                 # Now that we hold the lock, create and write temp file
-                temp_file = self.manifest_file.with_suffix('.tmp')
+                temp_file = self.manifest_file.with_suffix(".tmp")
 
-                with open(temp_file, 'w') as f:
+                with open(temp_file, "w") as f:
                     json.dump(manifest, f, indent=2)
                     f.flush()
                     os.fsync(f.fileno())  # Ensure data is written to disk
@@ -631,7 +623,7 @@ class StarlarkAppsPlugin(BasePlugin):
             try:
                 # Read current manifest while holding exclusive lock
                 if self.manifest_file.exists() and self.manifest_file.stat().st_size > 0:
-                    with open(self.manifest_file, 'r') as f:
+                    with open(self.manifest_file, "r") as f:
                         manifest = json.load(f)
                 else:
                     # Empty or non-existent file, start with default structure
@@ -641,8 +633,8 @@ class StarlarkAppsPlugin(BasePlugin):
                 updater_fn(manifest)
 
                 # Write back to temp file, then atomic replace (still holding lock)
-                temp_file = self.manifest_file.with_suffix('.tmp')
-                with open(temp_file, 'w') as f:
+                temp_file = self.manifest_file.with_suffix(".tmp")
+                with open(temp_file, "w") as f:
                     json.dump(manifest, f, indent=2)
                     f.flush()
                     os.fsync(f.fileno())
@@ -751,8 +743,12 @@ class StarlarkAppsPlugin(BasePlugin):
             use_cache = self.config.get("cache_rendered_output", True)
             cache_ttl = self.config.get("cache_ttl", 300)
 
-            if (not force and use_cache and app.cache_file.exists() and
-                (current_time - app.last_render_time) < cache_ttl):
+            if (
+                not force
+                and use_cache
+                and app.cache_file.exists()
+                and (current_time - app.last_render_time) < cache_ttl
+            ):
                 # Use cached render
                 self.logger.debug(f"Using cached render for: {app.app_id}")
                 return self._load_frames_from_cache(app)
@@ -765,14 +761,11 @@ class StarlarkAppsPlugin(BasePlugin):
             self.logger.debug(f"Using magnify={magnify} for {app.app_id}")
 
             # Filter out LEDMatrix-internal timing keys before passing to pixlet
-            INTERNAL_KEYS = {'render_interval', 'display_duration'}
+            INTERNAL_KEYS = {"render_interval", "display_duration"}
             pixlet_config = {k: v for k, v in app.config.items() if k not in INTERNAL_KEYS}
 
             success, error = self.pixlet.render(
-                star_file=str(app.star_file),
-                output_path=str(app.cache_file),
-                config=pixlet_config,
-                magnify=magnify
+                star_file=str(app.star_file), output_path=str(app.cache_file), config=pixlet_config, magnify=magnify
             )
 
             if not success:
@@ -810,7 +803,7 @@ class StarlarkAppsPlugin(BasePlugin):
                     "nearest": Image.Resampling.NEAREST,
                     "bilinear": Image.Resampling.BILINEAR,
                     "bicubic": Image.Resampling.BICUBIC,
-                    "lanczos": Image.Resampling.LANCZOS
+                    "lanczos": Image.Resampling.LANCZOS,
                 }
                 scale_method = scale_method_map.get(scale_method_str, Image.Resampling.NEAREST)
 
@@ -852,15 +845,21 @@ class StarlarkAppsPlugin(BasePlugin):
             # Check if it's time to advance to next frame
             delay_seconds = delay_ms / 1000.0
             if (current_time - self.current_app.last_frame_time) >= delay_seconds:
-                self.current_app.current_frame_index = (
-                    (self.current_app.current_frame_index + 1) % len(self.current_app.frames)
+                self.current_app.current_frame_index = (self.current_app.current_frame_index + 1) % len(
+                    self.current_app.frames
                 )
                 self.current_app.last_frame_time = current_time
 
         except Exception as e:
             self.logger.error(f"Error displaying frame: {e}")
 
-    def install_app(self, app_id: str, star_file_path: str, metadata: Optional[Dict[str, Any]] = None, assets_dir: Optional[str] = None) -> bool:
+    def install_app(
+        self,
+        app_id: str,
+        star_file_path: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        assets_dir: Optional[str] = None,
+    ) -> bool:
         """
         Install a new Starlark app.
 
@@ -914,7 +913,7 @@ class StarlarkAppsPlugin(BasePlugin):
                 "star_file": f"{safe_app_id}.star",
                 "enabled": True,
                 "render_interval": metadata.get("render_interval", 300) if metadata else 300,
-                "display_duration": metadata.get("display_duration", 15) if metadata else 15
+                "display_duration": metadata.get("display_duration", 15) if metadata else 15,
             }
 
             # Try to extract schema
@@ -923,20 +922,20 @@ class StarlarkAppsPlugin(BasePlugin):
                 schema_path = app_dir / "schema.json"
                 # Verify schema path safety
                 self._verify_path_safety(schema_path, self.apps_dir)
-                with open(schema_path, 'w') as f:
+                with open(schema_path, "w") as f:
                     json.dump(schema, f, indent=2)
 
             # Create default config — pre-populate with schema defaults
             default_config = {}
             if schema:
-                fields = schema.get('fields') or schema.get('schema') or []
+                fields = schema.get("fields") or schema.get("schema") or []
                 for field in fields:
-                    if isinstance(field, dict) and 'id' in field and 'default' in field:
-                        default_config[field['id']] = field['default']
+                    if isinstance(field, dict) and "id" in field and "default" in field:
+                        default_config[field["id"]] = field["default"]
             config_path = app_dir / "config.json"
             # Verify config path safety
             self._verify_path_safety(config_path, self.apps_dir)
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(default_config, f, indent=2)
 
             # Update manifest (use safe_app_id as key to match directory)
@@ -1009,7 +1008,7 @@ class StarlarkAppsPlugin(BasePlugin):
         """Get display duration for current app."""
         if self.current_app:
             return float(self.current_app.get_display_duration())
-        return self.config.get('display_duration', 15.0)
+        return self.config.get("display_duration", 15.0)
 
     # ─── Vegas Mode Integration ──────────────────────────────────────
 
@@ -1040,19 +1039,21 @@ class StarlarkAppsPlugin(BasePlugin):
     def get_info(self) -> Dict[str, Any]:
         """Return plugin info for web UI."""
         info = super().get_info()
-        info.update({
-            'pixlet_available': self.pixlet.is_available(),
-            'pixlet_version': self.pixlet.get_version(),
-            'installed_apps': len(self.apps),
-            'enabled_apps': len([a for a in self.apps.values() if a.is_enabled()]),
-            'current_app': self.current_app.app_id if self.current_app else None,
-            'apps': {
-                app_id: {
-                    'name': app.manifest.get('name', app_id),
-                    'enabled': app.is_enabled(),
-                    'has_frames': app.frames is not None
-                }
-                for app_id, app in self.apps.items()
+        info.update(
+            {
+                "pixlet_available": self.pixlet.is_available(),
+                "pixlet_version": self.pixlet.get_version(),
+                "installed_apps": len(self.apps),
+                "enabled_apps": len([a for a in self.apps.values() if a.is_enabled()]),
+                "current_app": self.current_app.app_id if self.current_app else None,
+                "apps": {
+                    app_id: {
+                        "name": app.manifest.get("name", app_id),
+                        "enabled": app.is_enabled(),
+                        "has_frames": app.frames is not None,
+                    }
+                    for app_id, app in self.apps.items()
+                },
             }
-        })
+        )
         return info

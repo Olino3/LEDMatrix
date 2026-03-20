@@ -91,7 +91,7 @@ class TestNetworkStatus:
 
         def check_output_side_effect(cmd, **kwargs):
             if "iwconfig" in cmd:
-                return b"wlan0  IEEE 802.11  ESSID:\"MyNetwork\"  Signal level=-45 dBm  Link Quality=65/70"
+                return b'wlan0  IEEE 802.11  ESSID:"MyNetwork"  Signal level=-45 dBm  Link Quality=65/70'
             return b"192.168.1.100 "
 
         mock_co.side_effect = check_output_side_effect

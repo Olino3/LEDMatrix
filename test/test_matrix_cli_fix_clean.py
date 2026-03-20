@@ -22,6 +22,7 @@ from matrix_cli import cli
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _invoke(*args):
     """Shortcut to invoke a CLI command and return the result."""
     return CliRunner().invoke(cli, list(args))
@@ -30,6 +31,7 @@ def _invoke(*args):
 # ---------------------------------------------------------------------------
 # fix permissions — flag combinations
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestFixPermissionsFlags:
@@ -112,14 +114,13 @@ class TestFixPermissionsFlags:
 # fix permissions — _fix_dir_permissions internals
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestFixDirPermissions:
     """Test _fix_dir_permissions helper with real temp directories."""
 
     def test_nonexistent_dir_returns_zero(self, tmp_path):
-        result = matrix_cli._fix_dir_permissions(
-            tmp_path / "nope", 0o755, 0o644, "test"
-        )
+        result = matrix_cli._fix_dir_permissions(tmp_path / "nope", 0o755, 0o644, "test")
         assert result == 0
 
     def test_changes_file_permissions(self, tmp_path):
@@ -159,6 +160,7 @@ class TestFixDirPermissions:
 # fix permissions — top-level fixers
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestFixPermissionFixers:
     """Test the individual _fix_*_permissions functions."""
@@ -167,9 +169,7 @@ class TestFixPermissionFixers:
     def test_fix_assets_calls_helper(self, mock_fdp):
         result = matrix_cli._fix_assets_permissions()
         assert result == 3
-        mock_fdp.assert_called_once_with(
-            matrix_cli.ASSETS_DIR, 0o755, 0o644, "assets/"
-        )
+        mock_fdp.assert_called_once_with(matrix_cli.ASSETS_DIR, 0o755, 0o644, "assets/")
 
     @patch("matrix_cli._fix_dir_permissions", return_value=2)
     def test_fix_plugin_calls_helper_for_both_dirs(self, mock_fdp):
@@ -181,14 +181,13 @@ class TestFixPermissionFixers:
     def test_fix_web_calls_helper(self, mock_fdp):
         result = matrix_cli._fix_web_permissions()
         assert result == 1
-        mock_fdp.assert_called_once_with(
-            matrix_cli.WEB_DIR, 0o755, 0o644, "web_interface/"
-        )
+        mock_fdp.assert_called_once_with(matrix_cli.WEB_DIR, 0o755, 0o644, "web_interface/")
 
 
 # ---------------------------------------------------------------------------
 # fix permissions — output messages
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestFixPermissionsOutput:
@@ -214,6 +213,7 @@ class TestFixPermissionsOutput:
 # ---------------------------------------------------------------------------
 # clean cache
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestCleanCache:
@@ -263,6 +263,7 @@ class TestCleanCache:
 # clean deps
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestCleanDeps:
     """Test `matrix clean deps` subcommand."""
@@ -279,8 +280,7 @@ class TestCleanDeps:
 
         # Patch Path.home() to return tmp_path so the search_dirs find our cache
         original_path = Path
-        with patch.object(matrix_cli, "PLUGINS_DIR", plugins), \
-             patch("matrix_cli.Path") as MockPath:
+        with patch.object(matrix_cli, "PLUGINS_DIR", plugins), patch("matrix_cli.Path") as MockPath:
             # Make Path behave normally except for Path.home() and Path("/var/cache/...")
             MockPath.side_effect = original_path
             MockPath.home.return_value = tmp_path
@@ -331,6 +331,7 @@ class TestCleanDeps:
 # ---------------------------------------------------------------------------
 # clean backups
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestCleanBackups:
@@ -409,6 +410,7 @@ class TestCleanBackups:
 # ---------------------------------------------------------------------------
 # CLI group registration
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGroupRegistration:

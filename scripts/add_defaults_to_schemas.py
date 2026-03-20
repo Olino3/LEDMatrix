@@ -22,20 +22,20 @@ def get_default_for_field(prop: Dict[str, Any]) -> Any:
     Returns:
         Default value or None if no default should be added
     """
-    prop_type = prop.get('type')
+    prop_type = prop.get("type")
 
     # Handle union types (array with multiple types)
     if isinstance(prop_type, list):
         # Use the first non-null type
-        prop_type = next((t for t in prop_type if t != 'null'), prop_type[0] if prop_type else 'string')
+        prop_type = next((t for t in prop_type if t != "null"), prop_type[0] if prop_type else "string")
 
-    if prop_type == 'boolean':
+    if prop_type == "boolean":
         return False
 
-    elif prop_type == 'number':
+    elif prop_type == "number":
         # For numbers, use minimum if available, or a sensible default
-        minimum = prop.get('minimum')
-        maximum = prop.get('maximum')
+        minimum = prop.get("minimum")
+        maximum = prop.get("maximum")
 
         if minimum is not None:
             return minimum
@@ -46,10 +46,10 @@ def get_default_for_field(prop: Dict[str, Any]) -> Any:
             # No constraints, use 0
             return 0
 
-    elif prop_type == 'integer':
+    elif prop_type == "integer":
         # Similar to number
-        minimum = prop.get('minimum')
-        maximum = prop.get('maximum')
+        minimum = prop.get("minimum")
+        maximum = prop.get("maximum")
 
         if minimum is not None:
             return minimum
@@ -58,10 +58,10 @@ def get_default_for_field(prop: Dict[str, Any]) -> Any:
         else:
             return 0
 
-    elif prop_type == 'string':
+    elif prop_type == "string":
         # Only add default for strings if it makes sense
         # Check if there's an enum - use first value
-        enum_values = prop.get('enum')
+        enum_values = prop.get("enum")
         if enum_values:
             return enum_values[0]
 
@@ -69,11 +69,11 @@ def get_default_for_field(prop: Dict[str, Any]) -> Any:
         # We'll skip adding defaults for strings unless explicitly needed
         return None
 
-    elif prop_type == 'array':
+    elif prop_type == "array":
         # Empty array as default
         return []
 
-    elif prop_type == 'object':
+    elif prop_type == "object":
         # Empty object - but we'll handle nested objects separately
         return {}
 
@@ -92,29 +92,29 @@ def should_add_default(prop: Dict[str, Any], field_path: str) -> bool:
         True if default should be added
     """
     # Skip if already has a default
-    if 'default' in prop:
+    if "default" in prop:
         return False
 
     # Skip secret fields (they should be user-provided)
-    if prop.get('x-secret', False):
+    if prop.get("x-secret", False):
         return False
 
     # Skip API keys and similar sensitive fields
-    field_name = field_path.split('.')[-1].lower()
-    sensitive_keywords = ['key', 'password', 'secret', 'token', 'auth', 'credential']
+    field_name = field_path.split(".")[-1].lower()
+    sensitive_keywords = ["key", "password", "secret", "token", "auth", "credential"]
     if any(keyword in field_name for keyword in sensitive_keywords):
         return False
 
-    prop_type = prop.get('type')
+    prop_type = prop.get("type")
     if isinstance(prop_type, list):
-        prop_type = next((t for t in prop_type if t != 'null'), prop_type[0] if prop_type else None)
+        prop_type = next((t for t in prop_type if t != "null"), prop_type[0] if prop_type else None)
 
     # Only add defaults for certain types
-    if prop_type in ('boolean', 'number', 'integer', 'array'):
+    if prop_type in ("boolean", "number", "integer", "array"):
         return True
 
     # For strings, only if there's an enum
-    if prop_type == 'string' and 'enum' in prop:
+    if prop_type == "string" and "enum" in prop:
         return True
 
     return False
@@ -135,19 +135,19 @@ def add_defaults_recursive(schema: Dict[str, Any], path: str = "", modified: Lis
     if modified is None:
         modified = []
 
-    if not isinstance(schema, dict) or 'properties' not in schema:
+    if not isinstance(schema, dict) or "properties" not in schema:
         return False
 
     changes_made = False
 
-    for key, prop in schema['properties'].items():
+    for key, prop in schema["properties"].items():
         if not isinstance(prop, dict):
             continue
 
         current_path = f"{path}.{key}" if path else key
 
         # Check nested objects
-        if prop.get('type') == 'object' and 'properties' in prop:
+        if prop.get("type") == "object" and "properties" in prop:
             if add_defaults_recursive(prop, current_path, modified):
                 changes_made = True
 
@@ -155,7 +155,7 @@ def add_defaults_recursive(schema: Dict[str, Any], path: str = "", modified: Lis
         if should_add_default(prop, current_path):
             default_value = get_default_for_field(prop)
             if default_value is not None:
-                prop['default'] = default_value
+                prop["default"] = default_value
                 modified.append(current_path)
                 changes_made = True
                 print(f"  Added default to {current_path}: {default_value} (type: {prop.get('type')})")
@@ -176,7 +176,7 @@ def process_schema_file(schema_path: Path) -> bool:
     print(f"\nProcessing: {schema_path}")
 
     try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)
     except Exception as e:
         print(f"  Error reading schema: {e}")
@@ -187,9 +187,9 @@ def process_schema_file(schema_path: Path) -> bool:
 
     if changes_made:
         # Write back with pretty formatting
-        with open(schema_path, 'w', encoding='utf-8') as f:
+        with open(schema_path, "w", encoding="utf-8") as f:
             json.dump(schema, f, indent=2, ensure_ascii=False)
-            f.write('\n')  # Add trailing newline
+            f.write("\n")  # Add trailing newline
 
         print(f"  ✓ Modified {len(modified_fields)} fields")
         return True
@@ -201,14 +201,14 @@ def process_schema_file(schema_path: Path) -> bool:
 def main():
     """Main entry point."""
     project_root = Path(__file__).parent.parent
-    plugins_dir = project_root / 'plugins'
+    plugins_dir = project_root / "plugins"
 
     if not plugins_dir.exists():
         print(f"Error: Plugins directory not found: {plugins_dir}")
         sys.exit(1)
 
     # Find all config_schema.json files
-    schema_files = list(plugins_dir.rglob('config_schema.json'))
+    schema_files = list(plugins_dir.rglob("config_schema.json"))
 
     if not schema_files:
         print("No config_schema.json files found")
@@ -221,11 +221,10 @@ def main():
         if process_schema_file(schema_file):
             modified_count += 1
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Summary: Modified {modified_count} out of {len(schema_files)} schema files")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

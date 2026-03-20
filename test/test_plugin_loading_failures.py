@@ -35,7 +35,7 @@ def mock_managers():
         "config_manager": MagicMock(),
         "display_manager": MagicMock(),
         "cache_manager": MagicMock(),
-        "font_manager": MagicMock()
+        "font_manager": MagicMock(),
     }
 
 
@@ -57,11 +57,8 @@ class TestMissingManifest:
         plugin_dir.mkdir()
         (plugin_dir / "manager.py").write_text("# Empty plugin")
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             plugins = manager.discover_plugins()
 
         assert "test-plugin" not in plugins
@@ -76,11 +73,8 @@ class TestInvalidManifest:
         plugin_dir.mkdir()
         (plugin_dir / "manifest.json").write_text("{ invalid json }")
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             plugins = manager.discover_plugins()
 
         assert "test-plugin" not in plugins
@@ -94,11 +88,8 @@ class TestInvalidManifest:
         manifest = {"id": "test-plugin", "name": "Test Plugin"}
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             plugins = manager.discover_plugins()
 
             # Plugin might be discovered but should fail to load
@@ -119,15 +110,12 @@ class TestMissingEntryPoint:
             "id": "test-plugin",
             "name": "Test Plugin",
             "entry_point": "manager.py",  # File doesn't exist
-            "class_name": "TestPlugin"
+            "class_name": "TestPlugin",
         }
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             manager.discover_plugins()
 
             # Force the manifest to be loaded
@@ -145,12 +133,7 @@ class TestImportErrors:
         plugin_dir = temp_plugin_dir / "test-plugin"
         plugin_dir.mkdir()
 
-        manifest = {
-            "id": "test-plugin",
-            "name": "Test Plugin",
-            "entry_point": "manager.py",
-            "class_name": "TestPlugin"
-        }
+        manifest = {"id": "test-plugin", "name": "Test Plugin", "entry_point": "manager.py", "class_name": "TestPlugin"}
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
         # Create manager.py with syntax error
@@ -160,11 +143,8 @@ class TestPlugin
         pass
 """)
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             manager.discover_plugins()
             manager.plugin_manifests["test-plugin"] = manifest
 
@@ -176,12 +156,7 @@ class TestPlugin
         plugin_dir = temp_plugin_dir / "test-plugin"
         plugin_dir.mkdir()
 
-        manifest = {
-            "id": "test-plugin",
-            "name": "Test Plugin",
-            "entry_point": "manager.py",
-            "class_name": "TestPlugin"
-        }
+        manifest = {"id": "test-plugin", "name": "Test Plugin", "entry_point": "manager.py", "class_name": "TestPlugin"}
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
         # Create manager.py that imports non-existent module
@@ -192,11 +167,8 @@ class TestPlugin:
     pass
 """)
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             manager.discover_plugins()
             manager.plugin_manifests["test-plugin"] = manifest
 
@@ -216,7 +188,7 @@ class TestMissingClassName:
             "id": "test-plugin",
             "name": "Test Plugin",
             "entry_point": "manager.py",
-            "class_name": "NonExistentClass"  # Doesn't exist in manager.py
+            "class_name": "NonExistentClass",  # Doesn't exist in manager.py
         }
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
@@ -225,11 +197,8 @@ class ActualPlugin:
     pass
 """)
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             manager.discover_plugins()
             manager.plugin_manifests["test-plugin"] = manifest
 
@@ -245,28 +214,20 @@ class TestValidateConfigFailure:
         plugin_dir = temp_plugin_dir / "test-plugin"
         plugin_dir.mkdir()
 
-        manifest = {
-            "id": "test-plugin",
-            "name": "Test Plugin",
-            "entry_point": "manager.py",
-            "class_name": "TestPlugin"
-        }
+        manifest = {"id": "test-plugin", "name": "Test Plugin", "entry_point": "manager.py", "class_name": "TestPlugin"}
         (plugin_dir / "manifest.json").write_text(json.dumps(manifest))
 
         # Create a mock plugin that fails validation
         mock_plugin = MagicMock()
         mock_plugin.validate_config.return_value = False
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
             manager.discover_plugins()
             manager.plugin_manifests["test-plugin"] = manifest
 
             # Mock the plugin loader to return our mock plugin
-            with patch.object(manager.plugin_loader, 'load_plugin', return_value=(mock_plugin, MagicMock())):
+            with patch.object(manager.plugin_loader, "load_plugin", return_value=(mock_plugin, MagicMock())):
                 result = manager.load_plugin("test-plugin")
                 assert result is False
 
@@ -275,22 +236,19 @@ class TestValidateConfigFailure:
         mock_plugin = MagicMock()
         mock_plugin.validate_config.side_effect = ValueError("Config validation error")
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
 
             manifest = {
                 "id": "test-plugin",
                 "name": "Test Plugin",
                 "entry_point": "manager.py",
-                "class_name": "TestPlugin"
+                "class_name": "TestPlugin",
             }
             manager.plugin_manifests["test-plugin"] = manifest
 
-            with patch.object(manager.plugin_loader, 'load_plugin', return_value=(mock_plugin, MagicMock())):
-                with patch.object(manager.plugin_loader, 'find_plugin_directory', return_value=temp_plugin_dir):
+            with patch.object(manager.plugin_loader, "load_plugin", return_value=(mock_plugin, MagicMock())):
+                with patch.object(manager.plugin_loader, "find_plugin_directory", return_value=temp_plugin_dir):
                     result = manager.load_plugin("test-plugin")
                     assert result is False
 
@@ -300,11 +258,8 @@ class TestPluginStateOnFailure:
 
     def test_state_set_to_error_on_load_failure(self, temp_plugin_dir, mock_managers):
         """Plugin state should be ERROR when loading fails."""
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
 
             manifest = {"id": "test-plugin", "name": "Test Plugin"}
             manager.plugin_manifests["test-plugin"] = manifest
@@ -327,11 +282,8 @@ class TestErrorAggregation:
         # Get the aggregator
         aggregator = get_error_aggregator()
 
-        with patch('src.common.permission_utils.ensure_directory_permissions'):
-            manager = PluginManager(
-                plugins_dir=str(temp_plugin_dir),
-                **mock_managers
-            )
+        with patch("src.common.permission_utils.ensure_directory_permissions"):
+            manager = PluginManager(plugins_dir=str(temp_plugin_dir), **mock_managers)
 
             manifest = {"id": "test-plugin", "name": "Test Plugin"}
             manager.plugin_manifests["test-plugin"] = manifest

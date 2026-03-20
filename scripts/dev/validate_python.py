@@ -20,17 +20,17 @@ import sys
 def validate_file(filepath: str) -> bool:
     """Validate a Python file for common issues."""
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         issues_found = []
 
         # Check for tabs (should use spaces)
-        if '\t' in content:
+        if "\t" in content:
             issues_found.append("❌ Contains tabs - use 4 spaces instead")
 
         # Check for trailing whitespace
-        lines = content.split('\n')
+        lines = content.split("\n")
         for i, line in enumerate(lines, 1):
             if line.rstrip() != line:
                 issues_found.append(f"❌ Line {i}: Trailing whitespace")
@@ -67,18 +67,20 @@ def validate_file(filepath: str) -> bool:
         print(f"❌ Error reading file {filepath}: {e}")
         return False
 
+
 def validate_directory(directory: str) -> bool:
     """Validate all Python files in a directory."""
     all_passed = True
 
     for root, _dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith('.py'):
+            if file.endswith(".py"):
                 filepath = os.path.join(root, file)
                 if not validate_file(filepath):
                     all_passed = False
 
     return all_passed
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

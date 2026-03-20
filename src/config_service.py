@@ -252,7 +252,7 @@ class ConfigService:
                 # Sleep with periodic checks for stop signal
                 for _ in range(int(self._watch_interval)):
                     if self._stop_watching:
-                        break
+                        break  # type: ignore[unreachable]
                     time.sleep(1)
 
             except Exception as e:
@@ -300,7 +300,7 @@ class ConfigService:
             Plugin configuration dictionary
         """
         config = self.get_config()
-        return config.get(plugin_id, {})
+        return config.get(plugin_id, {})  # type: ignore[no-any-return]
 
     def subscribe(
         self, callback: Callable[[Dict[str, Any], Dict[str, Any]], None], plugin_id: Optional[str] = None

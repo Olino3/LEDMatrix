@@ -9,10 +9,11 @@ from src.display_manager import DisplayManager
 @pytest.fixture
 def mock_rgb_matrix():
     """Mock the rgbmatrix library."""
-    with patch('src.display_manager.RGBMatrix') as mock_matrix, \
-         patch('src.display_manager.RGBMatrixOptions') as mock_options, \
-         patch('src.display_manager.freetype'):
-
+    with (
+        patch("src.display_manager.RGBMatrix") as mock_matrix,
+        patch("src.display_manager.RGBMatrixOptions") as mock_options,
+        patch("src.display_manager.freetype"),
+    ):
         # Setup matrix instance mock
         matrix_instance = MagicMock()
         matrix_instance.width = 128
@@ -22,11 +23,8 @@ def mock_rgb_matrix():
         matrix_instance.SetImage = MagicMock()
         mock_matrix.return_value = matrix_instance
 
-        yield {
-            'matrix_class': mock_matrix,
-            'options_class': mock_options,
-            'matrix_instance': matrix_instance
-        }
+        yield {"matrix_class": mock_matrix, "options_class": mock_options, "matrix_instance": matrix_instance}
+
 
 class TestDisplayManagerInitialization:
     """Test DisplayManager initialization."""
@@ -34,7 +32,7 @@ class TestDisplayManagerInitialization:
     def test_init_hardware_mode(self, test_config, mock_rgb_matrix):
         """Test initialization in hardware mode."""
         # Ensure EMULATOR env var is not set
-        with patch.dict('os.environ', {'EMULATOR': 'false'}):
+        with patch.dict("os.environ", {"EMULATOR": "false"}):
             dm = DisplayManager(test_config)
 
             assert dm.width == 128
@@ -42,8 +40,8 @@ class TestDisplayManagerInitialization:
             assert dm.matrix is not None
 
             # Verify options were set correctly
-            mock_rgb_matrix['options_class'].assert_called()
-            options = mock_rgb_matrix['options_class'].return_value
+            mock_rgb_matrix["options_class"].assert_called()
+            options = mock_rgb_matrix["options_class"].return_value
             assert options.rows == 32
             assert options.cols == 64
             assert options.chain_length == 2
@@ -51,10 +49,11 @@ class TestDisplayManagerInitialization:
     def test_init_emulator_mode(self, test_config):
         """Test initialization in emulator mode."""
         # Set EMULATOR env var and patch the import
-        with patch.dict('os.environ', {'EMULATOR': 'true'}), \
-             patch('src.display_manager.RGBMatrix') as mock_matrix, \
-             patch('src.display_manager.RGBMatrixOptions'):
-
+        with (
+            patch.dict("os.environ", {"EMULATOR": "true"}),
+            patch("src.display_manager.RGBMatrix") as mock_matrix,
+            patch("src.display_manager.RGBMatrixOptions"),
+        ):
             # Setup matrix instance
             matrix_instance = MagicMock()
             matrix_instance.width = 128
@@ -73,7 +72,7 @@ class TestDisplayManagerDrawing:
 
     def test_clear(self, test_config, mock_rgb_matrix):
         """Test clear operation."""
-        with patch.dict('os.environ', {'EMULATOR': 'false'}):
+        with patch.dict("os.environ", {"EMULATOR": "false"}):
             dm = DisplayManager(test_config)
             dm.clear()
             # clear() calls Clear() multiple times (offscreen_canvas, current_canvas, matrix)
@@ -81,7 +80,7 @@ class TestDisplayManagerDrawing:
 
     def test_draw_text(self, test_config, mock_rgb_matrix):
         """Test text drawing."""
-        with patch.dict('os.environ', {'EMULATOR': 'false'}):
+        with patch.dict("os.environ", {"EMULATOR": "false"}):
             dm = DisplayManager(test_config)
 
             # Mock font
@@ -95,14 +94,15 @@ class TestDisplayManagerDrawing:
 
     def test_draw_image(self, test_config, mock_rgb_matrix):
         """Test image drawing."""
-        with patch.dict('os.environ', {'EMULATOR': 'false'}):
+        with patch.dict("os.environ", {"EMULATOR": "false"}):
             dm = DisplayManager(test_config)
 
             # DisplayManager doesn't have draw_image method
             # It uses SetImage on canvas in update_display()
             # Just verify DisplayManager can handle image operations
             from PIL import Image
-            test_image = Image.new('RGB', (64, 32))
+
+            test_image = Image.new("RGB", (64, 32))
             dm.image = test_image
             dm.draw = ImageDraw.Draw(dm.image)
 
@@ -115,7 +115,7 @@ class TestDisplayManagerResourceManagement:
 
     def test_cleanup(self, test_config, mock_rgb_matrix):
         """Test cleanup operation."""
-        with patch.dict('os.environ', {'EMULATOR': 'false'}):
+        with patch.dict("os.environ", {"EMULATOR": "false"}):
             dm = DisplayManager(test_config)
             dm.cleanup()
 

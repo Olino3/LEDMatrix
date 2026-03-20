@@ -30,6 +30,7 @@ from src.common.scroll_helper import ScrollHelper
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_scroll_helper(width=64, height=32, logger=None):
     """Create a ScrollHelper with a silent logger by default."""
     if logger is None:
@@ -47,6 +48,7 @@ def _make_rgb_image(width, height, color=(255, 0, 0)):
 # ---------------------------------------------------------------------------
 # Initialization
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestScrollHelperInit:
@@ -85,6 +87,7 @@ class TestScrollHelperInit:
 # ---------------------------------------------------------------------------
 # create_scrolling_image
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestCreateScrollingImage:
@@ -177,6 +180,7 @@ class TestCreateScrollingImage:
 # set_scrolling_image
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestSetScrollingImage:
     def test_set_none_clears_cache(self):
@@ -228,6 +232,7 @@ class TestSetScrollingImage:
 # ---------------------------------------------------------------------------
 # update_scroll_position — time-based mode
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestUpdateScrollPositionTimeBased:
@@ -326,6 +331,7 @@ class TestUpdateScrollPositionTimeBased:
 # update_scroll_position — frame-based mode
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUpdateScrollPositionFrameBased:
     def _sh_frame_based(self, img_width=256):
@@ -377,6 +383,7 @@ class TestUpdateScrollPositionFrameBased:
 # ---------------------------------------------------------------------------
 # get_visible_portion
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGetVisiblePortion:
@@ -442,6 +449,7 @@ class TestGetVisiblePortion:
 # _get_visible_portion_integer (directly)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetVisiblePortionInteger:
     def _sh_ready(self, img_width=200):
@@ -477,6 +485,7 @@ class TestGetVisiblePortionInteger:
 # ---------------------------------------------------------------------------
 # _interpolate_subpixel
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestInterpolateSubpixel:
@@ -528,6 +537,7 @@ class TestInterpolateSubpixel:
 # _get_visible_portion_subpixel
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetVisiblePortionSubpixel:
     def _sh_with_image(self, img_width=200):
@@ -564,6 +574,7 @@ class TestGetVisiblePortionSubpixel:
 # calculate_dynamic_duration
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestCalculateDynamicDuration:
     def test_disabled_returns_min_duration(self):
@@ -598,7 +609,7 @@ class TestCalculateDynamicDuration:
     def test_frame_based_mode_calculation(self):
         sh = _make_scroll_helper(width=64, height=32)
         sh.total_scroll_width = 640
-        sh.scroll_speed = 1.0   # 1 px/frame
+        sh.scroll_speed = 1.0  # 1 px/frame
         sh.scroll_delay = 0.02  # 20ms/frame → 50 px/s
         sh.frame_based_scrolling = True
         sh.min_duration = 10
@@ -619,8 +630,8 @@ class TestCalculateDynamicDuration:
 
     def test_duration_clamped_to_min(self):
         sh = _make_scroll_helper(width=64, height=32)
-        sh.total_scroll_width = 64   # tiny content → very short scroll time
-        sh.scroll_speed = 10000.0    # very fast → calculated << min_duration
+        sh.total_scroll_width = 64  # tiny content → very short scroll time
+        sh.scroll_speed = 10000.0  # very fast → calculated << min_duration
         sh.frame_based_scrolling = False
         sh.min_duration = 60
         sh.max_duration = 300
@@ -630,7 +641,7 @@ class TestCalculateDynamicDuration:
     def test_duration_clamped_to_max(self):
         sh = _make_scroll_helper(width=64, height=32)
         sh.total_scroll_width = 1_000_000  # huge content → very long scroll time
-        sh.scroll_speed = 1.0              # very slow
+        sh.scroll_speed = 1.0  # very slow
         sh.frame_based_scrolling = False
         sh.min_duration = 30
         sh.max_duration = 120
@@ -647,8 +658,8 @@ class TestCalculateDynamicDuration:
 
     def test_type_error_returns_min_duration(self):
         sh = _make_scroll_helper()
-        sh.total_scroll_width = 640     # valid — passes the guard check
-        sh.scroll_speed = "bad"         # will cause TypeError during division inside try block
+        sh.total_scroll_width = 640  # valid — passes the guard check
+        sh.scroll_speed = "bad"  # will cause TypeError during division inside try block
         result = sh.calculate_dynamic_duration()
         assert result == sh.min_duration
 
@@ -656,6 +667,7 @@ class TestCalculateDynamicDuration:
 # ---------------------------------------------------------------------------
 # is_scroll_complete / reset_scroll / clear_cache
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestScrollControl:
@@ -717,6 +729,7 @@ class TestScrollControl:
 # ---------------------------------------------------------------------------
 # Setters
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestSetters:
@@ -844,6 +857,7 @@ class TestSetters:
 # get_dynamic_duration / get_scroll_info
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestInfoMethods:
     def test_get_dynamic_duration_returns_calculated(self):
@@ -855,9 +869,17 @@ class TestInfoMethods:
         sh = _make_scroll_helper()
         info = sh.get_scroll_info()
         expected_keys = {
-            "scroll_position", "total_distance_scrolled", "required_total_distance",
-            "scroll_speed", "scroll_delay", "total_width", "is_scrolling",
-            "scroll_complete", "dynamic_duration", "elapsed_time", "cached_image_size",
+            "scroll_position",
+            "total_distance_scrolled",
+            "required_total_distance",
+            "scroll_speed",
+            "scroll_delay",
+            "total_width",
+            "is_scrolling",
+            "scroll_complete",
+            "dynamic_duration",
+            "elapsed_time",
+            "cached_image_size",
         }
         assert expected_keys == set(info.keys())
 
@@ -890,6 +912,7 @@ class TestInfoMethods:
 # ---------------------------------------------------------------------------
 # log_frame_rate
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestLogFrameRate:
@@ -939,6 +962,7 @@ class TestLogFrameRate:
 # ---------------------------------------------------------------------------
 # Full integration: create → update → get_visible_portion cycle
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestScrollCycle:

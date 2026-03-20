@@ -37,11 +37,7 @@ class TestErrorRecording:
         aggregator = ErrorAggregator(max_records=100)
 
         error = ValueError("Test error message")
-        record = aggregator.record_error(
-            error=error,
-            plugin_id="test-plugin",
-            operation="update"
-        )
+        record = aggregator.record_error(error=error, plugin_id="test-plugin", operation="update")
 
         assert record.error_type == "ValueError"
         assert record.message == "Test error message"
@@ -56,11 +52,7 @@ class TestErrorRecording:
         error = ValueError("Test error")
         context = {"key": "value", "count": 42}
 
-        record = aggregator.record_error(
-            error=error,
-            context=context,
-            plugin_id="test-plugin"
-        )
+        record = aggregator.record_error(error=error, context=context, plugin_id="test-plugin")
 
         assert record.context["key"] == "value"
         assert record.context["count"] == 42
@@ -69,11 +61,7 @@ class TestErrorRecording:
         """Context from LEDMatrixError subclasses should be extracted."""
         aggregator = ErrorAggregator()
 
-        error = PluginError(
-            "Plugin failed",
-            plugin_id="failing-plugin",
-            context={"additional": "info"}
-        )
+        error = PluginError("Plugin failed", plugin_id="failing-plugin", context={"additional": "info"})
 
         record = aggregator.record_error(error=error)
 
@@ -108,18 +96,9 @@ class TestErrorRecording:
         """Plugin-specific error counts should be updated."""
         aggregator = ErrorAggregator()
 
-        aggregator.record_error(
-            error=ValueError("Error 1"),
-            plugin_id="plugin-a"
-        )
-        aggregator.record_error(
-            error=ValueError("Error 2"),
-            plugin_id="plugin-a"
-        )
-        aggregator.record_error(
-            error=ValueError("Error 3"),
-            plugin_id="plugin-b"
-        )
+        aggregator.record_error(error=ValueError("Error 1"), plugin_id="plugin-a")
+        aggregator.record_error(error=ValueError("Error 2"), plugin_id="plugin-a")
+        aggregator.record_error(error=ValueError("Error 3"), plugin_id="plugin-b")
 
         assert aggregator._plugin_error_counts["plugin-a"]["ValueError"] == 2
         assert aggregator._plugin_error_counts["plugin-b"]["ValueError"] == 1
@@ -130,10 +109,7 @@ class TestPatternDetection:
 
     def test_pattern_detected_after_threshold(self):
         """Pattern should be detected after threshold occurrences."""
-        aggregator = ErrorAggregator(
-            pattern_threshold=3,
-            pattern_window_minutes=60
-        )
+        aggregator = ErrorAggregator(pattern_threshold=3, pattern_window_minutes=60)
 
         # Record 3 errors of same type
         for _ in range(3):
@@ -143,10 +119,7 @@ class TestPatternDetection:
 
     def test_pattern_not_detected_below_threshold(self):
         """Pattern should not be detected below threshold."""
-        aggregator = ErrorAggregator(
-            pattern_threshold=5,
-            pattern_window_minutes=60
-        )
+        aggregator = ErrorAggregator(pattern_threshold=5, pattern_window_minutes=60)
 
         # Record only 2 errors
         for _ in range(2):
@@ -156,10 +129,7 @@ class TestPatternDetection:
 
     def test_pattern_severity_increases_with_count(self):
         """Pattern severity should increase with more occurrences."""
-        aggregator = ErrorAggregator(
-            pattern_threshold=2,
-            pattern_window_minutes=60
-        )
+        aggregator = ErrorAggregator(pattern_threshold=2, pattern_window_minutes=60)
 
         # Record enough to trigger critical severity
         for _ in range(10):
@@ -195,10 +165,7 @@ class TestErrorSummary:
         """Summary should contain all required fields."""
         aggregator = ErrorAggregator()
 
-        aggregator.record_error(
-            error=ValueError("Test"),
-            plugin_id="test-plugin"
-        )
+        aggregator.record_error(error=ValueError("Test"), plugin_id="test-plugin")
 
         summary = aggregator.get_error_summary()
 
@@ -243,10 +210,7 @@ class TestPluginHealth:
         aggregator = ErrorAggregator()
 
         for _ in range(3):
-            aggregator.record_error(
-                error=ValueError("Error"),
-                plugin_id="degraded-plugin"
-            )
+            aggregator.record_error(error=ValueError("Error"), plugin_id="degraded-plugin")
 
         health = aggregator.get_plugin_health("degraded-plugin")
 
@@ -258,10 +222,7 @@ class TestPluginHealth:
         aggregator = ErrorAggregator()
 
         for _ in range(10):
-            aggregator.record_error(
-                error=ValueError("Error"),
-                plugin_id="unhealthy-plugin"
-            )
+            aggregator.record_error(error=ValueError("Error"), plugin_id="unhealthy-plugin")
 
         health = aggregator.get_plugin_health("unhealthy-plugin")
 
@@ -312,14 +273,10 @@ class TestThreadSafety:
         def record_errors(thread_id):
             for i in range(errors_per_thread):
                 aggregator.record_error(
-                    error=ValueError(f"Thread {thread_id} error {i}"),
-                    plugin_id=f"plugin-{thread_id}"
+                    error=ValueError(f"Thread {thread_id} error {i}"), plugin_id=f"plugin-{thread_id}"
                 )
 
-        threads = [
-            threading.Thread(target=record_errors, args=(i,))
-            for i in range(num_threads)
-        ]
+        threads = [threading.Thread(target=record_errors, args=(i,)) for i in range(num_threads)]
 
         for t in threads:
             t.start()
@@ -343,10 +300,7 @@ class TestGlobalAggregator:
 
     def test_record_error_convenience_function(self):
         """record_error convenience function should work."""
-        record = record_error(
-            error=ValueError("Convenience function test"),
-            plugin_id="test"
-        )
+        record = record_error(error=ValueError("Convenience function test"), plugin_id="test")
 
         assert record.error_type == "ValueError"
         assert record.plugin_id == "test"
@@ -364,7 +318,7 @@ class TestSerialization:
             context={"key": "value"},
             plugin_id="test-plugin",
             operation="update",
-            stack_trace="traceback..."
+            stack_trace="traceback...",
         )
 
         data = record.to_dict()
@@ -384,7 +338,7 @@ class TestSerialization:
             last_seen=datetime.now(),
             affected_plugins=["plugin-a", "plugin-b"],
             sample_messages=["Error 1", "Error 2"],
-            severity="warning"
+            severity="warning",
         )
 
         data = pattern.to_dict()

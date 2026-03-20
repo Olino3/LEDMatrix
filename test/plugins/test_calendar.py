@@ -12,7 +12,7 @@ class TestCalendarPlugin(PluginTestBase):
 
     @pytest.fixture
     def plugin_id(self):
-        return 'calendar'
+        return "calendar"
 
     def test_manifest_exists(self, plugin_id):
         """Test that plugin manifest exists."""
@@ -51,8 +51,8 @@ class TestCalendarPlugin(PluginTestBase):
     def test_plugin_has_display_modes(self, plugin_id):
         """Test that plugin has display modes."""
         manifest = self.load_plugin_manifest(plugin_id)
-        assert 'display_modes' in manifest
-        assert 'calendar' in manifest['display_modes']
+        assert "display_modes" in manifest
+        assert "calendar" in manifest["display_modes"]
 
     def test_config_schema_valid(self, plugin_id):
         """Test that config schema is valid."""

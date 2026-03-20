@@ -34,7 +34,7 @@ class GameHelper:
         self.logger = logger or logging.getLogger(__name__)
         self.timezone = self._get_timezone(timezone_str)
 
-    def extract_game_details(self, event: Dict[str, Any], sport: str = None) -> Optional[Dict[str, Any]]:
+    def extract_game_details(self, event: Dict[str, Any], sport: str | None = None) -> Optional[Dict[str, Any]]:
         """
         Extract game details from ESPN event data.
 
@@ -210,7 +210,7 @@ class GameHelper:
 
         return sorted(games, key=get_start_time, reverse=reverse)
 
-    def process_games(self, events: List[Dict[str, Any]], sport: str = None) -> List[Dict[str, Any]]:
+    def process_games(self, events: List[Dict[str, Any]], sport: str | None = None) -> List[Dict[str, Any]]:
         """
         Process a list of ESPN events into game details.
 
@@ -256,11 +256,11 @@ class GameHelper:
     def _extract_team_abbreviation(self, team_data: Dict[str, Any]) -> str:
         """Extract team abbreviation from team data."""
         try:
-            return team_data.get("team", {}).get("abbreviation", "")
+            return team_data.get("team", {}).get("abbreviation", "")  # type: ignore[no-any-return]
         except (KeyError, AttributeError):
             # Fallback to first 3 characters of team name
             team_name = team_data.get("team", {}).get("name", "UNK")
-            return team_name[:3].upper()
+            return team_name[:3].upper()  # type: ignore[no-any-return]
 
     def _extract_team_record(self, team_data: Dict[str, Any]) -> str:
         """Extract team record from team data."""
@@ -271,7 +271,7 @@ class GameHelper:
                 # Don't show "0-0" records
                 if record in {"0-0", "0-0-0"}:
                     return ""
-                return record
+                return record  # type: ignore[no-any-return]
         except (KeyError, AttributeError, IndexError):
             pass
         return ""

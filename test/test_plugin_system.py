@@ -11,12 +11,12 @@ class TestPluginManager:
 
     def test_init(self, mock_config_manager, mock_display_manager, mock_cache_manager):
         """Test PluginManager initialization."""
-        with patch('src.plugin_system.plugin_manager.ensure_directory_permissions'):
+        with patch("src.plugin_system.plugin_manager.ensure_directory_permissions"):
             pm = PluginManager(
                 plugins_dir="plugins",
                 config_manager=mock_config_manager,
                 display_manager=mock_display_manager,
-                cache_manager=mock_cache_manager
+                cache_manager=mock_cache_manager,
             )
             assert pm.plugins_dir == Path("plugins")
             assert pm.config_manager == mock_config_manager
@@ -37,16 +37,17 @@ class TestPluginManager:
 
     def test_load_plugin_success(self, mock_config_manager, mock_display_manager, mock_cache_manager):
         """Test successful plugin loading."""
-        with patch('src.plugin_system.plugin_manager.ensure_directory_permissions'), \
-             patch('src.plugin_system.plugin_manager.PluginManager._scan_directory_for_plugins'), \
-             patch('src.plugin_system.plugin_manager.PluginLoader') as MockLoader, \
-             patch('src.plugin_system.plugin_manager.SchemaManager'):
-
+        with (
+            patch("src.plugin_system.plugin_manager.ensure_directory_permissions"),
+            patch("src.plugin_system.plugin_manager.PluginManager._scan_directory_for_plugins"),
+            patch("src.plugin_system.plugin_manager.PluginLoader") as MockLoader,
+            patch("src.plugin_system.plugin_manager.SchemaManager"),
+        ):
             pm = PluginManager(
                 plugins_dir="plugins",
                 config_manager=mock_config_manager,
                 display_manager=mock_display_manager,
-                cache_manager=mock_cache_manager
+                cache_manager=mock_cache_manager,
             )
 
             # Setup mocks
@@ -66,12 +67,12 @@ class TestPluginManager:
 
     def test_load_plugin_missing_manifest(self, mock_config_manager, mock_display_manager, mock_cache_manager):
         """Test loading plugin with missing manifest."""
-        with patch('src.plugin_system.plugin_manager.ensure_directory_permissions'):
+        with patch("src.plugin_system.plugin_manager.ensure_directory_permissions"):
             pm = PluginManager(
                 plugins_dir="plugins",
                 config_manager=mock_config_manager,
                 display_manager=mock_display_manager,
-                cache_manager=mock_cache_manager
+                cache_manager=mock_cache_manager,
             )
 
             # No manifest in pm.plugin_manifests
@@ -97,6 +98,7 @@ class TestPluginExecutor:
     def test_execute_display_success(self):
         """Test successful display execution."""
         from src.plugin_system.plugin_executor import PluginExecutor
+
         executor = PluginExecutor()
 
         mock_plugin = MagicMock()
@@ -110,6 +112,7 @@ class TestPluginExecutor:
     def test_execute_display_exception(self):
         """Test display execution with exception."""
         from src.plugin_system.plugin_executor import PluginExecutor
+
         executor = PluginExecutor()
 
         mock_plugin = MagicMock()
@@ -123,11 +126,14 @@ class TestPluginExecutor:
         """Test update execution timeout."""
         # Using a very short timeout for testing
         from src.plugin_system.plugin_executor import PluginExecutor
+
         executor = PluginExecutor(default_timeout=0.01)
 
         mock_plugin = MagicMock()
+
         def slow_update():
             time.sleep(0.05)
+
         mock_plugin.update.side_effect = slow_update
 
         result = executor.execute_update(mock_plugin, "test_plugin")
@@ -141,6 +147,7 @@ class TestPluginHealth:
     def test_circuit_breaker(self, mock_cache_manager):
         """Test circuit breaker activation."""
         from src.plugin_system.plugin_health import PluginHealthTracker
+
         tracker = PluginHealthTracker(cache_manager=mock_cache_manager, failure_threshold=3, cooldown_period=60)
 
         plugin_id = "test_plugin"
@@ -175,8 +182,11 @@ class TestBasePlugin:
 
         # Concrete implementation for testing
         class ConcretePlugin(BasePlugin):
-            def update(self): pass
-            def display(self, force_clear=False): pass
+            def update(self):
+                pass
+
+            def display(self, force_clear=False):
+                pass
 
         config = {"enabled": True}
         plugin = ConcretePlugin("test", config, mock_display_manager, mock_cache_manager, None)
@@ -190,8 +200,11 @@ class TestBasePlugin:
         from src.plugin_system.base_plugin import BasePlugin
 
         class ConcretePlugin(BasePlugin):
-            def update(self): pass
-            def display(self, force_clear=False): pass
+            def update(self):
+                pass
+
+            def display(self, force_clear=False):
+                pass
 
         config = {"enabled": True, "live_priority": True}
         plugin = ConcretePlugin("test", config, mock_display_manager, mock_cache_manager, None)

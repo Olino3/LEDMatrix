@@ -28,7 +28,7 @@ class Football(SportsCore):
         """Extract relevant game details from ESPN NCAA FB API response."""
         details, home_team, away_team, status, situation = self._extract_game_details_common(game_event)
         if details is None or home_team is None or away_team is None or status is None:
-            return
+            return None
         try:
             competition = game_event["competitions"][0]
             status = competition["status"]
@@ -45,14 +45,14 @@ class Football(SportsCore):
 
             if situation and status["type"]["state"] == "in":
                 # down = situation.get("down")
-                down_distance_text = situation.get("shortDownDistanceText")
-                down_distance_text_long = situation.get("downDistanceText")
+                down_distance_text = situation.get("shortDownDistanceText", "")
+                down_distance_text_long = situation.get("downDistanceText", "")
                 # distance = situation.get("distance")
 
                 # Detect scoring events from status detail
                 status_detail = status["type"].get("detail", "").lower()
                 status_short = status["type"].get("shortDetail", "").lower()
-                is_redzone = situation.get("isRedZone")
+                is_redzone = situation.get("isRedZone", False)
                 posession = situation.get("possession")
 
                 # Check for scoring events in status text
@@ -368,11 +368,15 @@ class FootballLive(Football, SportsLive):
             # Draw records or rankings if enabled (skip on short displays to avoid overlap)
             if (self.show_records or self.show_ranking) and self.display_height >= 24:
                 try:
-                    record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
+                    record_font: ImageFont.FreeTypeFont | ImageFont.ImageFont = ImageFont.truetype(
+                        "assets/fonts/4x6-font.ttf", 6
+                    )
                     self.logger.debug("Loaded 6px record font successfully")
                 except IOError:
                     record_font = ImageFont.load_default()
-                    self.logger.warning(f"Failed to load 6px font, using default font (size: {record_font.size})")
+                    self.logger.warning(
+                        f"Failed to load 6px font, using default font (size: {getattr(record_font, 'size', 'unknown')})"
+                    )
 
                 # Get team abbreviations
                 away_abbr = game.get("away_abbr", "")

@@ -80,12 +80,7 @@ class TestDisplayControllerOnDemand:
         controller.plugin_modes = {"mode1": MagicMock(), "mode2": MagicMock(), "od_mode": MagicMock()}
         controller.mode_to_plugin_id = {"od_mode": "od_plugin"}
 
-        request = {
-            "action": "start",
-            "plugin_id": "od_plugin",
-            "mode": "od_mode",
-            "duration": 60
-        }
+        request = {"action": "start", "plugin_id": "od_plugin", "mode": "od_mode", "duration": 60}
 
         controller._activate_on_demand(request)
 
@@ -137,7 +132,7 @@ class TestDisplayControllerLivePriority:
         # The mode name needs to match what get_live_modes returns or end with _live
         controller.plugin_modes = {
             "test_plugin_live": mock_plugin_with_live,  # Match get_live_modes return value
-            "normal_mode": normal_plugin
+            "normal_mode": normal_plugin,
         }
         controller.mode_to_plugin_id = {"test_plugin_live": "test_plugin", "normal_mode": "normal_plugin"}
 
@@ -158,10 +153,7 @@ class TestDisplayControllerLivePriority:
         normal_plugin.has_live_content = MagicMock(return_value=False)
 
         # Use mode name that matches get_live_modes return value
-        controller.plugin_modes = {
-            "test_plugin_live": mock_plugin_with_live,
-            "normal_mode": normal_plugin
-        }
+        controller.plugin_modes = {"test_plugin_live": mock_plugin_with_live, "normal_mode": normal_plugin}
         controller.mode_to_plugin_id = {"test_plugin_live": "test_plugin", "normal_mode": "normal_plugin"}
 
         # Simulate check loop logic
@@ -221,15 +213,11 @@ class TestDisplayControllerSchedule:
     def test_active_hours(self, test_display_controller):
         """Test active hours check."""
         controller = test_display_controller
-        self._set_schedule_config(controller, {
-            "schedule": {
-                "enabled": True,
-                "start_time": "09:00",
-                "end_time": "17:00"
-            }
-        })
+        self._set_schedule_config(
+            controller, {"schedule": {"enabled": True, "start_time": "09:00", "end_time": "17:00"}}
+        )
         # Mock datetime to be within active hours
-        with patch('src.display_controller.datetime') as mock_datetime:
+        with patch("src.display_controller.datetime") as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value.lower.return_value = "monday"
             mock_datetime.now.return_value.time.return_value = datetime.strptime("12:00", "%H:%M").time()
             mock_datetime.strptime = datetime.strptime
@@ -240,15 +228,11 @@ class TestDisplayControllerSchedule:
     def test_inactive_hours(self, test_display_controller):
         """Test inactive hours check."""
         controller = test_display_controller
-        self._set_schedule_config(controller, {
-            "schedule": {
-                "enabled": True,
-                "start_time": "09:00",
-                "end_time": "17:00"
-            }
-        })
+        self._set_schedule_config(
+            controller, {"schedule": {"enabled": True, "start_time": "09:00", "end_time": "17:00"}}
+        )
         # Mock datetime to be outside active hours
-        with patch('src.display_controller.datetime') as mock_datetime:
+        with patch("src.display_controller.datetime") as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value.lower.return_value = "monday"
             mock_datetime.now.return_value.time.return_value = datetime.strptime("20:00", "%H:%M").time()
             mock_datetime.strptime = datetime.strptime

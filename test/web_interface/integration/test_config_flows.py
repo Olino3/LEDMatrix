@@ -25,10 +25,10 @@ class TestConfigFlowsIntegration(unittest.TestCase):
         # Create initial config
         initial_config = {
             "plugin1": {"enabled": True, "display_duration": 30},
-            "plugin2": {"enabled": False, "display_duration": 15}
+            "plugin2": {"enabled": False, "display_duration": 15},
         }
 
-        with open(self.config_path, 'w') as f:
+        with open(self.config_path, "w") as f:
             json.dump(initial_config, f)
 
         # Initialize atomic config manager
@@ -36,7 +36,7 @@ class TestConfigFlowsIntegration(unittest.TestCase):
             config_path=str(self.config_path),
             secrets_path=str(self.secrets_path),
             backup_dir=str(self.backup_dir),
-            max_backups=5
+            max_backups=5,
         )
 
         # Initialize regular config manager
@@ -138,10 +138,11 @@ class TestConfigFlowsIntegration(unittest.TestCase):
         # Rollback to first change - get the backup version from the backup path
         # Extract version from backup path (format: config.json.backup.YYYYMMDD_HHMMSS)
         import os
+
         backup_filename = os.path.basename(result1.backup_path)
         # Extract timestamp part
-        if '.backup.' in backup_filename:
-            version = backup_filename.split('.backup.')[-1]
+        if ".backup." in backup_filename:
+            version = backup_filename.split(".backup.")[-1]
             rollback_success = self.atomic_manager.rollback_config(backup_version=version)
         else:
             # Fallback: use most recent backup
@@ -154,6 +155,5 @@ class TestConfigFlowsIntegration(unittest.TestCase):
         self.assertEqual(rolled_back_config["plugin2"]["display_duration"], 15)  # Original value
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-

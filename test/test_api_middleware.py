@@ -178,6 +178,7 @@ class TestCaptivePortal:
 class TestRegisterMiddleware:
     def test_register_middleware_importable(self):
         from src.api.middleware import register_middleware
+
         assert callable(register_middleware)
 
     def test_individual_middleware_importable(self):
@@ -186,7 +187,14 @@ class TestRegisterMiddleware:
         from src.api.middleware.request_id import RequestIdMiddleware
         from src.api.middleware.security import SecurityHeadersMiddleware
         from src.api.middleware.timing import RequestTimingMiddleware
-        assert all(callable(cls) for cls in [
-            SecurityHeadersMiddleware, RequestIdMiddleware,
-            RequestTimingMiddleware, CachingMiddleware, CaptivePortalMiddleware,
-        ])
+
+        assert all(
+            callable(cls)
+            for cls in [
+                SecurityHeadersMiddleware,
+                RequestIdMiddleware,
+                RequestTimingMiddleware,
+                CachingMiddleware,
+                CaptivePortalMiddleware,
+            ]
+        )

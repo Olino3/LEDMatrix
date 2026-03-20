@@ -27,7 +27,7 @@ class DisplayManager:
         return cls._instance
 
     def __init__(
-        self, config: Dict[str, Any] = None, force_fallback: bool = False, suppress_test_pattern: bool = False
+        self, config: Dict[str, Any] | None = None, force_fallback: bool = False, suppress_test_pattern: bool = False
     ):
         start_time = time.time()
         self.config = config or {}
@@ -39,7 +39,7 @@ class DisplayManager:
         self._last_snapshot_ts = 0.0
 
         # Scrolling state tracking for graceful updates
-        self._scrolling_state = {
+        self._scrolling_state: Dict[str, Any] = {
             "is_scrolling": False,
             "last_scroll_activity": 0,
             "scroll_inactivity_threshold": 2.0,  # seconds of inactivity before considering "not scrolling"
@@ -127,7 +127,7 @@ class DisplayManager:
                 logger.info("Initial Press Start 2P font loaded successfully")
             except Exception as e:
                 logger.error(f"Failed to load initial font: {e}")
-                self.font = ImageFont.load_default()
+                self.font = ImageFont.load_default()  # type: ignore[assignment]
 
             # Draw a test pattern unless caller suppressed it (e.g., web on-demand)
             if not getattr(self, "_suppress_test_pattern", False):
@@ -194,7 +194,7 @@ class DisplayManager:
         """
         # Fail fast: validate input type
         if not isinstance(brightness, (int, float)):
-            logger.error(f"[BRIGHTNESS] Invalid brightness type: {type(brightness).__name__}, expected int")
+            logger.error(f"[BRIGHTNESS] Invalid brightness type: {type(brightness).__name__}, expected int")  # type: ignore[unreachable]
             return False
 
         if self.matrix is None:
@@ -228,7 +228,7 @@ class DisplayManager:
             return -1
 
         try:
-            return self.matrix.brightness
+            return self.matrix.brightness  # type: ignore[no-any-return]
         except AttributeError as e:
             logger.warning(f"[BRIGHTNESS] Matrix does not support brightness property: {e}", exc_info=True)
             return -1
@@ -426,7 +426,7 @@ class DisplayManager:
         except Exception as e:
             logger.error(f"Error in font loading: {e}", exc_info=True)
             # Fallback to default font
-            self.regular_font = ImageFont.load_default()
+            self.regular_font = ImageFont.load_default()  # type: ignore[assignment]
             self.small_font = self.regular_font
             self.calendar_font = self.regular_font
             if not hasattr(self, "extra_small_font"):
@@ -473,11 +473,11 @@ class DisplayManager:
     def draw_text(
         self,
         text: str,
-        x: int = None,
-        y: int = None,
+        x: int | None = None,
+        y: int | None = None,
         color: tuple = (255, 255, 255),
         small_font: bool = False,
-        font: ImageFont = None,
+        font: ImageFont.FreeTypeFont | ImageFont.ImageFont | None = None,
         centered: bool = False,
     ):
         """Draw text on the canvas with optional font selection.
@@ -704,7 +704,12 @@ class DisplayManager:
         # Note: No update_display() here - let the caller handle the update
 
     def draw_text_with_icons(
-        self, text: str, icons: List[tuple] = None, x: int = None, y: int = None, color: tuple = (255, 255, 255)
+        self,
+        text: str,
+        icons: List[tuple] | None = None,
+        x: int | None = None,
+        y: int | None = None,
+        color: tuple = (255, 255, 255),
     ):
         """Draw text with weather icons at specified positions."""
         # Draw the text

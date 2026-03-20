@@ -191,9 +191,7 @@ class TestPluginLoaderUsesUv:
         return plugin_dir
 
     @patch("src.plugin_system.plugin_loader.install_plugin_dependencies")
-    def test_install_dependencies_delegates_to_dep_installer(
-        self, mock_install, plugin_loader, tmp_plugin_dir
-    ):
+    def test_install_dependencies_delegates_to_dep_installer(self, mock_install, plugin_loader, tmp_plugin_dir):
         """PluginLoader.install_dependencies delegates to dep_installer."""
         requirements_file = tmp_plugin_dir / "requirements.txt"
         requirements_file.write_text("requests>=2.0\n")
@@ -205,9 +203,7 @@ class TestPluginLoaderUsesUv:
         mock_install.assert_called_once()
 
     @patch("src.plugin_system.plugin_loader.install_plugin_dependencies")
-    def test_install_dependencies_no_break_system_packages(
-        self, mock_install, plugin_loader, tmp_plugin_dir
-    ):
+    def test_install_dependencies_no_break_system_packages(self, mock_install, plugin_loader, tmp_plugin_dir):
         """PluginLoader must not pass --break-system-packages."""
         requirements_file = tmp_plugin_dir / "requirements.txt"
         requirements_file.write_text("requests>=2.0\n")

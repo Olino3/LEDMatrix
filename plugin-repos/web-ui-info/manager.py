@@ -31,8 +31,7 @@ class WebUIInfoPlugin(BasePlugin):
         enabled (bool): Enable/disable plugin (default: true)
     """
 
-    def __init__(self, plugin_id: str, config: Dict[str, Any],
-                 display_manager, cache_manager, plugin_manager):
+    def __init__(self, plugin_id: str, config: Dict[str, Any], display_manager, cache_manager, plugin_manager):
         """Initialize the Web UI Info plugin."""
         super().__init__(plugin_id, config, display_manager, cache_manager, plugin_manager)
 
@@ -68,22 +67,12 @@ class WebUIInfoPlugin(BasePlugin):
         """
         try:
             # Check if hostapd service is running
-            result = subprocess.run(
-                ["systemctl", "is-active", "hostapd"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
+            result = subprocess.run(["systemctl", "is-active", "hostapd"], capture_output=True, text=True, timeout=2)
             if result.returncode == 0 and result.stdout.strip() == "active":
                 return True
 
             # Check if wlan0 has AP mode IP (192.168.4.1)
-            result = subprocess.run(
-                ["ip", "addr", "show", "wlan0"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
+            result = subprocess.run(["ip", "addr", "show", "wlan0"], capture_output=True, text=True, timeout=2)
             if result.returncode == 0 and "192.168.4.1" in result.stdout:
                 return True
 
@@ -107,12 +96,7 @@ class WebUIInfoPlugin(BasePlugin):
 
         try:
             # Try using 'hostname -I' first (fastest, gets all IPs)
-            result = subprocess.run(
-                ["hostname", "-I"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
+            result = subprocess.run(["hostname", "-I"], capture_output=True, text=True, timeout=2)
             if result.returncode == 0:
                 ips = result.stdout.strip().split()
                 # Filter out loopback and AP mode IPs
@@ -123,33 +107,27 @@ class WebUIInfoPlugin(BasePlugin):
                         return ip
 
             # Fallback: Use 'ip addr show' to get interface IPs
-            result = subprocess.run(
-                ["ip", "-4", "addr", "show"],
-                capture_output=True,
-                text=True,
-                timeout=3
-            )
+            result = subprocess.run(["ip", "-4", "addr", "show"], capture_output=True, text=True, timeout=3)
             if result.returncode == 0:
                 current_interface = None
-                for line in result.stdout.split('\n'):
+                for line in result.stdout.split("\n"):
                     line = line.strip()
                     # Check for interface name
-                    if ':' in line and not line.startswith('inet'):
-                        parts = line.split(':')
+                    if ":" in line and not line.startswith("inet"):
+                        parts = line.split(":")
                         if len(parts) >= 2:
-                            current_interface = parts[1].strip().split('@')[0]
+                            current_interface = parts[1].strip().split("@")[0]
                     # Check for inet address
-                    elif line.startswith('inet '):
+                    elif line.startswith("inet "):
                         parts = line.split()
                         if len(parts) >= 2:
                             ip_with_cidr = parts[1]
-                            ip = ip_with_cidr.split('/')[0]
+                            ip = ip_with_cidr.split("/")[0]
                             # Skip loopback and AP mode IPs
                             if not ip.startswith("127.") and ip != "192.168.4.1":
                                 # Prefer eth0/ethernet interfaces, then wlan0, then others
                                 if current_interface and (
-                                    current_interface.startswith("eth") or
-                                    current_interface.startswith("enp")
+                                    current_interface.startswith("eth") or current_interface.startswith("enp")
                                 ):
                                     self.logger.debug(f"Found Ethernet IP: {ip} on {current_interface}")
                                     return ip
@@ -162,7 +140,7 @@ class WebUIInfoPlugin(BasePlugin):
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 try:
                     # Connect to a public DNS server (doesn't actually connect)
-                    s.connect(('8.8.8.8', 80))
+                    s.connect(("8.8.8.8", 80))
                     ip = s.getsockname()[0]
                     if ip and not ip.startswith("127.") and ip != "192.168.4.1":
                         self.logger.debug(f"Found IP via socket method: {ip}")
@@ -232,7 +210,7 @@ class WebUIInfoPlugin(BasePlugin):
             height = self.display_manager.height
 
             # Create a new image for the display
-            img = Image.new('RGB', (width, height), (0, 0, 0))
+            img = Image.new("RGB", (width, height), (0, 0, 0))
             draw = ImageDraw.Draw(img)
 
             # Try to load a small font
@@ -264,10 +242,7 @@ class WebUIInfoPlugin(BasePlugin):
                 address = self.device_id
 
             # Prepare text to display
-            lines = [
-                "visit web ui",
-                f"at {address}:5000"
-            ]
+            lines = ["visit web ui", f"at {address}:5000"]
 
             # Calculate text positions (centered)
             y_start = 5
@@ -307,7 +282,7 @@ class WebUIInfoPlugin(BasePlugin):
 
     def get_display_duration(self) -> float:
         """Get display duration from config."""
-        return self.config.get('display_duration', 10.0)
+        return self.config.get("display_duration", 10.0)
 
     def validate_config(self) -> bool:
         """Validate plugin configuration."""
@@ -321,11 +296,12 @@ class WebUIInfoPlugin(BasePlugin):
     def get_info(self) -> Dict[str, Any]:
         """Return plugin info for web UI."""
         info = super().get_info()
-        info.update({
-            'device_id': self.device_id,
-            'device_ip': self.device_ip,
-            'web_ui_url': self.web_ui_url,
-            'current_display_mode': self.current_display_mode
-        })
+        info.update(
+            {
+                "device_id": self.device_id,
+                "device_ip": self.device_ip,
+                "web_ui_url": self.web_ui_url,
+                "current_display_mode": self.current_display_mode,
+            }
+        )
         return info
-

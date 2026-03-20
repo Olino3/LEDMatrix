@@ -17,7 +17,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Set emulator mode
-os.environ['EMULATOR'] = 'true'
+os.environ["EMULATOR"] = "true"
 
 
 @pytest.fixture
@@ -27,16 +27,13 @@ def plugins_dir() -> Path:
     Checks plugins/ first, then falls back to plugin-repos/
     for monorepo development environments.
     """
-    plugins_path = project_root / 'plugins'
-    plugin_repos_path = project_root / 'plugin-repos'
+    plugins_path = project_root / "plugins"
+    plugin_repos_path = project_root / "plugin-repos"
 
     # Prefer plugins/ if it has actual plugin directories
     if plugins_path.exists():
         try:
-            has_plugins = any(
-                p for p in plugins_path.iterdir()
-                if p.is_dir() and not p.name.startswith('.')
-            )
+            has_plugins = any(p for p in plugins_path.iterdir() if p.is_dir() and not p.name.startswith("."))
             if has_plugins:
                 return plugins_path
         except PermissionError:
@@ -100,27 +97,24 @@ def mock_plugin_manager() -> Any:
 @pytest.fixture
 def base_plugin_config() -> Dict[str, Any]:
     """Base configuration for plugins."""
-    return {
-        'enabled': True,
-        'update_interval': 300
-    }
+    return {"enabled": True, "update_interval": 300}
 
 
 def load_plugin_manifest(plugin_id: str, plugins_dir: Path) -> Dict[str, Any]:
     """Load plugin manifest.json."""
-    manifest_path = plugins_dir / plugin_id / 'manifest.json'
+    manifest_path = plugins_dir / plugin_id / "manifest.json"
     if not manifest_path.exists():
         pytest.skip(f"Manifest not found for {plugin_id}")
 
-    with open(manifest_path, 'r') as f:
+    with open(manifest_path, "r") as f:
         return json.load(f)
 
 
 def get_plugin_config_schema(plugin_id: str, plugins_dir: Path) -> Dict[str, Any]:
     """Load plugin config_schema.json if it exists."""
-    schema_path = plugins_dir / plugin_id / 'config_schema.json'
+    schema_path = plugins_dir / plugin_id / "config_schema.json"
     if schema_path.exists():
-        with open(schema_path, 'r') as f:
+        with open(schema_path, "r") as f:
             return json.load(f)
     return None
 
@@ -129,4 +123,5 @@ def get_plugin_config_schema(plugin_id: str, plugins_dir: Path) -> Dict[str, Any
 def visual_display_manager() -> Any:
     """Create a VisualTestDisplayManager that renders real pixels for visual testing."""
     from src.plugin_system.testing import VisualTestDisplayManager
+
     return VisualTestDisplayManager(width=128, height=32)

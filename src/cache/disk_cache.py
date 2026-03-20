@@ -106,7 +106,7 @@ class DiskCache:
 
             now = time.time()
             if record_ts is None or (now - record_ts) <= max_age:
-                return record
+                return record  # type: ignore[no-any-return]
             else:
                 # Stale on disk; keep file for potential diagnostics but treat as miss
                 return None

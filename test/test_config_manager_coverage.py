@@ -121,9 +121,10 @@ class TestSaveConfigAtomic:
             message="rolled back",
         )
 
-        with patch.object(
-            manager._get_atomic_manager(), "save_config_atomic", return_value=rolled_back_result
-        ), patch.object(manager, "load_config", side_effect=ConfigError("reload fail")):
+        with (
+            patch.object(manager._get_atomic_manager(), "save_config_atomic", return_value=rolled_back_result),
+            patch.object(manager, "load_config", side_effect=ConfigError("reload fail")),
+        ):
             result = manager.save_config_atomic({"x": 1}, create_backup=False)
 
         assert result.status == SaveResultStatus.ROLLED_BACK
@@ -148,9 +149,9 @@ class TestSaveConfigAtomic:
         manager.config = {}
 
         atomic = manager._get_atomic_manager()
-        with patch.object(atomic, "save_config_atomic", return_value=SaveResult(
-            status=SaveResultStatus.SUCCESS, message="ok"
-        )) as mock_save:
+        with patch.object(
+            atomic, "save_config_atomic", return_value=SaveResult(status=SaveResultStatus.SUCCESS, message="ok")
+        ) as mock_save:
             manager.save_config_atomic({"k": "v"}, create_backup=False)
 
         _, kwargs = mock_save.call_args
@@ -193,8 +194,9 @@ class TestRollbackConfig:
         _write_json(cfg, {})
         manager = ConfigManager(config_path=str(cfg))
 
-        with patch.object(manager._get_atomic_manager(), "rollback_config", return_value=True), patch.object(
-            manager, "load_config", side_effect=Exception("disk error")
+        with (
+            patch.object(manager._get_atomic_manager(), "rollback_config", return_value=True),
+            patch.object(manager, "load_config", side_effect=Exception("disk error")),
         ):
             result = manager.rollback_config()
 
@@ -351,9 +353,7 @@ class TestLoadConfigErrorPaths:
         """FileNotFoundError mentioning config_secrets.json should not raise."""
         cfg = tmp_path / "config.json"
         _write_json(cfg, {"timezone": "UTC"})
-        manager = ConfigManager(
-            config_path=str(cfg), secrets_path=str(tmp_path / "config_secrets.json")
-        )
+        manager = ConfigManager(config_path=str(cfg), secrets_path=str(tmp_path / "config_secrets.json"))
         manager.template_path = str(tmp_path / "no_template.json")
         manager.config = {"pre_existing": True}
 
@@ -437,6 +437,7 @@ class TestMigrateConfig:
 
     def test_migration_logs_warning_for_missing_template(self, tmp_path, caplog):
         import logging
+
         cfg = tmp_path / "config.json"
         _write_json(cfg, {})
         manager = ConfigManager(config_path=str(cfg))

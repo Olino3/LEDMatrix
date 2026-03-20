@@ -21,7 +21,8 @@ import requests
 try:
     from src.api.services.api_counter import increment_api_counter
 except ImportError:
-    def increment_api_counter(kind: str, count: int = 1):
+
+    def increment_api_counter(kind: str, count: int = 1) -> None:
         pass
 
 
@@ -110,7 +111,7 @@ class BaseOddsManager:
 
         if cached_data:
             self.logger.info(f"Using cached odds from ESPN for {cache_key}")
-            return cached_data
+            return cached_data  # type: ignore[no-any-return]
 
         self.logger.info(f"Cache miss - fetching fresh odds from ESPN for {cache_key}")
 
@@ -151,7 +152,7 @@ class BaseOddsManager:
         except json.JSONDecodeError:
             self.logger.error(f"Error decoding JSON response from ESPN API for {cache_key}.")
 
-        return self.cache_manager.get_with_auto_strategy(cache_key)
+        return self.cache_manager.get_with_auto_strategy(cache_key)  # type: ignore[no-any-return]
 
     def _extract_espn_data(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -269,6 +270,8 @@ class BaseOddsManager:
         """
         if not self.is_odds_available(odds_data):
             return "No odds available"
+
+        assert odds_data is not None  # narrowing for mypy; guaranteed by is_odds_available
 
         parts = []
 

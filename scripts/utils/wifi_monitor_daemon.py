@@ -20,14 +20,12 @@ from src.wifi_manager import WiFiManager
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/var/log/ledmatrix-wifi-monitor.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("/var/log/ledmatrix-wifi-monitor.log")],
 )
 
 logger = logging.getLogger(__name__)
+
 
 class WiFiMonitorDaemon:
     """Daemon to monitor WiFi and manage AP mode"""
@@ -66,10 +64,14 @@ class WiFiMonitorDaemon:
         # Log initial status
         initial_status = self.wifi_manager.get_wifi_status()
         initial_ethernet = self.wifi_manager._is_ethernet_connected()
-        logger.info(f"Initial status: WiFi connected={initial_status.connected}, "
-                   f"Ethernet connected={initial_ethernet}, AP active={initial_status.ap_mode_active}")
+        logger.info(
+            f"Initial status: WiFi connected={initial_status.connected}, "
+            f"Ethernet connected={initial_ethernet}, AP active={initial_status.ap_mode_active}"
+        )
         if initial_status.connected:
-            logger.info(f"  WiFi SSID: {initial_status.ssid}, IP: {initial_status.ip_address}, Signal: {initial_status.signal}%")
+            logger.info(
+                f"  WiFi SSID: {initial_status.ssid}, IP: {initial_status.ip_address}, Signal: {initial_status.signal}%"
+            )
 
         while self.running:
             try:
@@ -85,17 +87,19 @@ class WiFiMonitorDaemon:
                 updated_ethernet = self.wifi_manager._is_ethernet_connected()
 
                 current_state = {
-                    'connected': updated_status.connected,
-                    'ethernet_connected': updated_ethernet,
-                    'ap_active': updated_status.ap_mode_active,
-                    'ssid': updated_status.ssid
+                    "connected": updated_status.connected,
+                    "ethernet_connected": updated_ethernet,
+                    "ap_active": updated_status.ap_mode_active,
+                    "ssid": updated_status.ssid,
                 }
 
                 # Log state changes with detailed information
                 if current_state != self.last_state:
                     logger.info("=== State Change Detected ===")
                     if updated_status.connected:
-                        logger.info(f"WiFi connected: {updated_status.ssid} (IP: {updated_status.ip_address}, Signal: {updated_status.signal}%)")
+                        logger.info(
+                            f"WiFi connected: {updated_status.ssid} (IP: {updated_status.ip_address}, Signal: {updated_status.signal}%)"
+                        )
                     else:
                         logger.info("WiFi disconnected (no active connection)")
 
@@ -117,10 +121,14 @@ class WiFiMonitorDaemon:
                 else:
                     # Log periodic status (less verbose)
                     if updated_status.connected:
-                        logger.debug(f"Status check: WiFi={updated_status.ssid} ({updated_status.signal}%), "
-                                   f"Ethernet={updated_ethernet}, AP={updated_status.ap_mode_active}")
+                        logger.debug(
+                            f"Status check: WiFi={updated_status.ssid} ({updated_status.signal}%), "
+                            f"Ethernet={updated_ethernet}, AP={updated_status.ap_mode_active}"
+                        )
                     else:
-                        logger.debug(f"Status check: WiFi=disconnected, Ethernet={updated_ethernet}, AP={updated_status.ap_mode_active}")
+                        logger.debug(
+                            f"Status check: WiFi=disconnected, Ethernet={updated_ethernet}, AP={updated_status.ap_mode_active}"
+                        )
 
                 # Sleep until next check
                 time.sleep(self.check_interval)
@@ -148,7 +156,9 @@ class WiFiMonitorDaemon:
         try:
             status = self.wifi_manager.get_wifi_status()
             ethernet_connected = self.wifi_manager._is_ethernet_connected()
-            logger.info(f"Final status: WiFi={status.connected}, Ethernet={ethernet_connected}, AP={status.ap_mode_active}")
+            logger.info(
+                f"Final status: WiFi={status.connected}, Ethernet={ethernet_connected}, AP={status.ap_mode_active}"
+            )
 
             if (status.connected or ethernet_connected) and status.ap_mode_active:
                 if status.connected:
@@ -171,18 +181,9 @@ def main():
     """Main entry point"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='WiFi Monitor Daemon for LED Matrix')
-    parser.add_argument(
-        '--interval',
-        type=int,
-        default=30,
-        help='Check interval in seconds (default: 30)'
-    )
-    parser.add_argument(
-        '--foreground',
-        action='store_true',
-        help='Run in foreground (for debugging)'
-    )
+    parser = argparse.ArgumentParser(description="WiFi Monitor Daemon for LED Matrix")
+    parser.add_argument("--interval", type=int, default=30, help="Check interval in seconds (default: 30)")
+    parser.add_argument("--foreground", action="store_true", help="Run in foreground (for debugging)")
 
     args = parser.parse_args()
 
@@ -195,6 +196,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

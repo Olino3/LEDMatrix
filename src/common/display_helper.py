@@ -120,23 +120,23 @@ class DisplayHelper:
         if status_text or period_text:
             status_display = f"{period_text} {status_text}".strip()
             if status_display:
-                self._draw_centered_text(draw, status_display, fonts.get("time", fonts.get("status")), y_position=1)
+                self._draw_centered_text(draw, status_display, fonts.get("time", fonts.get("status")), y_position=1)  # type: ignore[arg-type]
 
         # Draw clock if available
         if clock:
-            self._draw_centered_text(draw, clock, fonts.get("time"), y_position=1)
+            self._draw_centered_text(draw, clock, fonts.get("time"), y_position=1)  # type: ignore[arg-type]
 
         # Draw scores (center)
         score_text = f"{away_score}-{home_score}"
-        self._draw_centered_text(draw, score_text, fonts.get("score"), y_position=self.display_height // 2 - 3)
+        self._draw_centered_text(draw, score_text, fonts.get("score"), y_position=self.display_height // 2 - 3)  # type: ignore[arg-type]
 
         # Draw team abbreviations (bottom)
         abbr_y = max(0, self.display_height - 8)
         if away_abbr:
-            self._draw_text_with_outline(draw, away_abbr, (0, abbr_y), fonts.get("team"))
+            self._draw_text_with_outline(draw, away_abbr, (0, abbr_y), fonts.get("team"))  # type: ignore[arg-type]
         if home_abbr:
             text_width = draw.textlength(home_abbr, font=fonts.get("team"))
-            self._draw_text_with_outline(draw, home_abbr, (self.display_width - text_width, abbr_y), fonts.get("team"))
+            self._draw_text_with_outline(draw, home_abbr, (self.display_width - text_width, abbr_y), fonts.get("team"))  # type: ignore[arg-type]
 
         # Composite and return
         final_img = self.composite_images(main_img, overlay)
@@ -200,8 +200,8 @@ class DisplayHelper:
         text_width = draw.textlength(text, font=font)
         bbox = draw.textbbox((0, 0), text, font=font)
         text_height = bbox[3] - bbox[1]
-        x = (self.display_width - text_width) // 2
-        y = (self.display_height - text_height) // 2
+        x = int((self.display_width - text_width) // 2)
+        y = int((self.display_height - text_height) // 2)
 
         # Draw text
         self._draw_text_with_outline(draw, text, (x, y), font, fill=text_color)
@@ -224,7 +224,7 @@ class DisplayHelper:
         font = ImageFont.load_default()
 
         # Draw centered error message
-        self._draw_centered_text(message, font, (50, 0, 0), (255, 255, 255))
+        self._draw_centered_text(message, font, (50, 0, 0), (255, 255, 255))  # type: ignore[arg-type]
 
         return img
 
@@ -241,7 +241,7 @@ class DisplayHelper:
         img = self.create_base_image((0, 0, 0))
 
         font = ImageFont.load_default()
-        self._draw_centered_text(message, font, (0, 0, 0), (150, 150, 150))
+        self._draw_centered_text(message, font, (0, 0, 0), (150, 150, 150))  # type: ignore[arg-type]
 
         return img
 
@@ -302,7 +302,7 @@ class DisplayHelper:
     ) -> None:
         """Draw centered text at specified y position."""
         text_width = draw.textlength(text, font=font)
-        x = (self.display_width - text_width) // 2
+        x = int((self.display_width - text_width) // 2)
         self._draw_text_with_outline(draw, text, (x, y_position), font)
 
     def _draw_text_with_outline(

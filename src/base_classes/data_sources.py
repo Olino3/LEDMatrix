@@ -67,7 +67,10 @@ class ESPNDataSource(DataSource):
             formatted_date = now.strftime("%Y%m%d")
             url = f"{self.base_url}/{sport}/{league}/scoreboard"
             response = self.session.get(
-                url, params={"dates": formatted_date, "limit": 1000}, headers=self.get_headers(), timeout=15
+                url,
+                params={"dates": formatted_date, "limit": 1000},  # type: ignore[arg-type]
+                headers=self.get_headers(),
+                timeout=15,
             )
             response.raise_for_status()
 
@@ -96,14 +99,14 @@ class ESPNDataSource(DataSource):
 
             params = {"dates": f"{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}", "limit": 1000}
 
-            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)
+            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)  # type: ignore[arg-type]
             response.raise_for_status()
 
             data = response.json()
             events = data.get("events", [])
 
             self.logger.debug(f"Fetched {len(events)} scheduled games for {sport}/{league}")
-            return events
+            return events  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching schedule from ESPN: {e}")
@@ -119,7 +122,7 @@ class ESPNDataSource(DataSource):
 
             data = response.json()
             self.logger.debug(f"Fetched standings for {sport}/{league}")
-            return data
+            return data  # type: ignore[no-any-return]
         except Exception as e:
             # If standings doesn't exist, try rankings (for college sports)
             if hasattr(e, "response") and hasattr(e.response, "status_code") and e.response.status_code == 404:
@@ -130,7 +133,7 @@ class ESPNDataSource(DataSource):
 
                     data = response.json()
                     self.logger.debug(f"Fetched rankings for {sport}/{league}")
-                    return data
+                    return data  # type: ignore[no-any-return]
                 except Exception:
                     # Both endpoints failed - standings/rankings may not be available for this sport/league
                     self.logger.debug(f"Standings/rankings not available for {sport}/{league} from ESPN API")
@@ -158,7 +161,7 @@ class MLBAPIDataSource(DataSource):
                 "hydrate": "game,team,venue,weather",
             }
 
-            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)
+            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)  # type: ignore[arg-type]
             response.raise_for_status()
 
             data = response.json()
@@ -191,7 +194,7 @@ class MLBAPIDataSource(DataSource):
             response.raise_for_status()
 
             data = response.json()
-            all_games = []
+            all_games: list[Dict] = []
             for date_data in data.get("dates", []):
                 all_games.extend(date_data.get("games", []))
 
@@ -212,12 +215,12 @@ class MLBAPIDataSource(DataSource):
                 "standingsType": "regularSeason",
             }
 
-            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)
+            response = self.session.get(url, headers=self.get_headers(), params=params, timeout=15)  # type: ignore[arg-type]
             response.raise_for_status()
 
             data = response.json()
             self.logger.debug("Fetched standings from MLB API")
-            return data
+            return data  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching standings from MLB API: {e}")
@@ -227,7 +230,7 @@ class MLBAPIDataSource(DataSource):
 class SoccerAPIDataSource(DataSource):
     """Soccer API data source (generic structure)."""
 
-    def __init__(self, logger: logging.Logger, api_key: str = None):
+    def __init__(self, logger: logging.Logger, api_key: str | None = None):
         super().__init__(logger)
         self.api_key = api_key
         self.base_url = "https://api.football-data.org/v4"  # Example API
@@ -253,7 +256,7 @@ class SoccerAPIDataSource(DataSource):
             matches = data.get("matches", [])
 
             self.logger.debug(f"Fetched {len(matches)} live games from soccer API")
-            return matches
+            return matches  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching live games from soccer API: {e}")
@@ -278,7 +281,7 @@ class SoccerAPIDataSource(DataSource):
             matches = data.get("matches", [])
 
             self.logger.debug(f"Fetched {len(matches)} scheduled games from soccer API")
-            return matches
+            return matches  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching schedule from soccer API: {e}")
@@ -293,7 +296,7 @@ class SoccerAPIDataSource(DataSource):
 
             data = response.json()
             self.logger.debug("Fetched standings from soccer API")
-            return data
+            return data  # type: ignore[no-any-return]
 
         except Exception as e:
             self.logger.error(f"Error fetching standings from soccer API: {e}")

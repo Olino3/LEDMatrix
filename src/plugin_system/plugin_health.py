@@ -60,7 +60,7 @@ class PluginHealthTracker:
         cached = self.cache_manager.get(cache_key, max_age=None)
 
         if cached:
-            return cached
+            return cached  # type: ignore[no-any-return]
 
         # Default state
         return {

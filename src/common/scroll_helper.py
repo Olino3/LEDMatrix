@@ -88,7 +88,7 @@ class ScrollHelper:
         self.last_update_time: Optional[float] = None
 
         # High FPS settings
-        self.target_fps = 120  # Target 120 FPS for smooth scrolling
+        self.target_fps: float = 120  # Target 120 FPS for smooth scrolling
         self.frame_time_target = 1.0 / self.target_fps
 
         # Dynamic duration settings
@@ -105,7 +105,7 @@ class ScrollHelper:
         self.frame_count = 0
         self.last_frame_time = time.time()
         self.last_fps_log_time = time.time()
-        self.frame_times = []
+        self.frame_times: list[float] = []
 
         # Scrolling state management
         self.is_scrolling = False
@@ -363,6 +363,7 @@ class ScrollHelper:
 
     def _get_visible_portion_integer(self, start_x: int, end_x: int) -> Image.Image:
         """Fast integer pixel extraction (no interpolation)."""
+        assert self.cached_image is not None and self.cached_array is not None
         # Fast numpy array slicing for normal case (no wrap-around)
         if end_x <= self.cached_image.width:
             # Normal case: single slice - fastest path
@@ -400,6 +401,7 @@ class ScrollHelper:
         Get visible portion with sub-pixel interpolation for smooth scrolling.
         Uses bilinear interpolation to blend between pixels.
         """
+        assert self.cached_image is not None and self.cached_array is not None
         # We need to extract a region that's 1 pixel wider to allow for interpolation
         start_x = start_x_int
         end_x = start_x_int + self.display_width + 1
@@ -687,7 +689,7 @@ class ScrollHelper:
             image: PIL Image containing the scrolling content
         """
         if image is None:
-            self.logger.warning("Attempted to set None as scrolling image, clearing cache instead")
+            self.logger.warning("Attempted to set None as scrolling image, clearing cache instead")  # type: ignore[unreachable]
             self.clear_cache()
             return
 

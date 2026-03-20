@@ -12,7 +12,7 @@ class TestSoccerScoreboardPlugin(PluginTestBase):
 
     @pytest.fixture
     def plugin_id(self):
-        return 'soccer-scoreboard'
+        return "soccer-scoreboard"
 
     def test_manifest_exists(self, plugin_id):
         """Test that plugin manifest exists."""
@@ -49,29 +49,21 @@ class TestSoccerScoreboardPlugin(PluginTestBase):
     def test_plugin_has_display_modes(self, plugin_id):
         """Test that plugin has display modes."""
         manifest = self.load_plugin_manifest(plugin_id)
-        assert 'display_modes' in manifest
-        assert 'soccer_live' in manifest['display_modes']
-        assert 'soccer_recent' in manifest['display_modes']
-        assert 'soccer_upcoming' in manifest['display_modes']
+        assert "display_modes" in manifest
+        assert "soccer_live" in manifest["display_modes"]
+        assert "soccer_recent" in manifest["display_modes"]
+        assert "soccer_upcoming" in manifest["display_modes"]
 
     def test_plugin_has_get_display_modes(self, plugin_id):
         """Test that plugin can return display modes."""
         manifest = self.load_plugin_manifest(plugin_id)
         plugin_dir = self.plugins_dir / plugin_id
-        entry_point = manifest['entry_point']
-        class_name = manifest['class_name']
+        entry_point = manifest["entry_point"]
+        class_name = manifest["class_name"]
 
-        module = self.plugin_loader.load_module(
-            plugin_id=plugin_id,
-            plugin_dir=plugin_dir,
-            entry_point=entry_point
-        )
+        module = self.plugin_loader.load_module(plugin_id=plugin_id, plugin_dir=plugin_dir, entry_point=entry_point)
 
-        plugin_class = self.plugin_loader.get_plugin_class(
-            plugin_id=plugin_id,
-            module=module,
-            class_name=class_name
-        )
+        plugin_class = self.plugin_loader.get_plugin_class(plugin_id=plugin_id, module=module, class_name=class_name)
 
         config = self.base_config.copy()
         plugin_instance = self.plugin_loader.instantiate_plugin(
@@ -80,11 +72,11 @@ class TestSoccerScoreboardPlugin(PluginTestBase):
             config=config,
             display_manager=self.mock_display_manager,
             cache_manager=self.mock_cache_manager,
-            plugin_manager=self.mock_plugin_manager
+            plugin_manager=self.mock_plugin_manager,
         )
 
         # Check if plugin has get_display_modes method
-        if hasattr(plugin_instance, 'get_display_modes'):
+        if hasattr(plugin_instance, "get_display_modes"):
             modes = plugin_instance.get_display_modes()
             assert isinstance(modes, list)
             assert len(modes) > 0

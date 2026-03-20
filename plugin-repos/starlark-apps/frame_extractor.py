@@ -108,7 +108,7 @@ class FrameExtractor:
         frames: List[Tuple[Image.Image, int]],
         target_width: int,
         target_height: int,
-        method: Image.Resampling = Image.Resampling.NEAREST
+        method: Image.Resampling = Image.Resampling.NEAREST,
     ) -> List[Tuple[Image.Image, int]]:
         """
         Scale all frames to target dimensions.
@@ -128,10 +128,7 @@ class FrameExtractor:
             try:
                 # Only scale if dimensions don't match
                 if frame.width != target_width or frame.height != target_height:
-                    scaled_frame = frame.resize(
-                        (target_width, target_height),
-                        resample=method
-                    )
+                    scaled_frame = frame.resize((target_width, target_height), resample=method)
                     scaled_frames.append((scaled_frame, delay))
                 else:
                     scaled_frames.append((frame, delay))
@@ -148,7 +145,7 @@ class FrameExtractor:
         frames: List[Tuple[Image.Image, int]],
         target_width: int,
         target_height: int,
-        background_color: tuple = (0, 0, 0)
+        background_color: tuple = (0, 0, 0),
     ) -> List[Tuple[Image.Image, int]]:
         """
         Center frames on a larger canvas instead of scaling.
@@ -173,7 +170,7 @@ class FrameExtractor:
                     continue
 
                 # Create black canvas at target size
-                canvas = Image.new('RGB', (target_width, target_height), background_color)
+                canvas = Image.new("RGB", (target_width, target_height), background_color)
 
                 # Calculate position to center the frame
                 x_offset = (target_width - frame.width) // 2
@@ -207,7 +204,7 @@ class FrameExtractor:
         self,
         frames: List[Tuple[Image.Image, int]],
         max_frames: Optional[int] = None,
-        target_duration: Optional[int] = None
+        target_duration: Optional[int] = None,
     ) -> List[Tuple[Image.Image, int]]:
         """
         Optimize frame list by reducing frame count or adjusting timing.
@@ -238,10 +235,7 @@ class FrameExtractor:
             current_duration = self.get_total_duration(optimized)
             if current_duration > 0:
                 scale_factor = target_duration / current_duration
-                optimized = [
-                    (frame, max(16, int(delay * scale_factor)))
-                    for frame, delay in optimized
-                ]
+                optimized = [(frame, max(16, int(delay * scale_factor))) for frame, delay in optimized]
                 logger.debug(f"Adjusted timing: {current_duration}ms -> {target_duration}ms")
 
         return optimized
@@ -276,7 +270,7 @@ class FrameExtractor:
                 append_images=images[1:],
                 duration=durations,
                 loop=0,  # Infinite loop
-                optimize=False  # Skip optimization for speed
+                optimize=False,  # Skip optimization for speed
             )
 
             return output.getvalue()

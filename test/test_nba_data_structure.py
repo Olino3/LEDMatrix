@@ -2,14 +2,16 @@
 """
 Simple test script to verify NBA data structure includes team ID fields.
 """
+
 import logging
 import sys
 
 import requests
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def test_nba_data_structure():
     """Test that NBA data includes team ID fields."""
@@ -22,17 +24,17 @@ def test_nba_data_structure():
         teams_data = response.json()
 
         # Extract team information
-        sports = teams_data.get('sports', [])
+        sports = teams_data.get("sports", [])
         if not sports:
             logger.error("No sports data found!")
             return False
 
-        leagues = sports[0].get('leagues', [])
+        leagues = sports[0].get("leagues", [])
         if not leagues:
             logger.error("No leagues data found!")
             return False
 
-        teams = leagues[0].get('teams', [])
+        teams = leagues[0].get("teams", [])
         if not teams:
             logger.error("No teams data found!")
             return False
@@ -42,12 +44,12 @@ def test_nba_data_structure():
         # Check first few teams for ID fields
         teams_with_ids = 0
         for i, team_data in enumerate(teams[:5]):
-            team = team_data.get('team', {})
-            team_id = team.get('id')
-            team_abbr = team.get('abbreviation', 'Unknown')
-            team_name = team.get('name', 'Unknown')
+            team = team_data.get("team", {})
+            team_id = team.get("id")
+            team_abbr = team.get("abbreviation", "Unknown")
+            team_name = team.get("name", "Unknown")
 
-            logger.info(f"Team {i+1}: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
+            logger.info(f"Team {i + 1}: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
             if team_id is not None:
                 teams_with_ids += 1
@@ -66,22 +68,22 @@ def test_nba_data_structure():
         standings_data = response.json()
 
         # Check standings structure
-        children = standings_data.get('children', [])
+        children = standings_data.get("children", [])
         logger.info(f"Found {len(children)} conference/division groups")
 
         standings_teams_with_ids = 0
         total_standings_teams = 0
 
         for child in children:
-            if 'standings' in child and 'entries' in child['standings']:
-                entries = child['standings']['entries']
+            if "standings" in child and "entries" in child["standings"]:
+                entries = child["standings"]["entries"]
                 total_standings_teams += len(entries)
 
                 for entry in entries[:3]:  # Check first 3 teams per conference
-                    team = entry.get('team', {})
-                    team_id = team.get('id')
-                    team_abbr = team.get('abbreviation', 'Unknown')
-                    team_name = team.get('displayName', 'Unknown')
+                    team = entry.get("team", {})
+                    team_id = team.get("id")
+                    team_abbr = team.get("abbreviation", "Unknown")
+                    team_name = team.get("displayName", "Unknown")
 
                     logger.info(f"Standings team: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
@@ -92,7 +94,9 @@ def test_nba_data_structure():
             logger.error("No standings teams have ID fields!")
             return False
 
-        logger.info(f"{standings_teams_with_ids} standings teams have ID fields out of {total_standings_teams} total teams")
+        logger.info(
+            f"{standings_teams_with_ids} standings teams have ID fields out of {total_standings_teams} total teams"
+        )
 
         # Simulate the fixed leaderboard manager logic
         logger.info("Simulating fixed leaderboard manager logic...")
@@ -100,21 +104,23 @@ def test_nba_data_structure():
         # Simulate the team data structure that would be created by the fixed code
         simulated_teams = []
         for team_data in teams[:3]:  # Test with first 3 teams
-            team = team_data.get('team', {})
-            simulated_teams.append({
-                'name': team.get('name', 'Unknown'),
-                'id': team.get('id'),  # This is the fix - including the ID field
-                'abbreviation': team.get('abbreviation', 'Unknown'),
-                'wins': 10,  # Mock data
-                'losses': 5,  # Mock data
-                'ties': 0,    # Mock data
-                'win_percentage': 0.667  # Mock data
-            })
+            team = team_data.get("team", {})
+            simulated_teams.append(
+                {
+                    "name": team.get("name", "Unknown"),
+                    "id": team.get("id"),  # This is the fix - including the ID field
+                    "abbreviation": team.get("abbreviation", "Unknown"),
+                    "wins": 10,  # Mock data
+                    "losses": 5,  # Mock data
+                    "ties": 0,  # Mock data
+                    "win_percentage": 0.667,  # Mock data
+                }
+            )
 
         # Verify that our simulated teams have ID fields
         teams_with_ids_in_simulation = 0
         for team in simulated_teams:
-            if team.get('id') is not None:
+            if team.get("id") is not None:
                 teams_with_ids_in_simulation += 1
             logger.info(f"Simulated team: {team['abbreviation']} (ID: {team['id']})")
 
@@ -129,6 +135,7 @@ def test_nba_data_structure():
         logger.error(f"Error testing NBA data structure: {e}")
         return False
 
+
 def main():
     """Main test function."""
     logger.info("Testing NBA data structure and fix...")
@@ -142,6 +149,7 @@ def main():
         logger.error("❌ NBA data structure test FAILED!")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

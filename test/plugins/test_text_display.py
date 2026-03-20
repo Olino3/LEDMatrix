@@ -14,7 +14,7 @@ class TestTextDisplayPlugin(PluginTestBase):
 
     @pytest.fixture
     def plugin_id(self):
-        return 'text-display'
+        return "text-display"
 
     def test_manifest_exists(self, plugin_id):
         """Test that plugin manifest exists."""
@@ -52,36 +52,28 @@ class TestTextDisplayPlugin(PluginTestBase):
     def test_plugin_has_display_modes(self, plugin_id):
         """Test that plugin has display modes."""
         manifest = self.load_plugin_manifest(plugin_id)
-        assert 'display_modes' in manifest
-        assert 'text_display' in manifest['display_modes']
+        assert "display_modes" in manifest
+        assert "text_display" in manifest["display_modes"]
 
     def test_text_display_shows_text(self, plugin_id):
         """Test that text display plugin actually displays text."""
         manifest = self.load_plugin_manifest(plugin_id)
         plugin_dir = self.plugins_dir / plugin_id
-        entry_point = manifest.get('entry_point', 'manager.py')
-        class_name = manifest['class_name']
+        entry_point = manifest.get("entry_point", "manager.py")
+        class_name = manifest["class_name"]
 
-        module = self.plugin_loader.load_module(
-            plugin_id=plugin_id,
-            plugin_dir=plugin_dir,
-            entry_point=entry_point
-        )
+        module = self.plugin_loader.load_module(plugin_id=plugin_id, plugin_dir=plugin_dir, entry_point=entry_point)
 
-        plugin_class = self.plugin_loader.get_plugin_class(
-            plugin_id=plugin_id,
-            module=module,
-            class_name=class_name
-        )
+        plugin_class = self.plugin_loader.get_plugin_class(plugin_id=plugin_id, module=module, class_name=class_name)
 
         config = self.base_config.copy()
-        config['text'] = 'Test Message'
-        config['scroll'] = False
-        config['text_color'] = [255, 255, 255]
-        config['background_color'] = [0, 0, 0]
+        config["text"] = "Test Message"
+        config["scroll"] = False
+        config["text_color"] = [255, 255, 255]
+        config["background_color"] = [0, 0, 0]
 
         # Mock display_manager.matrix to have width/height attributes
-        if not hasattr(self.mock_display_manager, 'matrix'):
+        if not hasattr(self.mock_display_manager, "matrix"):
             self.mock_display_manager.matrix = MagicMock()
         self.mock_display_manager.matrix.width = 128
         self.mock_display_manager.matrix.height = 32
@@ -92,7 +84,7 @@ class TestTextDisplayPlugin(PluginTestBase):
             config=config,
             display_manager=self.mock_display_manager,
             cache_manager=self.mock_cache_manager,
-            plugin_manager=self.mock_plugin_manager
+            plugin_manager=self.mock_plugin_manager,
         )
 
         # Update and display
@@ -100,11 +92,10 @@ class TestTextDisplayPlugin(PluginTestBase):
         plugin_instance.display(force_clear=True)
 
         # Verify text was set
-        assert plugin_instance.text == 'Test Message'
+        assert plugin_instance.text == "Test Message"
 
         # Verify display was called (may be called via image assignment)
-        assert (self.mock_display_manager.update_display.called or
-                hasattr(self.mock_display_manager, 'image'))
+        assert self.mock_display_manager.update_display.called or hasattr(self.mock_display_manager, "image")
 
     def test_config_schema_valid(self, plugin_id):
         """Test that config schema is valid."""

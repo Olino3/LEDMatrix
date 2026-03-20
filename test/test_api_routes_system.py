@@ -87,7 +87,7 @@ class TestSystemAction:
     def test_git_pull_action(self, mock_run):
         # First call: git status (no changes), second call: git pull
         mock_run.side_effect = [
-            (0, "", ""),   # git status --porcelain
+            (0, "", ""),  # git status --porcelain
             (0, "Already up to date.", ""),  # git pull
         ]
         client, _, _ = _make_client()
@@ -192,8 +192,10 @@ class TestErrors:
 class TestRouterImports:
     def test_config_router_has_routes(self):
         from src.api.routers.config import router
+
         assert len(router.routes) >= 9  # 9 config endpoints
 
     def test_system_router_has_routes(self):
         from src.api.routers.system import router
+
         assert len(router.routes) >= 8  # system + health + logs + errors

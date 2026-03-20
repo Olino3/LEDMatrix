@@ -3,16 +3,18 @@
 Test script to verify that the NBA leaderboard fix works correctly.
 This script simulates the leaderboard manager's data fetching process.
 """
+
 import logging
 import os
 import sys
 
 # Add the src directory to Python path so we can import the leaderboard manager
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def test_nba_standings_data():
     """Test that NBA standings data includes team ID fields."""
@@ -25,7 +27,7 @@ def test_nba_standings_data():
         from display_manager import DisplayManager
 
         # Load config
-        with open('config/config.json', 'r') as f:
+        with open("config/config.json", "r") as f:
             config = json.load(f)
 
         # Create mock display and cache managers
@@ -37,8 +39,8 @@ def test_nba_standings_data():
 
         # Test NBA standings fetching
         logger.info("Testing NBA standings data fetching...")
-        nba_config = leaderboard_manager.league_configs['nba']
-        nba_config['enabled'] = True  # Enable NBA for testing
+        nba_config = leaderboard_manager.league_configs["nba"]
+        nba_config["enabled"] = True  # Enable NBA for testing
 
         standings = leaderboard_manager._fetch_standings(nba_config)
 
@@ -51,11 +53,11 @@ def test_nba_standings_data():
         # Check if team ID fields are present
         missing_id_count = 0
         for i, team in enumerate(standings[:5]):  # Check first 5 teams
-            team_id = team.get('id')
-            team_abbr = team.get('abbreviation', 'Unknown')
-            team_name = team.get('name', 'Unknown')
+            team_id = team.get("id")
+            team_abbr = team.get("abbreviation", "Unknown")
+            team_name = team.get("name", "Unknown")
 
-            logger.info(f"Team {i+1}: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
+            logger.info(f"Team {i + 1}: ID={team_id}, ABBR={team_abbr}, NAME={team_name}")
 
             if team_id is None:
                 logger.error(f"Team {team_abbr} is missing ID field!")
@@ -69,16 +71,20 @@ def test_nba_standings_data():
 
         # Test that we can create a leaderboard image (without actually displaying)
         logger.info("Testing leaderboard image creation...")
-        leaderboard_manager.leaderboard_data = [{
-            'league': 'nba',
-            'league_config': nba_config,
-            'teams': standings[:3]  # Test with first 3 teams
-        }]
+        leaderboard_manager.leaderboard_data = [
+            {
+                "league": "nba",
+                "league_config": nba_config,
+                "teams": standings[:3],  # Test with first 3 teams
+            }
+        ]
 
         try:
             leaderboard_manager._create_leaderboard_image()
             if leaderboard_manager.leaderboard_image:
-                logger.info(f"Successfully created leaderboard image: {leaderboard_manager.leaderboard_image.width}x{leaderboard_manager.leaderboard_image.height}")
+                logger.info(
+                    f"Successfully created leaderboard image: {leaderboard_manager.leaderboard_image.width}x{leaderboard_manager.leaderboard_image.height}"
+                )
                 return True
             else:
                 logger.error("Failed to create leaderboard image!")
@@ -95,6 +101,7 @@ def test_nba_standings_data():
         logger.error(f"Unexpected error: {e}")
         return False
 
+
 def main():
     """Main test function."""
     logger.info("Testing NBA leaderboard fix...")
@@ -109,6 +116,7 @@ def main():
         logger.info("The issue may not be fully resolved")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

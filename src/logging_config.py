@@ -118,6 +118,7 @@ def setup_logging(
     root_logger.handlers.clear()
 
     # Create formatter based on type
+    formatter: logging.Formatter
     if format_type == "json":
         formatter = StructuredFormatter()
     else:
@@ -156,7 +157,7 @@ def get_logger(name: str, plugin_id: Optional[str] = None) -> logging.Logger:
 
     # Add plugin_id as attribute for formatters
     if plugin_id:
-        logger.plugin_id = plugin_id
+        logger.plugin_id = plugin_id  # type: ignore[attr-defined]
 
     return logger
 
@@ -182,7 +183,7 @@ def log_with_context(
         operation_id: Optional operation ID for request tracking
         exc_info: Optional exception info for error logging
     """
-    extra = {}
+    extra: Dict[str, Any] = {}
 
     if context:
         extra["context"] = context

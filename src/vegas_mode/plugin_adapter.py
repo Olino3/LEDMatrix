@@ -145,7 +145,7 @@ class PluginAdapter:
             valid_images = []
             for i, img in enumerate(images):
                 if not isinstance(img, Image.Image):
-                    logger.warning("[%s] Native: item[%d] is not an Image: %s", plugin_id, i, type(img).__name__)
+                    logger.warning("[%s] Native: item[%d] is not an Image: %s", plugin_id, i, type(img).__name__)  # type: ignore[unreachable]
                     continue
 
                 logger.info("[%s] Native: item[%d] is %dx%d, mode=%s", plugin_id, i, img.width, img.height, img.mode)
@@ -292,7 +292,7 @@ class PluginAdapter:
                             cached_image.width,
                             cached_image.height,
                         )
-                        return cached_image
+                        return cached_image  # type: ignore[no-any-return]
                 except (AttributeError, TypeError, ValueError, OSError):
                     logger.exception("[%s] _create_scrolling_display() failed", plugin_id)
 
@@ -310,7 +310,7 @@ class PluginAdapter:
                             cached_image.width,
                             cached_image.height,
                         )
-                        return cached_image
+                        return cached_image  # type: ignore[no-any-return]
                     logger.info("[%s] display(force_clear=True) did not populate cached_image", plugin_id)
                 except (AttributeError, TypeError, ValueError, OSError):
                     logger.exception("[%s] display(force_clear=True) failed", plugin_id)
@@ -349,7 +349,7 @@ class PluginAdapter:
             logger.info("[%s] Fallback: has update_data=%s", plugin_id, has_update_data)
             if has_update_data:
                 try:
-                    plugin.update_data()
+                    plugin.update_data()  # type: ignore[attr-defined]
                     logger.info("[%s] Fallback: update_data() called", plugin_id)
                 except (AttributeError, RuntimeError, OSError):
                     logger.exception("[%s] Fallback: update_data() failed", plugin_id)
@@ -378,7 +378,7 @@ class PluginAdapter:
             )
 
             # Check if captured image has content (not all black)
-            is_blank, bright_ratio = self._is_blank_image(captured, return_ratio=True)
+            is_blank, bright_ratio = self._is_blank_image(captured, return_ratio=True)  # type: ignore[misc]
             logger.info(
                 "[%s] Fallback: brightness check - %.3f%% bright pixels (threshold=0.5%%)",
                 plugin_id,
@@ -392,7 +392,7 @@ class PluginAdapter:
                 plugin.display(force_clear=True)
                 captured = self.display_manager.image.copy()
 
-                is_blank, bright_ratio = self._is_blank_image(captured, return_ratio=True)
+                is_blank, bright_ratio = self._is_blank_image(captured, return_ratio=True)  # type: ignore[misc]
                 logger.info("[%s] Fallback: retry brightness - %.3f%% bright pixels", plugin_id, bright_ratio * 100)
 
                 if is_blank:
@@ -475,7 +475,7 @@ class PluginAdapter:
                 del self._content_cache[plugin_id]
                 return None
 
-            return content
+            return content  # type: ignore[no-any-return]
 
     def _cache_content(self, plugin_id: str, content: List[Image.Image]) -> None:
         """Cache content for a plugin."""

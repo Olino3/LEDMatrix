@@ -36,17 +36,11 @@ class TestLayoutManager:
     @pytest.fixture
     def layout_manager(self, tmp_layout_file, mock_display_manager):
         """Create a LayoutManager instance."""
-        return LayoutManager(
-            display_manager=mock_display_manager,
-            config_path=tmp_layout_file
-        )
+        return LayoutManager(display_manager=mock_display_manager, config_path=tmp_layout_file)
 
     def test_init(self, tmp_layout_file, mock_display_manager):
         """Test LayoutManager initialization."""
-        lm = LayoutManager(
-            display_manager=mock_display_manager,
-            config_path=tmp_layout_file
-        )
+        lm = LayoutManager(display_manager=mock_display_manager, config_path=tmp_layout_file)
 
         assert lm.display_manager == mock_display_manager
         assert lm.config_path == tmp_layout_file
@@ -56,29 +50,18 @@ class TestLayoutManager:
     def test_load_layouts_file_exists(self, tmp_path, mock_display_manager):
         """Test loading layouts from existing file."""
         layout_file = tmp_path / "custom_layouts.json"
-        layout_data = {
-            "test_layout": {
-                "elements": [{"type": "text", "x": 0, "y": 0}],
-                "description": "Test layout"
-            }
-        }
-        with open(layout_file, 'w') as f:
+        layout_data = {"test_layout": {"elements": [{"type": "text", "x": 0, "y": 0}], "description": "Test layout"}}
+        with open(layout_file, "w") as f:
             json.dump(layout_data, f)
 
-        lm = LayoutManager(
-            display_manager=mock_display_manager,
-            config_path=str(layout_file)
-        )
+        lm = LayoutManager(display_manager=mock_display_manager, config_path=str(layout_file))
 
         assert "test_layout" in lm.layouts
         assert lm.layouts["test_layout"]["description"] == "Test layout"
 
     def test_load_layouts_file_not_exists(self, tmp_layout_file, mock_display_manager):
         """Test loading layouts when file doesn't exist."""
-        lm = LayoutManager(
-            display_manager=mock_display_manager,
-            config_path=tmp_layout_file
-        )
+        lm = LayoutManager(display_manager=mock_display_manager, config_path=tmp_layout_file)
 
         assert lm.layouts == {}
 
@@ -182,7 +165,7 @@ class TestLayoutManager:
         """Test rendering a layout."""
         elements = [
             {"type": "text", "x": 0, "y": 0, "properties": {"text": "Hello"}},
-            {"type": "text", "x": 10, "y": 10, "properties": {"text": "World"}}
+            {"type": "text", "x": 10, "y": 10, "properties": {"text": "World"}},
         ]
         layout_manager.create_layout("test_layout", elements)
 
@@ -214,11 +197,7 @@ class TestLayoutManager:
             "type": "text",
             "x": 10,
             "y": 20,
-            "properties": {
-                "text": "Hello",
-                "color": [255, 0, 0],
-                "font_size": "small"
-            }
+            "properties": {"text": "Hello", "color": [255, 0, 0], "font_size": "small"},
         }
 
         layout_manager.render_element(element, {})
@@ -231,15 +210,7 @@ class TestLayoutManager:
 
     def test_render_element_weather_icon(self, layout_manager, mock_display_manager):
         """Test rendering a weather icon element."""
-        element = {
-            "type": "weather_icon",
-            "x": 10,
-            "y": 20,
-            "properties": {
-                "condition": "sunny",
-                "size": 16
-            }
-        }
+        element = {"type": "weather_icon", "x": 10, "y": 20, "properties": {"condition": "sunny", "size": 16}}
 
         layout_manager.render_element(element, {})
 
@@ -247,17 +218,8 @@ class TestLayoutManager:
 
     def test_render_element_weather_icon_from_context(self, layout_manager, mock_display_manager):
         """Test rendering weather icon with data from context."""
-        element = {
-            "type": "weather_icon",
-            "x": 10,
-            "y": 20,
-            "properties": {"size": 16}
-        }
-        data_context = {
-            "weather": {
-                "condition": "cloudy"
-            }
-        }
+        element = {"type": "weather_icon", "x": 10, "y": 20, "properties": {"size": 16}}
+        data_context = {"weather": {"condition": "cloudy"}}
 
         layout_manager.render_element(element, data_context)
 
@@ -269,12 +231,7 @@ class TestLayoutManager:
             "type": "rectangle",
             "x": 10,
             "y": 20,
-            "properties": {
-                "width": 50,
-                "height": 30,
-                "color": [255, 0, 0],
-                "filled": True
-            }
+            "properties": {"width": 50, "height": 30, "color": [255, 0, 0], "filled": True},
         }
 
         # Mock the draw object and rectangle method
@@ -288,12 +245,7 @@ class TestLayoutManager:
 
     def test_render_element_unknown_type(self, layout_manager):
         """Test rendering an unknown element type."""
-        element = {
-            "type": "unknown_type",
-            "x": 0,
-            "y": 0,
-            "properties": {}
-        }
+        element = {"type": "unknown_type", "x": 0, "y": 0, "properties": {}}
 
         # Should not raise an exception
         layout_manager.render_element(element, {})
@@ -301,10 +253,7 @@ class TestLayoutManager:
     def test_process_template_text(self, layout_manager):
         """Test template text processing."""
         text = "Hello {name}, temperature is {temp}°F"
-        data_context = {
-            "name": "World",
-            "temp": 72
-        }
+        data_context = {"name": "World", "temp": 72}
 
         result = layout_manager._process_template_text(text, data_context)
 
@@ -339,12 +288,7 @@ class TestLayoutManager:
             "type": "line",
             "x": 10,
             "y": 20,
-            "properties": {
-                "x2": 50,
-                "y2": 30,
-                "color": [255, 0, 0],
-                "width": 2
-            }
+            "properties": {"x2": 50, "y2": 30, "color": [255, 0, 0], "width": 2},
         }
 
         mock_draw = MagicMock()
@@ -356,15 +300,7 @@ class TestLayoutManager:
 
     def test_render_element_clock(self, layout_manager, mock_display_manager):
         """Test rendering a clock element."""
-        element = {
-            "type": "clock",
-            "x": 10,
-            "y": 20,
-            "properties": {
-                "format": "%H:%M",
-                "color": [255, 255, 255]
-            }
-        }
+        element = {"type": "clock", "x": 10, "y": 20, "properties": {"format": "%H:%M", "color": [255, 255, 255]}}
 
         layout_manager.render_element(element, {})
 
@@ -380,14 +316,10 @@ class TestLayoutManager:
                 "data_key": "weather.temperature",
                 "format": "Temp: {value}°F",
                 "color": [255, 255, 255],
-                "default": "N/A"
-            }
+                "default": "N/A",
+            },
         }
-        data_context = {
-            "weather": {
-                "temperature": 72
-            }
-        }
+        data_context = {"weather": {"temperature": 72}}
 
         layout_manager.render_element(element, data_context)
 

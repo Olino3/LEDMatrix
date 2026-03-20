@@ -27,8 +27,7 @@ class TestFirstTimeInstallDeprecation:
         """The wrapper should be under 50 lines (was ~700+ lines)."""
         lines = INSTALL_SCRIPT.read_text().splitlines()
         assert len(lines) < 50, (
-            f"first_time_install.sh should be a thin wrapper (<50 lines), "
-            f"but has {len(lines)} lines"
+            f"first_time_install.sh should be a thin wrapper (<50 lines), but has {len(lines)} lines"
         )
 
     def test_script_contains_deprecation_warning(self):
@@ -41,24 +40,19 @@ class TestFirstTimeInstallDeprecation:
     def test_script_mentions_matrix_install(self):
         """The wrapper must direct users to `matrix install`."""
         content = INSTALL_SCRIPT.read_text()
-        assert "matrix install" in content, (
-            "first_time_install.sh should reference 'matrix install' as the replacement"
-        )
+        assert "matrix install" in content, "first_time_install.sh should reference 'matrix install' as the replacement"
 
     def test_script_does_not_contain_apt_install(self):
         """The wrapper should NOT contain apt install logic (that was the old script)."""
         content = INSTALL_SCRIPT.read_text()
         assert "apt install" not in content and "apt-get install" not in content, (
-            "first_time_install.sh should not contain apt install logic — "
-            "it should be a thin wrapper"
+            "first_time_install.sh should not contain apt install logic — it should be a thin wrapper"
         )
 
     def test_script_does_not_contain_rgbmatrix_build(self):
         """The wrapper should NOT contain rgbmatrix build logic."""
         content = INSTALL_SCRIPT.read_text()
-        assert "rpi-rgb-led-matrix" not in content, (
-            "first_time_install.sh should not contain rgbmatrix build logic"
-        )
+        assert "rpi-rgb-led-matrix" not in content, "first_time_install.sh should not contain rgbmatrix build logic"
 
 
 @pytest.mark.unit
@@ -75,14 +69,11 @@ class TestOneShotInstallUpdated:
         content = self.ONE_SHOT_SCRIPT.read_text()
         # Allow references in comments but not as an actual command invocation
         lines = [
-            line for line in content.splitlines()
-            if "first_time_install.sh" in line
-            and not line.strip().startswith("#")
+            line
+            for line in content.splitlines()
+            if "first_time_install.sh" in line and not line.strip().startswith("#")
         ]
-        assert len(lines) == 0, (
-            f"one-shot-install.sh still invokes first_time_install.sh in "
-            f"non-comment lines: {lines}"
-        )
+        assert len(lines) == 0, f"one-shot-install.sh still invokes first_time_install.sh in non-comment lines: {lines}"
 
     def test_one_shot_calls_matrix_install(self):
         """one-shot-install.sh should call matrix install."""

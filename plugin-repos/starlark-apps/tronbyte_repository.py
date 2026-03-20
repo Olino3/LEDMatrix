@@ -19,7 +19,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 # Module-level cache for bulk app listing (survives across requests)
-_apps_cache = {'data': None, 'timestamp': 0, 'categories': [], 'authors': []}
+_apps_cache = {"data": None, "timestamp": 0, "categories": [], "authors": []}
 _CACHE_TTL = 7200  # 2 hours
 _cache_lock = threading.Lock()
 
@@ -53,13 +53,10 @@ class TronbyteRepository:
 
         self.session = requests.Session()
         if github_token:
-            self.session.headers.update({
-                'Authorization': f'token {github_token}'
-            })
-        self.session.headers.update({
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'LEDMatrix-Starlark-Plugin'
-        })
+            self.session.headers.update({"Authorization": f"token {github_token}"})
+        self.session.headers.update(
+            {"Accept": "application/vnd.github.v3+json", "User-Agent": "LEDMatrix-Starlark-Plugin"}
+        )
 
     def _make_request(self, url: str, timeout: int = 10) -> Optional[Dict[str, Any]]:
         """
@@ -146,14 +143,10 @@ class TronbyteRepository:
         # Filter directories (apps)
         apps = []
         for item in data:
-            if item.get('type') == 'dir':
-                app_id = item.get('name')
-                if app_id and not app_id.startswith('.'):
-                    apps.append({
-                        'id': app_id,
-                        'path': item.get('path'),
-                        'url': item.get('url')
-                    })
+            if item.get("type") == "dir":
+                app_id = item.get("name")
+                if app_id and not app_id.startswith("."):
+                    apps.append({"id": app_id, "path": item.get("path"), "url": item.get("url")})
 
         logger.info(f"Found {len(apps)} apps in repository")
         return True, apps, None
@@ -189,10 +182,10 @@ class TronbyteRepository:
                     return False, None, f"Invalid manifest format: expected dict, got {type(metadata).__name__}"
 
             # Enhance with app_id
-            metadata['id'] = app_id
+            metadata["id"] = app_id
 
             # Parse schema if present
-            if 'schema' in metadata:
+            if "schema" in metadata:
                 # Schema is already parsed from YAML
                 pass
 
@@ -225,24 +218,24 @@ class TronbyteRepository:
 
         apps_with_metadata = []
         for app_info in apps:
-            app_id = app_info['id']
+            app_id = app_info["id"]
             success, metadata, error = self.get_app_metadata(app_id)
 
             if success and metadata:
                 # Merge basic info with metadata
-                metadata.update({
-                    'repository_path': app_info['path']
-                })
+                metadata.update({"repository_path": app_info["path"]})
                 apps_with_metadata.append(metadata)
             else:
                 # Add basic info even if metadata fetch failed
-                apps_with_metadata.append({
-                    'id': app_id,
-                    'name': app_id.replace('_', ' ').title(),
-                    'summary': 'No description available',
-                    'repository_path': app_info['path'],
-                    'metadata_error': error
-                })
+                apps_with_metadata.append(
+                    {
+                        "id": app_id,
+                        "name": app_id.replace("_", " ").title(),
+                        "summary": "No description available",
+                        "repository_path": app_info["path"],
+                        "metadata_error": error,
+                    }
+                )
 
         return apps_with_metadata
 
@@ -263,26 +256,26 @@ class TronbyteRepository:
 
         # Check cache with lock (read-only check)
         with _cache_lock:
-            if _apps_cache['data'] is not None and (now - _apps_cache['timestamp']) < _CACHE_TTL:
+            if _apps_cache["data"] is not None and (now - _apps_cache["timestamp"]) < _CACHE_TTL:
                 return {
-                    'apps': _apps_cache['data'],
-                    'categories': _apps_cache['categories'],
-                    'authors': _apps_cache['authors'],
-                    'count': len(_apps_cache['data']),
-                    'cached': True
+                    "apps": _apps_cache["data"],
+                    "categories": _apps_cache["categories"],
+                    "authors": _apps_cache["authors"],
+                    "count": len(_apps_cache["data"]),
+                    "cached": True,
                 }
 
         # Fetch directory listing (1 GitHub API call)
         success, app_dirs, error = self.list_apps()
         if not success or not app_dirs:
             logger.error(f"Failed to list apps for bulk fetch: {error}")
-            return {'apps': [], 'categories': [], 'authors': [], 'count': 0, 'cached': False}
+            return {"apps": [], "categories": [], "authors": [], "count": 0, "cached": False}
 
         logger.info(f"Bulk-fetching manifests for {len(app_dirs)} apps...")
 
         def fetch_one(app_info):
             """Fetch a single app's manifest (runs in thread pool)."""
-            app_id = app_info['id']
+            app_id = app_info["id"]
             manifest_path = f"{self.APPS_PATH}/{app_id}/manifest.yaml"
             content = self._fetch_raw_file(manifest_path)
             if content:
@@ -290,17 +283,17 @@ class TronbyteRepository:
                     metadata = yaml.safe_load(content)
                     if not isinstance(metadata, dict):
                         metadata = {}
-                    metadata['id'] = app_id
-                    metadata['repository_path'] = app_info.get('path', '')
+                    metadata["id"] = app_id
+                    metadata["repository_path"] = app_info.get("path", "")
                     return metadata
                 except (yaml.YAMLError, TypeError) as e:
                     logger.warning(f"Failed to parse manifest for {app_id}: {e}")
             # Fallback: minimal entry
             return {
-                'id': app_id,
-                'name': app_id.replace('_', ' ').replace('-', ' ').title(),
-                'summary': 'No description available',
-                'repository_path': app_info.get('path', ''),
+                "id": app_id,
+                "name": app_id.replace("_", " ").replace("-", " ").title(),
+                "summary": "No description available",
+                "repository_path": app_info.get("path", ""),
             }
 
         # Parallel manifest fetches via raw.githubusercontent.com (high rate limit)
@@ -315,38 +308,42 @@ class TronbyteRepository:
                 except Exception as e:
                     app_info = futures[future]
                     logger.warning(f"Failed to fetch manifest for {app_info['id']}: {e}")
-                    apps_with_metadata.append({
-                        'id': app_info['id'],
-                        'name': app_info['id'].replace('_', ' ').replace('-', ' ').title(),
-                        'summary': 'No description available',
-                        'repository_path': app_info.get('path', ''),
-                    })
+                    apps_with_metadata.append(
+                        {
+                            "id": app_info["id"],
+                            "name": app_info["id"].replace("_", " ").replace("-", " ").title(),
+                            "summary": "No description available",
+                            "repository_path": app_info.get("path", ""),
+                        }
+                    )
 
         # Sort by name for consistent ordering
-        apps_with_metadata.sort(key=lambda a: (a.get('name') or a.get('id', '')).lower())
+        apps_with_metadata.sort(key=lambda a: (a.get("name") or a.get("id", "")).lower())
 
         # Extract unique categories and authors
-        categories = sorted({a.get('category', '') for a in apps_with_metadata if a.get('category')})
-        authors = sorted({a.get('author', '') for a in apps_with_metadata if a.get('author')})
+        categories = sorted({a.get("category", "") for a in apps_with_metadata if a.get("category")})
+        authors = sorted({a.get("author", "") for a in apps_with_metadata if a.get("author")})
 
         # Update cache with lock
         with _cache_lock:
-            _apps_cache['data'] = apps_with_metadata
-            _apps_cache['timestamp'] = now
-            _apps_cache['categories'] = categories
-            _apps_cache['authors'] = authors
+            _apps_cache["data"] = apps_with_metadata
+            _apps_cache["timestamp"] = now
+            _apps_cache["categories"] = categories
+            _apps_cache["authors"] = authors
 
         logger.info(f"Cached {len(apps_with_metadata)} apps ({len(categories)} categories, {len(authors)} authors)")
 
         return {
-            'apps': apps_with_metadata,
-            'categories': categories,
-            'authors': authors,
-            'count': len(apps_with_metadata),
-            'cached': False
+            "apps": apps_with_metadata,
+            "categories": categories,
+            "authors": authors,
+            "count": len(apps_with_metadata),
+            "cached": False,
         }
 
-    def download_star_file(self, app_id: str, output_path: Path, filename: Optional[str] = None) -> Tuple[bool, Optional[str]]:
+    def download_star_file(
+        self, app_id: str, output_path: Path, filename: Optional[str] = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Download the .star file for an app.
 
@@ -360,15 +357,16 @@ class TronbyteRepository:
             Tuple of (success, error_message)
         """
         # Validate inputs for path traversal
-        if '..' in app_id or '/' in app_id or '\\' in app_id:
+        if ".." in app_id or "/" in app_id or "\\" in app_id:
             return False, "Invalid app_id: contains path traversal characters"
 
         star_filename = filename or f"{app_id}.star"
-        if '..' in star_filename or '/' in star_filename or '\\' in star_filename:
+        if ".." in star_filename or "/" in star_filename or "\\" in star_filename:
             return False, "Invalid filename: contains path traversal characters"
 
         # Validate output_path to prevent path traversal
         import tempfile
+
         try:
             resolved_output = output_path.resolve()
             temp_dir = Path(tempfile.gettempdir()).resolve()
@@ -379,10 +377,12 @@ class TronbyteRepository:
                 is_safe = resolved_output.is_relative_to(temp_dir)
             except AttributeError:
                 # Fallback for Python < 3.9: compare string paths
-                is_safe = str(resolved_output).startswith(str(temp_dir) + '/')
+                is_safe = str(resolved_output).startswith(str(temp_dir) + "/")
 
             if not is_safe:
-                logger.warning(f"Path traversal attempt in download_star_file: app_id={app_id}, output_path={output_path}")
+                logger.warning(
+                    f"Path traversal attempt in download_star_file: app_id={app_id}, output_path={output_path}"
+                )
                 return False, f"Invalid output_path for {app_id}: must be within temp directory"
         except Exception as e:
             logger.error(f"Error validating output_path for {app_id}: {e}")
@@ -397,7 +397,7 @@ class TronbyteRepository:
 
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
             logger.info(f"Downloaded {app_id}.star to {output_path}")
@@ -426,7 +426,7 @@ class TronbyteRepository:
         if not isinstance(data, list):
             return False, None, "Invalid response format"
 
-        files = [item['name'] for item in data if item.get('type') == 'file']
+        files = [item["name"] for item in data if item.get("type") == "file"]
         return True, files, None
 
     def download_app_assets(self, app_id: str, output_dir: Path) -> Tuple[bool, Optional[str]]:
@@ -441,7 +441,7 @@ class TronbyteRepository:
             Tuple of (success, error_message)
         """
         # Validate app_id for path traversal
-        if '..' in app_id or '/' in app_id or '\\' in app_id:
+        if ".." in app_id or "/" in app_id or "\\" in app_id:
             return False, "Invalid app_id: contains path traversal characters"
 
         try:
@@ -457,11 +457,11 @@ class TronbyteRepository:
             # Find directories that contain assets (images, sources, etc.)
             asset_dirs = []
             for item in data:
-                if item.get('type') == 'dir':
-                    dir_name = item.get('name')
+                if item.get("type") == "dir":
+                    dir_name = item.get("name")
                     # Common asset directory names in Tronbyte apps
-                    if dir_name in ('images', 'sources', 'fonts', 'assets'):
-                        asset_dirs.append((dir_name, item.get('url')))
+                    if dir_name in ("images", "sources", "fonts", "assets"):
+                        asset_dirs.append((dir_name, item.get("url")))
 
             if not asset_dirs:
                 # No asset directories, this is fine
@@ -470,7 +470,7 @@ class TronbyteRepository:
             # Download each asset directory
             for dir_name, dir_url in asset_dirs:
                 # Validate directory name for path traversal
-                if '..' in dir_name or '/' in dir_name or '\\' in dir_name:
+                if ".." in dir_name or "/" in dir_name or "\\" in dir_name:
                     logger.warning(f"Skipping potentially unsafe directory: {dir_name}")
                     continue
 
@@ -486,8 +486,8 @@ class TronbyteRepository:
 
                 # Download each file
                 for file_item in dir_data:
-                    if file_item.get('type') == 'file':
-                        file_name = file_item.get('name')
+                    if file_item.get("type") == "file":
+                        file_name = file_item.get("name")
 
                         # Ensure file_name is a non-empty string before validation
                         if not file_name or not isinstance(file_name, str):
@@ -495,7 +495,7 @@ class TronbyteRepository:
                             continue
 
                         # Validate filename for path traversal
-                        if '..' in file_name or '/' in file_name or '\\' in file_name:
+                        if ".." in file_name or "/" in file_name or "\\" in file_name:
                             logger.warning(f"Skipping potentially unsafe file: {file_name}")
                             continue
 
@@ -505,11 +505,13 @@ class TronbyteRepository:
                             # Write binary content to file
                             output_path = local_dir / file_name
                             try:
-                                with open(output_path, 'wb') as f:
+                                with open(output_path, "wb") as f:
                                     f.write(content)
                                 logger.debug(f"[Tronbyte Repo] Downloaded asset: {dir_name}/{file_name}")
                             except OSError as e:
-                                logger.warning(f"[Tronbyte Repo] Failed to save {dir_name}/{file_name}: {e}", exc_info=True)
+                                logger.warning(
+                                    f"[Tronbyte Repo] Failed to save {dir_name}/{file_name}: {e}", exc_info=True
+                                )
                         else:
                             logger.warning(f"Failed to download {dir_name}/{file_name}")
 
@@ -539,13 +541,15 @@ class TronbyteRepository:
 
         for app in apps_with_metadata:
             # Search in name, summary, description, author
-            searchable = ' '.join([
-                app.get('name', ''),
-                app.get('summary', ''),
-                app.get('desc', ''),
-                app.get('author', ''),
-                app.get('id', '')
-            ]).lower()
+            searchable = " ".join(
+                [
+                    app.get("name", ""),
+                    app.get("summary", ""),
+                    app.get("desc", ""),
+                    app.get("author", ""),
+                    app.get("id", ""),
+                ]
+            ).lower()
 
             if query_lower in searchable:
                 results.append(app)
@@ -563,14 +567,14 @@ class TronbyteRepository:
         Returns:
             Filtered list of apps
         """
-        if not category or category.lower() == 'all':
+        if not category or category.lower() == "all":
             return apps_with_metadata
 
         category_lower = category.lower()
         results = []
 
         for app in apps_with_metadata:
-            app_category = app.get('category', '').lower()
+            app_category = app.get("category", "").lower()
             if app_category == category_lower:
                 results.append(app)
 
@@ -587,17 +591,12 @@ class TronbyteRepository:
         data = self._make_request(url)
 
         if data:
-            core = data.get('resources', {}).get('core', {})
+            core = data.get("resources", {}).get("core", {})
             return {
-                'limit': core.get('limit', 0),
-                'remaining': core.get('remaining', 0),
-                'reset': core.get('reset', 0),
-                'used': core.get('used', 0)
+                "limit": core.get("limit", 0),
+                "remaining": core.get("remaining", 0),
+                "reset": core.get("reset", 0),
+                "used": core.get("used", 0),
             }
 
-        return {
-            'limit': 0,
-            'remaining': 0,
-            'reset': 0,
-            'used': 0
-        }
+        return {"limit": 0, "remaining": 0, "reset": 0, "used": 0}

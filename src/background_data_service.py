@@ -102,7 +102,7 @@ class BackgroundDataService:
         self.executor = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="BackgroundData")
         self.active_requests: Dict[str, FetchRequest] = {}
         self.completed_requests: Dict[str, FetchResult] = {}
-        self.request_queue = queue.PriorityQueue()
+        self.request_queue: queue.PriorityQueue[Any] = queue.PriorityQueue()
 
         # Thread safety
         self._lock = threading.RLock()
@@ -140,7 +140,7 @@ class BackgroundDataService:
 
         logger.info(f"BackgroundDataService initialized with {max_workers} workers")
 
-    def get_sport_cache_key(self, sport: str, date_str: str = None) -> str:
+    def get_sport_cache_key(self, sport: str, date_str: Optional[str] = None) -> str:
         """
         Generate consistent cache keys for sports data.
         This ensures Recent/Upcoming managers and background service
@@ -157,7 +157,7 @@ class BackgroundDataService:
         sport: str,
         year: int,
         url: str,
-        cache_key: str = None,
+        cache_key: Optional[str] = None,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -374,7 +374,7 @@ class BackgroundDataService:
                 else:
                     logger.error(f"All {request.max_retries + 1} attempts failed for {request.sport} {request.year}")
 
-        raise last_exception
+        raise last_exception  # type: ignore[misc]
 
     def get_result(self, request_id: str) -> Optional[FetchResult]:
         """
@@ -553,7 +553,7 @@ class BackgroundDataService:
             if to_remove:
                 logger.info(f"Cleared {len(to_remove)} old completed requests")
 
-    def shutdown(self, wait: bool = True, timeout: int = 30):
+    def shutdown(self, wait: bool = True, timeout: Optional[int] = 30):
         """
         Shutdown the background data service.
 
@@ -573,7 +573,7 @@ class BackgroundDataService:
         # Shutdown executor with compatibility for older Python versions
         try:
             # Try with timeout parameter (Python 3.9+)
-            self.executor.shutdown(wait=wait, timeout=timeout)
+            self.executor.shutdown(wait=wait, timeout=timeout)  # type: ignore[call-arg]
         except TypeError:
             # Fallback for older Python versions that don't support timeout
             if wait and timeout:

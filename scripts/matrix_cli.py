@@ -94,6 +94,7 @@ def print_banner() -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _run(cmd: list, **kwargs) -> int:
     return subprocess.run(cmd, **kwargs).returncode
 
@@ -144,13 +145,15 @@ def _detect_web() -> bool:
 def _require_web() -> bool:
     """Print an error and return False if web interface is not running."""
     if not _detect_web():
-        console.print(Panel(
-            "[yellow]Web interface is not running.[/yellow]\n\n"
-            "Start it in another terminal with:\n"
-            "  [bold green]matrix web[/bold green]",
-            title="[red]Service Unavailable[/red]",
-            border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[yellow]Web interface is not running.[/yellow]\n\n"
+                "Start it in another terminal with:\n"
+                "  [bold green]matrix web[/bold green]",
+                title="[red]Service Unavailable[/red]",
+                border_style="red",
+            )
+        )
         return False
     return True
 
@@ -286,6 +289,7 @@ REQUIREMENTS_CONTENT = "# Add plugin dependencies here, e.g.:\n# requests>=2.28.
 # CLI root
 # ---------------------------------------------------------------------------
 
+
 @click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx: click.Context) -> None:
@@ -303,6 +307,7 @@ def cli(ctx: click.Context) -> None:
 # matrix run
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.option("--debug", is_flag=True, help="Enable verbose debug logging.")
 def run(debug: bool) -> None:
@@ -318,6 +323,7 @@ def run(debug: bool) -> None:
 # matrix web
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 def web() -> None:
     """Start the web interface on localhost:5000."""
@@ -329,6 +335,7 @@ def web() -> None:
 # ---------------------------------------------------------------------------
 # matrix setup
 # ---------------------------------------------------------------------------
+
 
 def _sync_venv(extras: tuple) -> int:
     """Sync the .venv using uv. Returns the return code (0 = success)."""
@@ -350,8 +357,9 @@ def _sync_venv(extras: tuple) -> int:
 
 
 @cli.command()
-@click.option("--extras", multiple=True, default=("emulator",),
-              show_default=True, help="uv extras to install (repeatable).")
+@click.option(
+    "--extras", multiple=True, default=("emulator",), show_default=True, help="uv extras to install (repeatable)."
+)
 def setup(extras: tuple) -> None:
     """Create or sync the .venv using uv. Run this after cloning or pulling."""
     console.print(Rule("[green]setup[/green]"))
@@ -364,10 +372,7 @@ def setup(extras: tuple) -> None:
 
 _RGBMATRIX_APT_DEPS = ["python3-dev", "gcc", "make"]
 
-_RGBMATRIX_PIP_URL = (
-    "git+https://github.com/hzeller/rpi-rgb-led-matrix@master"
-    "#subdirectory=bindings/python"
-)
+_RGBMATRIX_PIP_URL = "git+https://github.com/hzeller/rpi-rgb-led-matrix@master#subdirectory=bindings/python"
 
 
 def _install_rgbmatrix_hardware() -> None:
@@ -384,7 +389,9 @@ def _install_rgbmatrix_hardware() -> None:
     missing: list[str] = []
     for pkg in _RGBMATRIX_APT_DEPS:
         result = subprocess.run(
-            ["dpkg", "-l", pkg], capture_output=True, check=False,
+            ["dpkg", "-l", pkg],
+            capture_output=True,
+            check=False,
         )
         if result.returncode != 0:
             missing.append(pkg)
@@ -407,7 +414,8 @@ def _install_rgbmatrix_hardware() -> None:
     with console.status("[bold green]Compiling rgbmatrix...", spinner="dots"):
         result = subprocess.run(
             [uv, "pip", "install", "--project", str(LEDMATRIX_ROOT), _RGBMATRIX_PIP_URL],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
 
     if result.returncode != 0:
@@ -431,6 +439,7 @@ def _install_rgbmatrix_hardware() -> None:
 # Full install step helpers (used by `matrix install --full`)
 # ---------------------------------------------------------------------------
 
+
 class _StepError(Exception):
     """Raised when a full-install step fails."""
 
@@ -445,8 +454,7 @@ def _full_install_step_01_os_validate() -> None:
         content = os_release.read_text()
         if "debian" not in content.lower() and "raspbian" not in content.lower():
             raise _StepError(
-                "Unsupported OS — expected Debian or Raspbian. "
-                f"Contents of /etc/os-release:\n{content[:300]}"
+                f"Unsupported OS — expected Debian or Raspbian. Contents of /etc/os-release:\n{content[:300]}"
             )
     else:
         console.print("[yellow]  /etc/os-release not found — skipping distro check[/yellow]")
@@ -462,7 +470,8 @@ def _full_install_step_02_network() -> None:
     # Ping check
     rc = subprocess.run(
         ["ping", "-c", "1", "-W", "5", "8.8.8.8"],
-        capture_output=True, check=False,
+        capture_output=True,
+        check=False,
     ).returncode
     if rc != 0:
         raise _StepError("No network — ping 8.8.8.8 failed.")
@@ -516,10 +525,7 @@ def _full_install_step_04_uv() -> None:
     # Verify uv is accessible (may need to refresh PATH)
     uv_path = Path.home() / ".local" / "bin" / "uv"
     if not shutil.which("uv") and not uv_path.exists():
-        raise _StepError(
-            "uv installed but not found on PATH. "
-            "Add ~/.local/bin to your PATH and retry."
-        )
+        raise _StepError("uv installed but not found on PATH. Add ~/.local/bin to your PATH and retry.")
     console.print("  uv installed successfully")
 
 
@@ -668,7 +674,8 @@ def _full_install_step_12_conflicting_services(*, skip_hardware: bool = False) -
     for svc in services:
         subprocess.run(
             ["sudo", "systemctl", "disable", "--now", svc],
-            capture_output=True, check=False,
+            capture_output=True,
+            check=False,
         )
     console.print(f"  Disabled conflicting services: {', '.join(services)}")
 
@@ -737,19 +744,34 @@ def _full_install_step_17_verify(results: list[tuple[str, bool]]) -> None:
 # matrix install
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.option("--no-services", is_flag=True, help="Skip systemd service installation.")
 @click.option("--emulator", is_flag=True, help="Install emulator extras instead of hardware.")
-@click.option("--permissions", is_flag=True, help="Set up cache directory, file permissions, and sudoers rules (Pi only).")
-@click.option("--services", "extra_services", is_flag=True, help="Install web interface and WiFi monitor services (Pi only).")
+@click.option(
+    "--permissions", is_flag=True, help="Set up cache directory, file permissions, and sudoers rules (Pi only)."
+)
+@click.option(
+    "--services", "extra_services", is_flag=True, help="Install web interface and WiFi monitor services (Pi only)."
+)
 @click.option("--prerequisites", is_flag=True, help="Install required apt packages (Pi only).")
 @click.option("--hardware", is_flag=True, help="Install rgbmatrix C-extension (Pi only).")
 @click.option("--full", is_flag=True, help="Run complete Pi installation (17 steps).")
-@click.option("--skip-hardware", is_flag=True, help="Skip rgbmatrix build and hardware tuning (emulator-only Pi install).")
+@click.option(
+    "--skip-hardware", is_flag=True, help="Skip rgbmatrix build and hardware tuning (emulator-only Pi install)."
+)
 @click.option("--yes", "-y", "auto_yes", is_flag=True, help="Skip confirmation prompts.")
-def install(no_services: bool, emulator: bool, permissions: bool,
-            extra_services: bool, prerequisites: bool, hardware: bool,
-            full: bool, skip_hardware: bool, auto_yes: bool) -> None:
+def install(
+    no_services: bool,
+    emulator: bool,
+    permissions: bool,
+    extra_services: bool,
+    prerequisites: bool,
+    hardware: bool,
+    full: bool,
+    skip_hardware: bool,
+    auto_yes: bool,
+) -> None:
     """Full installation: sync deps and optionally install systemd services.
 
     Pi-specific flags (--permissions, --services, --prerequisites, --hardware)
@@ -941,12 +963,17 @@ def install(no_services: bool, emulator: bool, permissions: bool,
     if hardware:
         _install_rgbmatrix_hardware()
 
-    console.print(Panel("[green]Installation complete![/green]\n\nRun [bold]matrix doctor[/bold] to verify.", border_style="green"))
+    console.print(
+        Panel(
+            "[green]Installation complete![/green]\n\nRun [bold]matrix doctor[/bold] to verify.", border_style="green"
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
 # matrix doctor
 # ---------------------------------------------------------------------------
+
 
 @cli.command()
 @click.option("--quick", is_flag=True, help="Run only core checks (fast path for CI).")
@@ -988,8 +1015,9 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
     # --- venv ---
     venv_py = LEDMATRIX_ROOT / ".venv" / "bin" / "python3"
     if venv_py.exists():
-        result = subprocess.run([str(venv_py), "-c", "import PIL; print(PIL.__version__)"],
-                                capture_output=True, text=True)
+        result = subprocess.run(
+            [str(venv_py), "-c", "import PIL; print(PIL.__version__)"], capture_output=True, text=True
+        )
         if result.returncode == 0:
             ok(".venv / Pillow", f"Pillow {result.stdout.strip()}")
         else:
@@ -1027,8 +1055,7 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
         if not unit_file.exists():
             warn(f"{unit}.service", "Not installed (OK on dev machine, required on Pi)")
             continue
-        result = subprocess.run(["systemctl", "is-active", unit],
-                                capture_output=True, text=True)
+        result = subprocess.run(["systemctl", "is-active", unit], capture_output=True, text=True)
         status = result.stdout.strip()
         if status == "active":
             ok(f"{unit}.service", "active")
@@ -1049,7 +1076,8 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
     if dev_mem.exists() and not emulator_env and venv_py.exists():
         result = subprocess.run(
             [str(venv_py), "-c", "import rgbmatrix; print('ok')"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         if result.returncode == 0:
             ok("rgbmatrix", "C extension importable")
@@ -1060,7 +1088,8 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
     if venv_py.exists():
         ver_result = subprocess.run(
             [str(venv_py), "-c", "import platform; print(platform.python_version())"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         py_ver = ver_result.stdout.strip() if ver_result.returncode == 0 else platform.python_version()
     else:
@@ -1091,10 +1120,14 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
         # --- Web interface reachability ---
         web_unit = Path("/etc/systemd/system/ledmatrix-web.service")
         if web_unit.exists():
-            web_active = subprocess.run(
-                ["systemctl", "is-active", "ledmatrix-web"],
-                capture_output=True, text=True,
-            ).stdout.strip() == "active"
+            web_active = (
+                subprocess.run(
+                    ["systemctl", "is-active", "ledmatrix-web"],
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+                == "active"
+            )
         else:
             web_active = False
         if web_active:
@@ -1155,7 +1188,8 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
             for svc in conflicting:
                 result = subprocess.run(
                     ["systemctl", "is-active", svc],
-                    capture_output=True, text=True,
+                    capture_output=True,
+                    text=True,
                 )
                 if result.stdout.strip() == "active":
                     warn(f"Conflicting: {svc}", f"{svc}.service is active — may interfere with LED timing")
@@ -1216,12 +1250,14 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
         try:
             branch_result = subprocess.run(
                 ["git", "-C", str(LEDMATRIX_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             branch_name = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
             dirty_result = subprocess.run(
                 ["git", "-C", str(LEDMATRIX_ROOT), "status", "--porcelain"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             is_dirty = bool(dirty_result.stdout.strip()) if dirty_result.returncode == 0 else False
             dirty_label = " (uncommitted changes)" if is_dirty else ""
@@ -1279,9 +1315,15 @@ def doctor(quick: bool, verbose: bool, json_output: bool) -> None:
 # matrix logs
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
-@click.option("--service", type=click.Choice(["display", "web", "all"]), default="display",
-              show_default=True, help="Which service log to tail.")
+@click.option(
+    "--service",
+    type=click.Choice(["display", "web", "all"]),
+    default="display",
+    show_default=True,
+    help="Which service log to tail.",
+)
 def logs(service: str) -> None:
     """Tail live service logs (Raspberry Pi / systemd only)."""
     services = {
@@ -1303,10 +1345,16 @@ def logs(service: str) -> None:
 # matrix service
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.argument("action", type=click.Choice(["start", "stop", "restart", "status"]))
-@click.option("--service", type=click.Choice(["display", "web", "all"]), default="display",
-              show_default=True, help="Which service to act on.")
+@click.option(
+    "--service",
+    type=click.Choice(["display", "web", "all"]),
+    default="display",
+    show_default=True,
+    help="Which service to act on.",
+)
 def service(action: str, service: str) -> None:
     """Manage LEDMatrix systemd services (Raspberry Pi only)."""
     service_map = {
@@ -1329,6 +1377,7 @@ def service(action: str, service: str) -> None:
 # ---------------------------------------------------------------------------
 # matrix plugin (group)
 # ---------------------------------------------------------------------------
+
 
 @cli.group()
 @click.pass_context
@@ -1370,16 +1419,16 @@ def plugin_new(id: str, dest: Optional[str], no_interactive: bool) -> None:
 
     if not no_interactive:
         display_name = click.prompt("  Display name", default=display_name)
-        author      = click.prompt("  Author", default="")
+        author = click.prompt("  Author", default="")
         description = click.prompt("  Description", default="")
-        category    = click.prompt(
+        category = click.prompt(
             "  Category",
             type=click.Choice(CATEGORIES),
             default="other",
             show_choices=True,
         )
-        tags_raw    = click.prompt("  Tags (comma-separated)", default="")
-        tags        = [t.strip() for t in tags_raw.split(",") if t.strip()]
+        tags_raw = click.prompt("  Tags (comma-separated)", default="")
+        tags = [t.strip() for t in tags_raw.split(",") if t.strip()]
         update_interval = click.prompt("  Update interval (seconds)", default=60, type=int)
     else:
         author = ""
@@ -1420,8 +1469,7 @@ def plugin_new(id: str, dest: Optional[str], no_interactive: bool) -> None:
     (plugin_dir / ".gitignore").write_text(GITIGNORE_CONTENT)
 
     # git init
-    _run(["git", "init", "-b", "main", str(plugin_dir)],
-         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    _run(["git", "init", "-b", "main", str(plugin_dir)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # pre-push hook
     hook_src = LEDMATRIX_ROOT / "scripts" / "git-hooks" / "pre-push-plugin-version"
@@ -1435,8 +1483,8 @@ def plugin_new(id: str, dest: Optional[str], no_interactive: bool) -> None:
     t = Table.grid(padding=(0, 2))
     t.add_column(style="dim")
     t.add_column()
-    t.add_row("id",       plugin_id)
-    t.add_row("class",    class_name)
+    t.add_row("id", plugin_id)
+    t.add_row("class", class_name)
     t.add_row("category", category)
     t.add_row("location", str(plugin_dir))
     console.print(Panel(t, title="[green]created[/green]", border_style="green"))
@@ -1447,6 +1495,7 @@ def plugin_new(id: str, dest: Optional[str], no_interactive: bool) -> None:
 # ---------------------------------------------------------------------------
 # matrix plugin link / unlink / status
 # ---------------------------------------------------------------------------
+
 
 @plugin.command("link")
 @click.argument("id")
@@ -1476,6 +1525,7 @@ def plugin_status() -> None:
 # matrix plugin list
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("list")
 def plugin_list() -> None:
     """Rich table of all installed plugins and their state."""
@@ -1499,14 +1549,14 @@ def plugin_list() -> None:
         mf = _read_manifest(p)
         if mf is None:
             continue
-        pid      = mf.get("id", p.name)
-        version  = mf.get("version", "—")
+        pid = mf.get("id", p.name)
+        version = mf.get("version", "—")
         category = mf.get("category", "—")
-        enabled  = config.get(pid, {}).get("enabled", True)
-        is_link  = p.is_symlink()
+        enabled = config.get(pid, {}).get("enabled", True)
+        is_link = p.is_symlink()
 
         status_text = Text("enabled", style="green") if enabled else Text("disabled", style="dim")
-        link_text   = Text("yes", style="cyan") if is_link else Text("no", style="dim")
+        link_text = Text("yes", style="cyan") if is_link else Text("no", style="dim")
 
         t.add_row(pid, status_text, version, category, link_text)
 
@@ -1517,14 +1567,16 @@ def plugin_list() -> None:
 # matrix plugin render
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("render")
 @click.argument("id")
 @click.option("--output", "-o", default=None, help="Output PNG path.")
-@click.option("--width",  default=None, type=int, help="Display width in pixels.")
+@click.option("--width", default=None, type=int, help="Display width in pixels.")
 @click.option("--height", default=None, type=int, help="Display height in pixels.")
 @click.option("--skip-update", is_flag=True, help="Skip update(), render display only.")
-def plugin_render(id: str, output: Optional[str], width: Optional[int],
-                  height: Optional[int], skip_update: bool) -> None:
+def plugin_render(
+    id: str, output: Optional[str], width: Optional[int], height: Optional[int], skip_update: bool
+) -> None:
     """Render a plugin to PNG without running the full display loop."""
     render_script = LEDMATRIX_ROOT / "scripts" / "render_plugin.py"
     if not render_script.exists():
@@ -1551,6 +1603,7 @@ def plugin_render(id: str, output: Optional[str], width: Optional[int],
 # matrix plugin install
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("install")
 @click.argument("target")
 @click.option("--branch", default=None, help="Git branch to install from.")
@@ -1566,15 +1619,14 @@ def plugin_install(target: str, branch: Optional[str]) -> None:
 
     is_url = target.startswith("http") or "github.com" in target
 
-    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
-                  console=console, transient=True) as progress:
+    with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console, transient=True) as progress:
         progress.add_task("Installing...", total=None)
         if is_url:
-            result = _api_post("/plugins/install-from-url",
-                               {"repo_url": target, **({"branch": branch} if branch else {})})
+            result = _api_post(
+                "/plugins/install-from-url", {"repo_url": target, **({"branch": branch} if branch else {})}
+            )
         else:
-            result = _api_post("/plugins/install",
-                               {"plugin_id": target, **({"branch": branch} if branch else {})})
+            result = _api_post("/plugins/install", {"plugin_id": target, **({"branch": branch} if branch else {})})
 
     if result is None:
         sys.exit(1)
@@ -1592,10 +1644,10 @@ def plugin_install(target: str, branch: Optional[str]) -> None:
 # matrix plugin uninstall
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("uninstall")
 @click.argument("id")
-@click.option("--keep-config", is_flag=True,
-              help="Preserve the plugin's config.json entry after removal.")
+@click.option("--keep-config", is_flag=True, help="Preserve the plugin's config.json entry after removal.")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt.")
 def plugin_uninstall(id: str, keep_config: bool, yes: bool) -> None:
     """Uninstall a plugin. Prompts for confirmation."""
@@ -1607,11 +1659,9 @@ def plugin_uninstall(id: str, keep_config: bool, yes: bool) -> None:
 
     console.print(Rule(f"[green]uninstall — {id}[/green]"))
 
-    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
-                  console=console, transient=True) as progress:
+    with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console, transient=True) as progress:
         progress.add_task("Uninstalling...", total=None)
-        result = _api_post("/plugins/uninstall",
-                           {"plugin_id": id, "preserve_config": keep_config})
+        result = _api_post("/plugins/uninstall", {"plugin_id": id, "preserve_config": keep_config})
 
     if result is None:
         sys.exit(1)
@@ -1628,6 +1678,7 @@ def plugin_uninstall(id: str, keep_config: bool, yes: bool) -> None:
 # matrix plugin update
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("update")
 @click.argument("id", required=False, default=None)
 def plugin_update(id: Optional[str]) -> None:
@@ -1640,15 +1691,14 @@ def plugin_update(id: Optional[str]) -> None:
     else:
         # Discover all installed plugin IDs from plugins dir
         targets = sorted(
-            m["id"]
-            for p in PLUGINS_DIR.iterdir()
-            if (p.is_dir() or p.is_symlink()) and (m := _read_manifest(p))
+            m["id"] for p in PLUGINS_DIR.iterdir() if (p.is_dir() or p.is_symlink()) and (m := _read_manifest(p))
         )
 
     console.print(Rule("[green]update[/green]"))
 
-    with Progress(SpinnerColumn(), TextColumn("{task.description}"),
-                  BarColumn(), TaskProgressColumn(), console=console) as progress:
+    with Progress(
+        SpinnerColumn(), TextColumn("{task.description}"), BarColumn(), TaskProgressColumn(), console=console
+    ) as progress:
         task = progress.add_task("Updating plugins...", total=len(targets))
         results = []
         for pid in targets:
@@ -1676,6 +1726,7 @@ def plugin_update(id: Optional[str]) -> None:
 # ---------------------------------------------------------------------------
 # matrix plugin enable / disable
 # ---------------------------------------------------------------------------
+
 
 @plugin.command("enable")
 @click.argument("id")
@@ -1710,6 +1761,7 @@ def _toggle_plugin(plugin_id: str, enabled: bool) -> None:
 # matrix plugin health
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("health")
 @click.argument("id", required=False, default=None)
 def plugin_health(id: Optional[str]) -> None:
@@ -1743,9 +1795,9 @@ def plugin_health(id: Optional[str]) -> None:
     for entry in entries:
         if not isinstance(entry, dict):
             continue
-        pid        = entry.get("plugin_id") or entry.get("id", "—")
-        state      = entry.get("state", "—")
-        error_cnt  = str(entry.get("error_count", 0))
+        pid = entry.get("plugin_id") or entry.get("id", "—")
+        state = entry.get("state", "—")
+        error_cnt = str(entry.get("error_count", 0))
         last_error = (entry.get("last_error") or "—")[:60]
 
         if state in ("running", "enabled"):
@@ -1764,14 +1816,14 @@ def plugin_health(id: Optional[str]) -> None:
 # matrix plugin store
 # ---------------------------------------------------------------------------
 
+
 @plugin.command("store")
 @click.argument("query", required=False, default=None)
 def plugin_store(query: Optional[str]) -> None:
     """Browse the plugin store. Optionally filter by name or tag."""
     console.print(Rule("[green]plugin store[/green]"))
 
-    with Progress(SpinnerColumn(), TextColumn("Fetching registry..."),
-                  console=console, transient=True) as progress:
+    with Progress(SpinnerColumn(), TextColumn("Fetching registry..."), console=console, transient=True) as progress:
         progress.add_task("", total=None)
         try:
             resp = requests.get(REGISTRY_URL, timeout=10)
@@ -1786,7 +1838,8 @@ def plugin_store(query: Optional[str]) -> None:
     if query:
         q = query.lower()
         plugins = [
-            p for p in plugins
+            p
+            for p in plugins
             if q in p.get("name", "").lower()
             or q in p.get("id", "").lower()
             or any(q in tag.lower() for tag in p.get("tags", []))
@@ -1794,7 +1847,7 @@ def plugin_store(query: Optional[str]) -> None:
         ]
 
     if not plugins:
-        match_msg = f' matching "{query}"' if query else ''
+        match_msg = f' matching "{query}"' if query else ""
         console.print(f"  [dim]No plugins found{match_msg}.[/dim]")
         return
 
@@ -1814,19 +1867,19 @@ def plugin_store(query: Optional[str]) -> None:
     t.add_column("Installed", min_width=10, justify="center")
 
     for p in sorted(plugins, key=lambda x: x.get("name", "")):
-        pid       = p.get("id", "—")
-        name      = p.get("name", pid)
-        author    = p.get("author", "—")
-        category  = p.get("category", "—")
-        version   = p.get("latest_version", "—")
-        verified  = Text("✓", style="green") if p.get("verified") else Text("✗", style="dim")
+        pid = p.get("id", "—")
+        name = p.get("name", pid)
+        author = p.get("author", "—")
+        category = p.get("category", "—")
+        version = p.get("latest_version", "—")
+        verified = Text("✓", style="green") if p.get("verified") else Text("✗", style="dim")
         inst_text = Text("✓", style="cyan") if pid in installed_ids else Text("—", style="dim")
 
         t.add_row(name, author, category, version, verified, inst_text)
 
     console.print(t)
     if query:
-        console.print(f"  [dim]{len(plugins)} result(s) for \"{query}\"[/dim]\n")
+        console.print(f'  [dim]{len(plugins)} result(s) for "{query}"[/dim]\n')
     else:
         console.print(f"  [dim]{len(plugins)} plugins in registry[/dim]\n")
 
@@ -1835,6 +1888,7 @@ def plugin_store(query: Optional[str]) -> None:
 # matrix diagnose
 # ---------------------------------------------------------------------------
 
+
 @cli.group()
 def diagnose() -> None:
     """Run diagnostic checks on LEDMatrix components."""
@@ -1842,6 +1896,7 @@ def diagnose() -> None:
 
 
 # -- diagnose helpers -------------------------------------------------------
+
 
 class _DiagResult:
     """Accumulator for diagnostic check results."""
@@ -1884,6 +1939,7 @@ class _DiagResult:
 def _check_port_open(host: str, port: int, timeout: float = 2.0) -> bool:
     """Return True if a TCP connection to *host*:*port* succeeds."""
     import socket
+
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True
@@ -1901,6 +1957,7 @@ def _check_url(url: str, timeout: float = 3.0) -> Optional[int]:
 
 
 # -- diagnose web -----------------------------------------------------------
+
 
 @diagnose.command("web")
 def diagnose_web() -> None:
@@ -1977,7 +2034,8 @@ def diagnose_web() -> None:
     if svc_file.exists():
         result = subprocess.run(
             ["systemctl", "is-active", "ledmatrix-web"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         status = result.stdout.strip()
         if status == "active":
@@ -1995,6 +2053,7 @@ def diagnose_web() -> None:
 
 # -- diagnose network -------------------------------------------------------
 
+
 @diagnose.command("network")
 def diagnose_network() -> None:
     """Check network connectivity: internet, DNS, WiFi signal (Pi only)."""
@@ -2004,7 +2063,8 @@ def diagnose_network() -> None:
     # 1. Internet connectivity — ping 8.8.8.8
     ping_result = subprocess.run(
         ["ping", "-c", "1", "-W", "3", "8.8.8.8"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     if ping_result.returncode == 0:
         r.ok("Internet (ping 8.8.8.8)", "Reachable")
@@ -2013,6 +2073,7 @@ def diagnose_network() -> None:
 
     # 2. DNS resolution
     import socket as _socket
+
     try:
         addr = _socket.getaddrinfo("pypi.org", 443, proto=_socket.IPPROTO_TCP)
         if addr:
@@ -2039,11 +2100,14 @@ def diagnose_network() -> None:
     # 4. WiFi signal strength (Pi only)
     if _is_raspberry_pi():
         iwconfig_result = subprocess.run(
-            ["iwconfig", "wlan0"], capture_output=True, text=True,
+            ["iwconfig", "wlan0"],
+            capture_output=True,
+            text=True,
         )
         if iwconfig_result.returncode == 0:
             output = iwconfig_result.stdout
             import re
+
             essid_match = re.search(r'ESSID:"([^"]*)"', output)
             signal_match = re.search(r"Signal level[=:](-?\d+)", output)
             quality_match = re.search(r"Link Quality[=:](\S+)", output)
@@ -2071,7 +2135,8 @@ def diagnose_network() -> None:
         if svc_file.exists():
             res = subprocess.run(
                 ["systemctl", "is-active", "ledmatrix-wifi-monitor"],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             status = res.stdout.strip()
             if status == "active":
@@ -2087,6 +2152,7 @@ def diagnose_network() -> None:
 
 
 # -- diagnose plugins -------------------------------------------------------
+
 
 @diagnose.command("plugins")
 def diagnose_plugins() -> None:
@@ -2118,10 +2184,7 @@ def diagnose_plugins() -> None:
         r.warn("plugin-repos/ directory", "Not found (OK if not doing plugin development)")
 
     # 3. Scan each plugin
-    plugin_dirs = sorted(
-        p for p in PLUGINS_DIR.iterdir()
-        if p.is_dir() or p.is_symlink()
-    )
+    plugin_dirs = sorted(p for p in PLUGINS_DIR.iterdir() if p.is_dir() or p.is_symlink())
 
     if not plugin_dirs:
         r.warn("Installed plugins", "No plugins found in plugins/")
@@ -2299,6 +2362,7 @@ def permissions(assets, cache, plugins, web):
 # clean — housekeeping commands
 # ---------------------------------------------------------------------------
 
+
 @cli.group()
 def clean():
     """Remove caches, markers, and backup files."""
@@ -2458,9 +2522,7 @@ def _get_wifi_info() -> dict:
     """Parse iwconfig wlan0 output for WiFi info (Pi only)."""
     info: dict = {"ssid": "N/A", "signal": "N/A", "quality": "N/A"}
     try:
-        output = subprocess.check_output(
-            ["iwconfig", "wlan0"], stderr=subprocess.DEVNULL
-        ).decode()
+        output = subprocess.check_output(["iwconfig", "wlan0"], stderr=subprocess.DEVNULL).decode()
         if 'ESSID:"' in output:
             start = output.index('ESSID:"') + 7
             end = output.index('"', start)
@@ -2760,8 +2822,7 @@ def _uninstall_step_remove_group() -> None:
 @click.option("--keep-venv", is_flag=True, help="Preserve .venv directory")
 @click.option("--all", "remove_all", is_flag=True, help="Remove everything including config and plugins")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
-def uninstall(keep_config: bool, keep_plugins: bool, keep_venv: bool,
-              remove_all: bool, yes: bool) -> None:
+def uninstall(keep_config: bool, keep_plugins: bool, keep_venv: bool, remove_all: bool, yes: bool) -> None:
     """Uninstall LEDMatrix services and optionally remove data."""
     console.print(Rule("[red]uninstall[/red]"))
 
@@ -2824,12 +2885,14 @@ def uninstall(keep_config: bool, keep_plugins: bool, keep_venv: bool,
     _uninstall_step_remove_group()
 
     console.print("  [bold]Step 8/8: Cleanup complete[/bold]")
-    console.print(Panel(
-        "[green]LEDMatrix has been uninstalled.[/green]\n\n"
-        "The source code remains in this directory.\n"
-        "To reinstall, run: [bold]matrix install[/bold]",
-        border_style="green",
-    ))
+    console.print(
+        Panel(
+            "[green]LEDMatrix has been uninstalled.[/green]\n\n"
+            "The source code remains in this directory.\n"
+            "To reinstall, run: [bold]matrix install[/bold]",
+            border_style="green",
+        )
+    )
 
 
 # ---------------------------------------------------------------------------

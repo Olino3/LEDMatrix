@@ -299,7 +299,7 @@ def parse_boolean(value: Union[str, bool, int]) -> bool:
     if isinstance(value, str):
         return value.lower() in ("true", "1", "yes", "on", "enabled")
 
-    return False
+    return False  # type: ignore[unreachable]
 
 
 def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:

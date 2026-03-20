@@ -34,9 +34,11 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _reset_singleton():
     """Reset the DisplayManager singleton so tests get a fresh instance."""
     from src.display_manager import DisplayManager
+
     DisplayManager._instance = None
     DisplayManager._initialized = False
 
@@ -52,8 +54,7 @@ def _make_matrix_mock(width=128, height=32):
     return m
 
 
-def _build_dm(config=None, force_fallback=False, suppress_test_pattern=True,
-              matrix_mock=None):
+def _build_dm(config=None, force_fallback=False, suppress_test_pattern=True, matrix_mock=None):
     """
     Construct a DisplayManager with all hardware / font / snapshot seams mocked.
     Returns (dm, matrix_instance).
@@ -65,12 +66,13 @@ def _build_dm(config=None, force_fallback=False, suppress_test_pattern=True,
     if matrix_mock is None:
         matrix_mock = _make_matrix_mock()
 
-    with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-         patch("src.display_manager.RGBMatrixOptions"), \
-         patch("src.display_manager.freetype"), \
-         patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
-         patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
-
+    with (
+        patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+        patch("src.display_manager.RGBMatrixOptions"),
+        patch("src.display_manager.freetype"),
+        patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+        patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+    ):
         dm = DisplayManager(
             config=config or {},
             force_fallback=force_fallback,
@@ -83,6 +85,7 @@ def _build_dm(config=None, force_fallback=False, suppress_test_pattern=True,
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def reset_singleton():
@@ -127,24 +130,29 @@ def dm_fallback(hardware_config):
 # Singleton tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestSingleton:
     """DisplayManager must return the same instance on subsequent calls."""
 
     def test_same_instance_returned(self, hardware_config):
         matrix_mock = _make_matrix_mock()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             from src.display_manager import DisplayManager
+
             dm1 = DisplayManager(config=hardware_config, suppress_test_pattern=True)
             dm2 = DisplayManager(config=hardware_config, suppress_test_pattern=True)
             assert dm1 is dm2
 
     def test_cleanup_resets_singleton(self, hardware_config):
         from src.display_manager import DisplayManager
+
         dm, _ = _build_dm(config=hardware_config)
         dm.cleanup()
         assert DisplayManager._instance is None
@@ -154,6 +162,7 @@ class TestSingleton:
 # ---------------------------------------------------------------------------
 # Initialization / setup_matrix
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestSetupMatrix:
@@ -181,11 +190,14 @@ class TestSetupMatrix:
     def test_matrix_init_exception_triggers_fallback(self):
         """If RGBMatrix() raises, we fall back gracefully."""
         from src.display_manager import DisplayManager
+
         _reset_singleton()
-        with patch("src.display_manager.RGBMatrix", side_effect=RuntimeError("hw error")), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()):
+        with (
+            patch("src.display_manager.RGBMatrix", side_effect=RuntimeError("hw error")),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+        ):
             dm = DisplayManager(suppress_test_pattern=True)
         assert dm.matrix is None
         assert dm.image is not None
@@ -208,12 +220,15 @@ class TestSetupMatrix:
         mock_options_instance = MagicMock()
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
+
         _reset_singleton()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions", return_value=mock_options_instance), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions", return_value=mock_options_instance),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             DisplayManager(config=config, suppress_test_pattern=True)
         assert mock_options_instance.scan_mode == 1
         assert mock_options_instance.pwm_dither_bits == 2
@@ -223,15 +238,16 @@ class TestSetupMatrix:
         """If truetype raises for initial font load, load_default() is used."""
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
+
         _reset_singleton()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype",
-                   side_effect=OSError("font missing")), \
-             patch("src.display_manager.ImageFont.load_default",
-                   return_value=MagicMock()) as mock_default, \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", side_effect=OSError("font missing")),
+            patch("src.display_manager.ImageFont.load_default", return_value=MagicMock()) as mock_default,
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             DisplayManager(suppress_test_pattern=True)
         # load_default() should have been called for the initial font
         mock_default.assert_called()
@@ -240,13 +256,16 @@ class TestSetupMatrix:
         """When suppress_test_pattern=True, _draw_test_pattern is not invoked."""
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
+
         _reset_singleton()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
-             patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp, \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+            patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp,
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             DisplayManager(config=hardware_config, suppress_test_pattern=True)
         mock_tp.assert_not_called()
 
@@ -254,13 +273,16 @@ class TestSetupMatrix:
         """When suppress_test_pattern=False, _draw_test_pattern is invoked."""
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
+
         _reset_singleton()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()), \
-             patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp, \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", return_value=MagicMock()),
+            patch("src.display_manager.DisplayManager._draw_test_pattern") as mock_tp,
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             DisplayManager(config=hardware_config, suppress_test_pattern=False)
         mock_tp.assert_called_once()
 
@@ -268,6 +290,7 @@ class TestSetupMatrix:
 # ---------------------------------------------------------------------------
 # width / height properties
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestWidthHeightProperties:
@@ -306,6 +329,7 @@ class TestWidthHeightProperties:
 # ---------------------------------------------------------------------------
 # set_brightness / get_brightness
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestBrightness:
@@ -387,6 +411,7 @@ class TestBrightness:
 # update_display
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestUpdateDisplay:
     """Cover update_display branches."""
@@ -429,6 +454,7 @@ class TestUpdateDisplay:
 # ---------------------------------------------------------------------------
 # clear
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestClear:
@@ -476,16 +502,19 @@ class TestClear:
 # _draw_test_pattern
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDrawTestPattern:
     """Cover _draw_test_pattern branches."""
 
     def test_draw_test_pattern_hardware_calls_update(self, dm_hardware):
         dm, mat = dm_hardware
-        with patch.object(dm, "update_display") as mock_update, \
-             patch("src.display_manager.time.sleep"), \
-             patch.object(dm, "clear"), \
-             patch.object(dm, "draw"):
+        with (
+            patch.object(dm, "update_display") as mock_update,
+            patch("src.display_manager.time.sleep"),
+            patch.object(dm, "clear"),
+            patch.object(dm, "draw"),
+        ):
             dm._draw_test_pattern()
         mock_update.assert_called_once()
 
@@ -504,6 +533,7 @@ class TestDrawTestPattern:
 # ---------------------------------------------------------------------------
 # _load_fonts
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestLoadFonts:
@@ -533,21 +563,22 @@ class TestLoadFonts:
         """When the 5x7.bdf path does not exist, calendar_font falls back."""
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
-        _reset_singleton()
 
+        _reset_singleton()
 
         def selective_truetype(path, size):
             if "PressStart" in path:
                 return MagicMock()
             raise OSError("not found")
 
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype") as mock_ft, \
-             patch("src.display_manager.ImageFont.truetype",
-                   side_effect=selective_truetype), \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"), \
-             patch("os.path.exists", return_value=False):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype") as mock_ft,
+            patch("src.display_manager.ImageFont.truetype", side_effect=selective_truetype),
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+            patch("os.path.exists", return_value=False),
+        ):
             mock_ft.Face.side_effect = FileNotFoundError("no bdf")
             dm = DisplayManager(suppress_test_pattern=True)
 
@@ -557,17 +588,18 @@ class TestLoadFonts:
         """When PressStart2P truetype fails, all fonts fall back to load_default."""
         matrix_mock = _make_matrix_mock()
         from src.display_manager import DisplayManager
+
         _reset_singleton()
 
         mock_default_font = MagicMock()
-        with patch("src.display_manager.RGBMatrix", return_value=matrix_mock), \
-             patch("src.display_manager.RGBMatrixOptions"), \
-             patch("src.display_manager.freetype"), \
-             patch("src.display_manager.ImageFont.truetype",
-                   side_effect=OSError("all fonts missing")), \
-             patch("src.display_manager.ImageFont.load_default",
-                   return_value=mock_default_font), \
-             patch("src.display_manager.DisplayManager._write_snapshot_if_due"):
+        with (
+            patch("src.display_manager.RGBMatrix", return_value=matrix_mock),
+            patch("src.display_manager.RGBMatrixOptions"),
+            patch("src.display_manager.freetype"),
+            patch("src.display_manager.ImageFont.truetype", side_effect=OSError("all fonts missing")),
+            patch("src.display_manager.ImageFont.load_default", return_value=mock_default_font),
+            patch("src.display_manager.DisplayManager._write_snapshot_if_due"),
+        ):
             dm = DisplayManager(suppress_test_pattern=True)
 
         assert dm.regular_font is mock_default_font
@@ -578,6 +610,7 @@ class TestLoadFonts:
 # get_text_width
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetTextWidth:
     """Cover get_text_width with freetype and PIL fonts."""
@@ -587,6 +620,7 @@ class TestGetTextWidth:
         import freetype as ft
 
         import src.display_manager as dm_mod
+
         dm, _ = dm_hardware
 
         # Create a real freetype.Face subclass instance so isinstance check passes
@@ -626,6 +660,7 @@ class TestGetTextWidth:
 # get_font_height
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetFontHeight:
     """Cover get_font_height with freetype and PIL fonts."""
@@ -636,6 +671,7 @@ class TestGetFontHeight:
         pil_font.getmetrics.return_value = (10, 2)
         # Need isinstance(pil_font, freetype.Face) to be False
         import src.display_manager as dm_mod
+
         original = dm_mod.freetype
         try:
             mock_ft = MagicMock()
@@ -653,6 +689,7 @@ class TestGetFontHeight:
         pil_font.getmetrics.side_effect = AttributeError("no metrics")
         pil_font.size = 9
         import src.display_manager as dm_mod
+
         original = dm_mod.freetype
         try:
             mock_ft = MagicMock()
@@ -668,6 +705,7 @@ class TestGetFontHeight:
         dm, _ = dm_hardware
         pil_font = MagicMock(spec=[])  # no attributes
         import src.display_manager as dm_mod
+
         original = dm_mod.freetype
         try:
             mock_ft = MagicMock()
@@ -683,6 +721,7 @@ class TestGetFontHeight:
 # draw_text
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDrawText:
     """Cover all draw_text branches."""
@@ -693,6 +732,7 @@ class TestDrawText:
         dm.regular_font = pil_font
         dm.draw.text = MagicMock()
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -710,6 +750,7 @@ class TestDrawText:
         dm.draw.text = MagicMock()
         dm.draw.textbbox = MagicMock(return_value=(0, 0, 40, 10))
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -729,6 +770,7 @@ class TestDrawText:
         dm.draw.text = MagicMock()
         dm.draw.textbbox = MagicMock(return_value=(0, 0, 20, 10))
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -747,6 +789,7 @@ class TestDrawText:
         dm.regular_font = pil_font
         dm.draw.text = MagicMock()
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -764,6 +807,7 @@ class TestDrawText:
         dm.small_font = small_font
         dm.draw.text = MagicMock()
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -780,6 +824,7 @@ class TestDrawText:
         custom_font = MagicMock()
         dm.draw.text = MagicMock()
         import src.display_manager as dm_mod
+
         orig = dm_mod.freetype
         mock_ft = MagicMock()
         mock_ft.Face = type("Face", (), {})
@@ -802,13 +847,22 @@ class TestDrawText:
 # _draw_bdf_text
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDrawBdfText:
     """Cover _draw_bdf_text including bitmap rendering loop."""
 
-    def _make_bdf_face(self, char_advance=64, bitmap_rows=7, bitmap_width=5,
-                       bitmap_pitch=1, bitmap_buffer=None, ascender=6 << 6,
-                       glyph_left=0, glyph_top=7):
+    def _make_bdf_face(
+        self,
+        char_advance=64,
+        bitmap_rows=7,
+        bitmap_width=5,
+        bitmap_pitch=1,
+        bitmap_buffer=None,
+        ascender=6 << 6,
+        glyph_left=0,
+        glyph_top=7,
+    ):
         """Build a freetype.Face-like mock for _draw_bdf_text."""
         face = MagicMock()
         face.size.ascender = ascender
@@ -888,33 +942,39 @@ class TestDrawBdfText:
 # Weather icon drawing
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestWeatherIcons:
     """Cover draw_weather_icon and all private drawing helpers."""
 
-    @pytest.mark.parametrize("condition,expected_helper", [
-        ("clear", "_draw_sun"),
-        ("sunny", "_draw_sun"),
-        ("clouds", "_draw_cloud"),
-        ("cloudy", "_draw_cloud"),
-        ("partly cloudy", "_draw_cloud"),
-        ("rain", "_draw_rain"),
-        ("drizzle", "_draw_rain"),
-        ("shower", "_draw_rain"),
-        ("snow", "_draw_snow"),
-        ("sleet", "_draw_snow"),
-        ("hail", "_draw_snow"),
-        ("thunderstorm", "_draw_storm"),
-        ("storm", "_draw_storm"),
-        ("unknown_condition", "_draw_sun"),  # default fallback
-    ])
+    @pytest.mark.parametrize(
+        "condition,expected_helper",
+        [
+            ("clear", "_draw_sun"),
+            ("sunny", "_draw_sun"),
+            ("clouds", "_draw_cloud"),
+            ("cloudy", "_draw_cloud"),
+            ("partly cloudy", "_draw_cloud"),
+            ("rain", "_draw_rain"),
+            ("drizzle", "_draw_rain"),
+            ("shower", "_draw_rain"),
+            ("snow", "_draw_snow"),
+            ("sleet", "_draw_snow"),
+            ("hail", "_draw_snow"),
+            ("thunderstorm", "_draw_storm"),
+            ("storm", "_draw_storm"),
+            ("unknown_condition", "_draw_sun"),  # default fallback
+        ],
+    )
     def test_draw_weather_icon_dispatches_correctly(self, condition, expected_helper, dm_hardware):
         dm, _ = dm_hardware
-        with patch.object(dm, "_draw_sun") as mock_sun, \
-             patch.object(dm, "_draw_cloud") as mock_cloud, \
-             patch.object(dm, "_draw_rain") as mock_rain, \
-             patch.object(dm, "_draw_snow") as mock_snow, \
-             patch.object(dm, "_draw_storm") as mock_storm:
+        with (
+            patch.object(dm, "_draw_sun") as mock_sun,
+            patch.object(dm, "_draw_cloud") as mock_cloud,
+            patch.object(dm, "_draw_rain") as mock_rain,
+            patch.object(dm, "_draw_snow") as mock_snow,
+            patch.object(dm, "_draw_storm") as mock_storm,
+        ):
             dm.draw_weather_icon(condition, x=0, y=0, size=16)
             helper_map = {
                 "_draw_sun": mock_sun,
@@ -997,23 +1057,25 @@ class TestWeatherIcons:
 # draw_text_with_icons
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDrawTextWithIcons:
     """Cover draw_text_with_icons."""
 
     def test_no_icons_calls_draw_text_and_update(self, dm_hardware):
         dm, _ = dm_hardware
-        with patch.object(dm, "draw_text") as mock_dt, \
-             patch.object(dm, "update_display") as mock_upd:
+        with patch.object(dm, "draw_text") as mock_dt, patch.object(dm, "update_display") as mock_upd:
             dm.draw_text_with_icons("Hello", icons=None, x=0, y=0)
         mock_dt.assert_called_once_with("Hello", 0, 0, (255, 255, 255))
         mock_upd.assert_called_once()
 
     def test_with_icons_calls_draw_weather_icon(self, dm_hardware):
         dm, _ = dm_hardware
-        with patch.object(dm, "draw_text"), \
-             patch.object(dm, "draw_weather_icon") as mock_icon, \
-             patch.object(dm, "update_display"):
+        with (
+            patch.object(dm, "draw_text"),
+            patch.object(dm, "draw_weather_icon") as mock_icon,
+            patch.object(dm, "update_display"),
+        ):
             icons = [("rain", 10, 5), ("sun", 50, 5)]
             dm.draw_text_with_icons("Test", icons=icons, x=0, y=0)
         assert mock_icon.call_count == 2
@@ -1024,6 +1086,7 @@ class TestDrawTextWithIcons:
 # ---------------------------------------------------------------------------
 # Scrolling state API
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestScrollingState:
@@ -1076,6 +1139,7 @@ class TestScrollingState:
 # defer_update / process_deferred_updates / _cleanup_expired_deferred_updates
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDeferredUpdates:
     """Cover the deferred update queue logic."""
@@ -1107,9 +1171,7 @@ class TestDeferredUpdates:
         dm, _ = dm_hardware
         dm._scrolling_state["is_scrolling"] = False
         fn = MagicMock()
-        dm._scrolling_state["deferred_updates"].append(
-            {"func": fn, "priority": 0, "timestamp": time.time()}
-        )
+        dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": time.time()})
         dm.process_deferred_updates()
         fn.assert_called_once()
 
@@ -1118,9 +1180,7 @@ class TestDeferredUpdates:
         dm._scrolling_state["is_scrolling"] = True
         dm._scrolling_state["last_scroll_activity"] = time.time()
         fn = MagicMock()
-        dm._scrolling_state["deferred_updates"].append(
-            {"func": fn, "priority": 0, "timestamp": time.time()}
-        )
+        dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": time.time()})
         dm.process_deferred_updates()
         fn.assert_not_called()
 
@@ -1134,9 +1194,7 @@ class TestDeferredUpdates:
         dm, _ = dm_hardware
         dm._scrolling_state["is_scrolling"] = False
         fn = MagicMock(side_effect=RuntimeError("oops"))
-        dm._scrolling_state["deferred_updates"].append(
-            {"func": fn, "priority": 0, "timestamp": time.time()}
-        )
+        dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": time.time()})
         # Should not propagate the exception
         dm.process_deferred_updates()
 
@@ -1144,9 +1202,7 @@ class TestDeferredUpdates:
         dm, _ = dm_hardware
         dm._scrolling_state["is_scrolling"] = False
         fn = MagicMock(side_effect=RuntimeError("fail"))
-        dm._scrolling_state["deferred_updates"].append(
-            {"func": fn, "priority": 0, "timestamp": time.time()}
-        )
+        dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": time.time()})
         dm.process_deferred_updates()
         # Failed recent update should be re-queued
         assert len(dm._scrolling_state["deferred_updates"]) == 1
@@ -1156,9 +1212,7 @@ class TestDeferredUpdates:
         dm._scrolling_state["is_scrolling"] = False
         fn = MagicMock()
         old_ts = time.time() - dm._scrolling_state["deferred_update_ttl"] - 1
-        dm._scrolling_state["deferred_updates"].append(
-            {"func": fn, "priority": 0, "timestamp": old_ts}
-        )
+        dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": old_ts})
         dm.process_deferred_updates()
         fn.assert_not_called()
 
@@ -1167,9 +1221,7 @@ class TestDeferredUpdates:
         dm._scrolling_state["is_scrolling"] = False
         fns = [MagicMock() for _ in range(10)]
         for fn in fns:
-            dm._scrolling_state["deferred_updates"].append(
-                {"func": fn, "priority": 0, "timestamp": time.time()}
-            )
+            dm._scrolling_state["deferred_updates"].append({"func": fn, "priority": 0, "timestamp": time.time()})
         dm.process_deferred_updates()
         called = sum(1 for fn in fns if fn.called)
         assert called == 5
@@ -1201,6 +1253,7 @@ class TestDeferredUpdates:
 # ---------------------------------------------------------------------------
 # format_date_with_ordinal
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestFormatDateWithOrdinal:
@@ -1264,6 +1317,7 @@ class TestFormatDateWithOrdinal:
 # _write_snapshot_if_due
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestWriteSnapshotIfDue:
     """Cover _write_snapshot_if_due branches."""
@@ -1280,13 +1334,15 @@ class TestWriteSnapshotIfDue:
         dm._last_snapshot_ts = 0.0  # never written
         dm._snapshot_path = "/tmp/test_led_preview.png"
 
-        with patch("src.display_manager.os.replace"), \
-             patch("pathlib.Path"), \
-             patch("src.common.permission_utils.ensure_directory_permissions"), \
-             patch("src.common.permission_utils.ensure_file_permissions"), \
-             patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755), \
-             patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644), \
-             patch.object(dm.image, "save") as mock_save:
+        with (
+            patch("src.display_manager.os.replace"),
+            patch("pathlib.Path"),
+            patch("src.common.permission_utils.ensure_directory_permissions"),
+            patch("src.common.permission_utils.ensure_file_permissions"),
+            patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755),
+            patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644),
+            patch.object(dm.image, "save") as mock_save,
+        ):
             dm._write_snapshot_if_due()
 
         mock_save.assert_called()
@@ -1297,13 +1353,15 @@ class TestWriteSnapshotIfDue:
         dm._last_snapshot_ts = 0.0
         dm._snapshot_path = "/tmp/test_led_preview.png"
 
-        with patch("src.display_manager.os.replace", side_effect=OSError("no replace")), \
-             patch("pathlib.Path"), \
-             patch("src.common.permission_utils.ensure_directory_permissions"), \
-             patch("src.common.permission_utils.ensure_file_permissions"), \
-             patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755), \
-             patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644), \
-             patch.object(dm.image, "save") as mock_save:
+        with (
+            patch("src.display_manager.os.replace", side_effect=OSError("no replace")),
+            patch("pathlib.Path"),
+            patch("src.common.permission_utils.ensure_directory_permissions"),
+            patch("src.common.permission_utils.ensure_file_permissions"),
+            patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755),
+            patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644),
+            patch.object(dm.image, "save") as mock_save,
+        ):
             dm._write_snapshot_if_due()
 
         # save called at least once (for direct fallback)
@@ -1322,12 +1380,14 @@ class TestWriteSnapshotIfDue:
         dm._last_snapshot_ts = 0.0
         dm._snapshot_path = "/tmp/led_matrix_preview.png"
 
-        with patch("src.display_manager.os.replace"), \
-             patch("src.common.permission_utils.ensure_directory_permissions") as mock_perm, \
-             patch("src.common.permission_utils.ensure_file_permissions"), \
-             patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755), \
-             patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644), \
-             patch.object(dm.image, "save"):
+        with (
+            patch("src.display_manager.os.replace"),
+            patch("src.common.permission_utils.ensure_directory_permissions") as mock_perm,
+            patch("src.common.permission_utils.ensure_file_permissions"),
+            patch("src.common.permission_utils.get_assets_dir_mode", return_value=0o755),
+            patch("src.common.permission_utils.get_assets_file_mode", return_value=0o644),
+            patch.object(dm.image, "save"),
+        ):
             dm._write_snapshot_if_due()
 
         mock_perm.assert_not_called()
@@ -1336,6 +1396,7 @@ class TestWriteSnapshotIfDue:
 # ---------------------------------------------------------------------------
 # cleanup
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestCleanup:
@@ -1348,12 +1409,14 @@ class TestCleanup:
 
     def test_cleanup_resets_singleton_state(self, dm_hardware):
         from src.display_manager import DisplayManager
+
         dm, _ = dm_hardware
         dm.cleanup()
         assert DisplayManager._instance is None
 
     def test_cleanup_resets_image(self, dm_hardware):
         from src.display_manager import DisplayManager
+
         dm, mat = dm_hardware
         dm.cleanup()
         # Image should be a fresh black one after cleanup
