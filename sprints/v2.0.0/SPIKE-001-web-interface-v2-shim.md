@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Feat
 **Depends on:** [BACK-008](BACK-008-flask-removal-cleanup.md)
@@ -26,13 +26,13 @@ The `web_interface_v2.py` file no longer exists in the repo (it was a legacy mod
 
 ## Acceptance Criteria
 
-- [ ] `web_interface_v2.py` exists at repo root as a compatibility shim
-- [ ] Shim re-exports `increment_api_counter` pointing to the new FastAPI-backed counter
-- [ ] Shim emits `DeprecationWarning` once per session on first import
-- [ ] `src/api/services/api_counter.py` implements the new counter service
-- [ ] `src/base_odds_manager.py` updated to import from new path (with fallback preserved)
-- [ ] `SHIMS.md` created at repo root documenting this shim and its removal phase (Phase 9)
-- [ ] Plugin impact documented: 4 plugins + `base_odds_manager.py`
+- [x] `web_interface_v2.py` exists at repo root as a compatibility shim
+- [x] Shim re-exports `increment_api_counter` pointing to the new FastAPI-backed counter
+- [x] Shim emits `DeprecationWarning` once per session on first import
+- [x] `src/api/services/api_counter.py` implements the new counter service
+- [x] `src/base_odds_manager.py` updated to import from new path (with fallback preserved)
+- [x] `SHIMS.md` created at repo root documenting this shim and its removal phase (Phase 9)
+- [x] Plugin impact documented: 4 plugins + `base_odds_manager.py`
 
 ---
 
