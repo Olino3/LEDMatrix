@@ -2,7 +2,7 @@
 
 > **For Claude:** Use `superpowers:writing-plans` before touching any files. Use `superpowers:test-driven-development` for any logic you add.
 
-**Status:** Open
+**Status:** Done
 **Phase:** v2.0.0 — Backend Modernization
 **Type:** Refactor
 **Depends on:** [BACK-008](BACK-008-flask-removal-cleanup.md)
@@ -25,11 +25,11 @@ This ticket decides their fate: delete them, or migrate them to framework-agnost
 
 ## Acceptance Criteria
 
-- [ ] `src/web_interface/api_helpers.py` either deleted or migrated to remove Flask imports
-- [ ] `src/web_interface/error_handler.py` either deleted or migrated to remove Flask imports
-- [ ] No `from flask` or `import flask` statements remain anywhere in `src/`
-- [ ] If files are kept, they use `fastapi.responses.JSONResponse` or plain dicts instead of `flask.jsonify`
-- [ ] All tests pass
+- [x] `src/web_interface/api_helpers.py` — deleted (dead code, no consumers)
+- [x] `src/web_interface/error_handler.py` — deleted (dead code, no consumers)
+- [x] No `from flask` or `import flask` statements remain anywhere in `src/`
+- [x] Also deleted: `errors.py`, `validators.py`, `logging_config.py` (all dead code)
+- [x] All tests pass (1285 passed)
 
 ---
 
