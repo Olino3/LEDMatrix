@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from src.wifi_manager import WiFiManager
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -30,7 +33,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -39,18 +42,17 @@ def _success(data: Any = None, message: str | None = None):
     return resp
 
 
-def _get_wifi_manager():
-    """Create a WiFiManager instance per request."""
+def _get_wifi_manager() -> "WiFiManager":
     from src.wifi_manager import WiFiManager
 
     return WiFiManager()
 
 
-def _read_wifi_config() -> dict:
-    """Read wifi_config.json, returning defaults if not found."""
+def _read_wifi_config() -> dict[str, Any]:
     if WIFI_CONFIG_PATH.exists():
         try:
-            return json.loads(WIFI_CONFIG_PATH.read_text())
+            data: dict[str, Any] = json.loads(WIFI_CONFIG_PATH.read_text())
+            return data
         except (json.JSONDecodeError, OSError) as exc:
             logger.warning("Failed to read wifi config: %s", exc)
     return {"auto_enable_ap_mode": False}
@@ -65,8 +67,8 @@ def _write_wifi_config(data: dict) -> None:
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/status")
-async def get_wifi_status():
+@router.get("/status", response_model=None)
+async def get_wifi_status() -> dict[str, Any] | JSONResponse:
     """Return current WiFi connection status."""
     try:
         manager = _get_wifi_manager()
@@ -77,8 +79,8 @@ async def get_wifi_status():
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.get("/scan")
-async def scan_networks():
+@router.get("/scan", response_model=None)
+async def scan_networks() -> dict[str, Any] | JSONResponse:
     """Scan for available WiFi networks."""
     try:
         manager = _get_wifi_manager()
@@ -89,8 +91,8 @@ async def scan_networks():
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/connect")
-async def connect_to_network(request: Request):
+@router.post("/connect", response_model=None)
+async def connect_to_network(request: Request) -> dict[str, Any] | JSONResponse:
     """Connect to a WiFi network. Expects {ssid, password}."""
     try:
         body = await request.json()
@@ -114,8 +116,8 @@ async def connect_to_network(request: Request):
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/disconnect")
-async def disconnect_from_network():
+@router.post("/disconnect", response_model=None)
+async def disconnect_from_network() -> dict[str, Any] | JSONResponse:
     """Disconnect from the current WiFi network."""
     try:
         manager = _get_wifi_manager()
@@ -128,8 +130,8 @@ async def disconnect_from_network():
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/ap/enable")
-async def enable_ap_mode():
+@router.post("/ap/enable", response_model=None)
+async def enable_ap_mode() -> dict[str, Any] | JSONResponse:
     """Enable access point mode."""
     try:
         manager = _get_wifi_manager()
@@ -142,8 +144,8 @@ async def enable_ap_mode():
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.post("/ap/disable")
-async def disable_ap_mode():
+@router.post("/ap/disable", response_model=None)
+async def disable_ap_mode() -> dict[str, Any] | JSONResponse:
     """Disable access point mode."""
     try:
         manager = _get_wifi_manager()
@@ -156,8 +158,8 @@ async def disable_ap_mode():
         return _error("WIFI_ERROR", str(exc), 500)
 
 
-@router.get("/ap/auto-enable")
-async def get_ap_auto_enable():
+@router.get("/ap/auto-enable", response_model=None)
+async def get_ap_auto_enable() -> dict[str, Any] | JSONResponse:
     """Read auto_enable_ap_mode setting from wifi_config.json."""
     try:
         config = _read_wifi_config()
@@ -171,8 +173,8 @@ async def get_ap_auto_enable():
         return _error("CONFIG_ERROR", str(exc), 500)
 
 
-@router.post("/ap/auto-enable")
-async def set_ap_auto_enable(request: Request):
+@router.post("/ap/auto-enable", response_model=None)
+async def set_ap_auto_enable(request: Request) -> dict[str, Any] | JSONResponse:
     """Update auto_enable_ap_mode setting in wifi_config.json."""
     try:
         body = await request.json()

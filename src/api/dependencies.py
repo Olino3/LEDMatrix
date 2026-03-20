@@ -5,6 +5,7 @@ Route handlers access them via FastAPI's `Depends()` pattern.
 """
 
 from pathlib import Path
+from typing import cast
 
 from fastapi import FastAPI, Request
 
@@ -77,32 +78,32 @@ def shutdown_services(app: FastAPI) -> None:
 
 
 def get_config_manager(request: Request) -> ConfigManager:
-    return request.app.state.config_manager
+    return cast(ConfigManager, request.app.state.config_manager)
 
 
 def get_plugin_manager(request: Request) -> PluginManager:
-    return request.app.state.plugin_manager
+    return cast(PluginManager, request.app.state.plugin_manager)
 
 
 def get_plugin_store_manager(request: Request) -> PluginStoreManager:
-    return request.app.state.plugin_store_manager
+    return cast(PluginStoreManager, request.app.state.plugin_store_manager)
 
 
 def get_schema_manager(request: Request) -> SchemaManager:
-    return request.app.state.schema_manager
+    return cast(SchemaManager, request.app.state.schema_manager)
 
 
 def get_operation_queue(request: Request) -> PluginOperationQueue:
-    return request.app.state.operation_queue
+    return cast(PluginOperationQueue, request.app.state.operation_queue)
 
 
 def get_plugin_state_manager(request: Request) -> PluginStateManager:
-    return request.app.state.plugin_state_manager
+    return cast(PluginStateManager, request.app.state.plugin_state_manager)
 
 
 def get_operation_history(request: Request) -> OperationHistory:
-    return request.app.state.operation_history
+    return cast(OperationHistory, request.app.state.operation_history)
 
 
 def get_saved_repositories_manager(request: Request) -> SavedRepositoriesManager:
-    return request.app.state.saved_repositories_manager
+    return cast(SavedRepositoriesManager, request.app.state.saved_repositories_manager)

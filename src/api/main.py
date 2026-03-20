@@ -1,11 +1,12 @@
 """FastAPI application factory and lifespan management."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, Response
 
 from src.api.dependencies import init_services, shutdown_services
 from src.api.middleware import register_middleware
@@ -27,7 +28,7 @@ WEB_INTERFACE_DIR = PROJECT_ROOT / "web_interface"
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Initialize and tear down application services."""
     init_services(app)
     yield
@@ -85,14 +86,12 @@ def create_app() -> FastAPI:
 
     # Root redirect to /v3 (matches current Flask behavior)
     @app.get("/", include_in_schema=False)
-    async def root_redirect():
+    async def root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/v3", status_code=307)
 
     # Favicon — return 204 No Content (matches current behavior)
     @app.get("/favicon.ico", include_in_schema=False)
-    async def favicon():
-        from starlette.responses import Response
-
+    async def favicon() -> Response:
         return Response(status_code=204)
 
     return app
