@@ -1,0 +1,16 @@
+<p-toolbar>
+  <ng-template #start>
+    <p-button
+      icon="pi pi-bars"
+      [text]="true"
+      (click)="onToggleSidebar()"
+      aria-label="Toggle sidebar"
+    />
+    <span class="app-title">LEDMatrix</span>
+  </ng-template>
+  <ng-template #end>
+    <span class="status-indicator">
+      <i class="pi pi-circle-fill status-dot"></i>
+    </span>
+  </ng-template>
+</p-toolbar>
