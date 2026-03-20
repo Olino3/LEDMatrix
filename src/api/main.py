@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse, RedirectResponse, Response
 
@@ -91,18 +90,28 @@ def create_app() -> FastAPI:
     async def root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/v3", status_code=307)
 
-    # Favicon — return 204 No Content (matches current behavior)
-    @app.get("/favicon.ico", include_in_schema=False)
-    async def favicon() -> Response:
-        return Response(status_code=204)
-
     # Mount Angular SPA (when built) — single catch-all serves both
     # static assets and index.html fallback for client-side routing.
     # Computed inside create_app() so PROJECT_ROOT can be patched in tests.
     spa_dist_dir = PROJECT_ROOT / "frontend" / "dist" / "ledmatrix" / "browser"
+
+    # Favicon — serve from SPA dist if present, else 204 No Content
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon() -> Response:
+        spa_favicon = spa_dist_dir / "favicon.ico"
+        if spa_favicon.is_file():
+            return FileResponse(spa_favicon, media_type="image/x-icon")
+        return Response(status_code=204)
+
     if spa_dist_dir.is_dir():
+        # Redirect /v3 → /v3/: the SPA catch-all prevents Starlette's redirect_slashes
+        # from kicking in for this path, so we add an explicit redirect.
+        @app.get("/v3", include_in_schema=False)
+        async def v3_redirect() -> RedirectResponse:
+            return RedirectResponse(url="/v3/", status_code=307)
+
         _SPA_RESERVED_PREFIXES = (
-            "/api/",
+            "/api",
             "/docs",
             "/redoc",
             "/static",
@@ -110,6 +119,7 @@ def create_app() -> FastAPI:
             "/openapi.json",
             "/favicon.ico",
         )
+        _resolved_spa_dist_dir = spa_dist_dir.resolve()
 
         @app.get("/{full_path:path}", include_in_schema=False)
         async def spa_catch_all(full_path: str) -> Response:
@@ -120,16 +130,26 @@ def create_app() -> FastAPI:
                     return Response(status_code=404)
 
             # Serve static file if it exists (JS, CSS, images, etc.)
-            if full_path and ".." not in full_path:
-                file_path = spa_dist_dir / full_path
-                if file_path.is_file():
-                    media_type = mimetypes.guess_type(str(file_path))[0]
-                    return FileResponse(file_path, media_type=media_type)
+            # Use path resolution to guard against traversal attacks.
+            if full_path:
+                try:
+                    resolved = (_resolved_spa_dist_dir / full_path).resolve()
+                    resolved.relative_to(_resolved_spa_dist_dir)
+                except ValueError:
+                    return Response(status_code=404)
+                if resolved.is_file():
+                    media_type = mimetypes.guess_type(str(resolved))[0]
+                    return FileResponse(resolved, media_type=media_type)
+                # Return 404 for missing paths with a recognised static-asset MIME type
+                # (e.g. .js, .css, .png). Paths without a known MIME type (including
+                # routes like /user/john.doe) fall through to index.html.
+                if mimetypes.guess_type(full_path)[0] is not None:
+                    return Response(status_code=404)
 
             # Fall back to index.html for Angular client-side routing
-            index_file = spa_dist_dir / "index.html"
+            index_file = _resolved_spa_dist_dir / "index.html"
             if index_file.is_file():
-                return HTMLResponse(content=index_file.read_text())
+                return FileResponse(index_file, media_type="text/html")
             return Response(status_code=404)
 
     return app
