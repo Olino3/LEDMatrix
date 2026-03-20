@@ -49,7 +49,7 @@ bash scripts/dev/run_emulator.sh
 
 ### Running the Web Interface
 ```bash
-python3 web_interface/start.py
+python3 src/api/start.py
 # Accessible at http://localhost:5000
 ```
 
@@ -88,7 +88,7 @@ sudo make remove-matrix    # remove the symlink
 
 ### Entry Points
 - `run.py` → `src/display_controller.py` — Main display loop
-- `web_interface/start.py` → `web_interface/app.py` — Flask web UI (port 5000)
+- `src/api/start.py` → `src/api/main.py` — FastAPI web UI (port 5000, uvicorn)
 
 ### Core Runtime Flow
 `DisplayController` initializes singletons in order: `ConfigManager`/`ConfigService` → `DisplayManager` → `CacheManager` → `FontManager` → `PluginManager`. The display loop cycles through enabled plugins calling `update()` then `display()`.
@@ -104,7 +104,7 @@ Plugins live in `plugins/<plugin-id>/` and inherit from `BasePlugin` (`src/plugi
 ```
 
 ### Web Interface
-Flask app at `web_interface/app.py` with blueprints: `api_v3.py` (REST API) and `pages_v3.py` (HTMX routes). SSE streams: `/api/v3/stream/stats`, `/stream/display`, `/stream/logs`.
+FastAPI app at `src/api/main.py` with routers in `src/api/routers/` (plugins, config, system, store, fonts, wifi, assets, starlark, streams). SSE streams: `/api/v3/stream/stats`, `/api/v3/stream/display`, `/api/v3/stream/logs`. Static files and HTMX templates remain in `web_interface/static/` and `web_interface/templates/` (pending Phase 3 Angular migration).
 
 ### Config System
 - `config/config.json` — all user settings (gitignored, created from `config/config.template.json`)
