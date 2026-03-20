@@ -30,7 +30,19 @@ The distrobox has these build deps pre-installed:
 
 **Need distrobox:** pytest, mypy, `uv sync`, `uv pip install`, running `scripts/matrix_cli.py` with venv deps, any C compilation
 
-**Do NOT need distrobox:** `git`, `gh`, file reads/writes, `grep`, `ls`, basic shell, `python3 -c "import ast; ..."` (syntax checks)
+**Do NOT need distrobox:** `git`, `gh`, file reads/writes, `grep`, `ls`, basic shell, `python3 -c "import ast; ..."` (syntax checks), Angular CLI (`ng build`, `ng serve`, `ng test`, `ng lint`)
+
+### Node.js / Angular CLI
+
+Node.js v24+ and npm are available on both the host and inside the distrobox via NVM (`~/.nvm/`). Angular commands run directly on the host — no distrobox needed.
+
+```bash
+# Angular commands run from frontend/ directory (no distrobox)
+cd frontend && npx ng build          # production build → frontend/dist/ledmatrix/
+cd frontend && npx ng serve          # dev server at http://localhost:4200
+cd frontend && npx ng test           # unit tests
+cd frontend && npx ng lint           # ESLint
+```
 
 ## Commands
 
@@ -51,6 +63,22 @@ bash scripts/dev/run_emulator.sh
 ```bash
 python3 src/api/start.py
 # Accessible at http://localhost:5000
+```
+
+### Angular Frontend Development
+```bash
+# Dev server with API proxy (run alongside FastAPI)
+cd frontend && npx ng serve           # http://localhost:4200, proxies /api/v3 → :5000
+
+# Production build
+cd frontend && npx ng build           # output: frontend/dist/ledmatrix/browser/
+
+# Both servers together (convenience script)
+bash scripts/dev/run_frontend_dev.sh  # starts FastAPI + ng serve
+
+# Lint and test
+cd frontend && npx ng lint
+cd frontend && npx ng test
 ```
 
 ### Testing a Single Plugin (no full display loop)
@@ -104,7 +132,7 @@ Plugins live in `plugins/<plugin-id>/` and inherit from `BasePlugin` (`src/plugi
 ```
 
 ### Web Interface
-FastAPI app at `src/api/main.py` with routers in `src/api/routers/` (plugins, config, system, store, fonts, wifi, assets, starlark, streams). SSE streams: `/api/v3/stream/stats`, `/api/v3/stream/display`, `/api/v3/stream/logs`. Static files and HTMX templates remain in `web_interface/static/` and `web_interface/templates/` (pending Phase 3 Angular migration).
+FastAPI app at `src/api/main.py` with routers in `src/api/routers/` (plugins, config, system, store, fonts, wifi, assets, starlark, streams). SSE streams: `/api/v3/stream/stats`, `/api/v3/stream/display`, `/api/v3/stream/logs`. Static files and HTMX templates remain in `web_interface/static/` and `web_interface/templates/` (being replaced by Angular in Phase 3). Angular 21 SPA in `frontend/` — when built (`frontend/dist/ledmatrix/browser/`), FastAPI serves it via a catch-all route at `/`.
 
 ### Config System
 - `config/config.json` — all user settings (gitignored, created from `config/config.template.json`)
