@@ -10,7 +10,7 @@
 
 | ID | Title | Status | Depends On |
 |---|---|---|---|
-| [FRONT-001](FRONT-001-angular-project-scaffold.md) | Angular project scaffold | Open | -- |
+| [FRONT-001](FRONT-001-angular-project-scaffold.md) | Angular project scaffold | **Done** | -- |
 | [FRONT-002](FRONT-002-primeng-theme-layout.md) | PrimeNG integration and dark theme layout | Open | FRONT-001 |
 | [FRONT-003](FRONT-003-api-service-layer.md) | API service layer and SSE client | Open | FRONT-001 |
 | [FRONT-004](FRONT-004-dashboard-module.md) | Dashboard feature module | Open | FRONT-002, FRONT-003 |
@@ -23,6 +23,9 @@
 | [SPIKE-003](SPIKE-003-operation-history-view.md) | Operation history view | Open | FRONT-007 |
 | [SPIKE-004](SPIKE-004-ci-angular-build.md) | CI pipeline for Angular build and tests | Open | FRONT-001, SPIKE-001 |
 | [SPIKE-005](SPIKE-005-starlark-config-ui.md) | Starlark configuration UI | Open | FRONT-006 |
+| [SPIKE-FRONT-001](SPIKE-FRONT-001-nodejs-in-distrobox.md) | Node.js in distrobox | **Done** | FRONT-001 |
+| [SPIKE-FRONT-002](SPIKE-FRONT-002-angular-environment-switching.md) | Angular environment file switching | **Done** | FRONT-001 |
+| [SPIKE-FRONT-003](SPIKE-FRONT-003-dev-server-proxy-verification.md) | Dev server proxy verification | **Done** | FRONT-001 |
 
 ## Dependency Graph
 
@@ -51,15 +54,15 @@ FRONT-004 + FRONT-005 + FRONT-006 + FRONT-007
 
 ## Definition of Done (Phase 3)
 
-- [ ] Angular 17+ SPA in `frontend/` with PrimeNG component library
+- [x] Angular 21 SPA in `frontend/` with PrimeNG component library
 - [ ] Dark-first theme active by default, responsive layout (mobile/tablet/desktop)
 - [ ] Five lazy-loaded feature modules: Dashboard, Plugins, Settings, Logs, Store
 - [ ] Dashboard shows real-time system metrics and display preview via SSE
 - [ ] Plugin config forms dynamically generated from JSON Schema
 - [ ] All HTMX templates and legacy static files removed
 - [ ] `src/api/routers/pages.py` (HTMX page routes) removed
-- [ ] FastAPI serves the built Angular SPA from `/`
-- [ ] `ng build` produces a valid production bundle
+- [x] FastAPI serves the built Angular SPA from `/`
+- [x] `ng build` produces a valid production bundle
 - [ ] Angular unit tests pass in CI (headless Chrome)
 - [ ] No regressions in backend Python tests
 - [ ] Plugin impact: none (Phase 3 is frontend-only; no plugin API changes)
