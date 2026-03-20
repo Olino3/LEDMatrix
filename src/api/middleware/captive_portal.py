@@ -2,7 +2,7 @@
 
 import subprocess
 
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 
@@ -39,7 +39,7 @@ def _is_ap_mode_active() -> bool:
 class CaptivePortalMiddleware(BaseHTTPMiddleware):
     """Redirect all requests to /v3 when the Pi is in AP mode, except allowed paths."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if _is_ap_mode_active():
             path = request.url.path
             if not any(path.startswith(prefix) for prefix in _ALLOWED_PREFIXES):

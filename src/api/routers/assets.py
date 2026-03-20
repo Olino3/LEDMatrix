@@ -35,7 +35,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -80,11 +80,11 @@ def _file_metadata(path: Path) -> dict[str, Any]:
 # ---- asset upload / delete / list -------------------------------------------
 
 
-@router.post("/assets/upload")
+@router.post("/assets/upload", response_model=None)
 async def upload_assets(
     plugin_id: str = Form(...),
     files: list[UploadFile] = File(...),
-):
+) -> dict[str, Any] | JSONResponse:
     """Upload asset files for a plugin (max 10 files, 5 MB each)."""
     if not plugin_id:
         return _error("INVALID_INPUT", "Missing plugin_id")
@@ -129,8 +129,8 @@ async def upload_assets(
     return _success(data=data, message=f"Uploaded {len(uploaded)} file(s)")
 
 
-@router.post("/assets/delete")
-async def delete_asset(request: Request):
+@router.post("/assets/delete", response_model=None)
+async def delete_asset(request: Request) -> dict[str, Any] | JSONResponse:
     """Delete an asset file. Expects {plugin_id, image_id}."""
     try:
         body = await request.json()
@@ -160,8 +160,8 @@ async def delete_asset(request: Request):
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.get("/assets/list")
-async def list_assets(plugin_id: str = Query(...)):
+@router.get("/assets/list", response_model=None)
+async def list_assets(plugin_id: str = Query(...)) -> dict[str, Any] | JSONResponse:
     """List asset files for a plugin."""
     if not plugin_id:
         return _error("INVALID_INPUT", "Missing plugin_id query parameter")
@@ -181,8 +181,8 @@ async def list_assets(plugin_id: str = Query(...)):
 # ---- static file serving ----------------------------------------------------
 
 
-@router.get("/{plugin_id}/static/{file_path:path}")
-async def serve_plugin_static(plugin_id: str, file_path: str):
+@router.get("/{plugin_id}/static/{file_path:path}", response_model=None)
+async def serve_plugin_static(plugin_id: str, file_path: str) -> FileResponse | JSONResponse:
     """Serve a static file from a plugin's directory."""
     plugin_dir = _resolve_plugin_dir(plugin_id)
     if plugin_dir is None:
@@ -202,10 +202,10 @@ async def serve_plugin_static(plugin_id: str, file_path: str):
 # ---- of-the-day JSON upload / delete ----------------------------------------
 
 
-@router.post("/of-the-day/json/upload")
+@router.post("/of-the-day/json/upload", response_model=None)
 async def upload_of_the_day_json(
     files: UploadFile = File(...),
-):
+) -> dict[str, Any] | JSONResponse:
     """Upload a JSON data file for the of-the-day plugin."""
     if not files.filename:
         return _error("INVALID_INPUT", "No filename provided")
@@ -235,8 +235,8 @@ async def upload_of_the_day_json(
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.post("/of-the-day/json/delete")
-async def delete_of_the_day_json(request: Request):
+@router.post("/of-the-day/json/delete", response_model=None)
+async def delete_of_the_day_json(request: Request) -> dict[str, Any] | JSONResponse:
     """Delete a JSON data file. Expects {file_id}."""
     try:
         body = await request.json()
@@ -267,10 +267,10 @@ async def delete_of_the_day_json(request: Request):
 # ---- calendar credentials ---------------------------------------------------
 
 
-@router.post("/calendar/upload-credentials")
+@router.post("/calendar/upload-credentials", response_model=None)
 async def upload_calendar_credentials(
     file: UploadFile = File(...),
-):
+) -> dict[str, Any] | JSONResponse:
     """Upload Google Calendar credentials JSON file."""
     if not file.filename:
         return _error("INVALID_INPUT", "No filename provided")
@@ -302,8 +302,8 @@ async def upload_calendar_credentials(
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.get("/calendar/list-calendars")
-async def list_calendars():
+@router.get("/calendar/list-calendars", response_model=None)
+async def list_calendars() -> dict[str, Any] | JSONResponse:
     """List Google calendars using stored credentials."""
     creds_path = PROJECT_ROOT / "config" / "google_calendar_credentials.json"
     if not creds_path.exists():

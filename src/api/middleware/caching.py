@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -10,7 +10,7 @@ from starlette.responses import Response
 class CachingMiddleware(BaseHTTPMiddleware):
     """Set cache headers matching the existing Flask behaviour."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
         path = request.url.path
 

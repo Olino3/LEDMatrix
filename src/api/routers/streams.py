@@ -12,7 +12,7 @@ import io
 import json
 import os
 import time
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
@@ -20,7 +20,7 @@ from sse_starlette.sse import EventSourceResponse
 try:
     import psutil
 except ImportError:  # pragma: no cover
-    psutil = None  # type: ignore[assignment]
+    psutil = None
 
 router = APIRouter(prefix="/stream", tags=["streams"])
 
@@ -87,7 +87,7 @@ async def _generate_stats_event() -> dict:
 
 
 async def _generate_display_event(
-    config_manager=None,
+    config_manager: Any = None,
     _last_modified: list | None = None,
 ) -> dict:
     """Produce a single display-preview dict."""
@@ -181,7 +181,7 @@ async def _stats_stream() -> AsyncGenerator[str, None]:
         return
 
 
-async def _display_stream(config_manager=None) -> AsyncGenerator[str, None]:
+async def _display_stream(config_manager: Any = None) -> AsyncGenerator[str, None]:
     """Infinite async generator for display preview."""
     last_modified: list[float | None] = [None]
     try:
@@ -213,19 +213,19 @@ async def _logs_stream() -> AsyncGenerator[str, None]:
 
 
 @router.get("/stats")
-async def stream_stats():
+async def stream_stats() -> EventSourceResponse:
     """SSE stream of system status metrics (every 10 s)."""
     return EventSourceResponse(_stats_stream())
 
 
 @router.get("/display")
-async def stream_display(request: Request):
+async def stream_display(request: Request) -> EventSourceResponse:
     """SSE stream of display preview snapshots (~2 Hz)."""
     config_mgr = getattr(request.app.state, "config_manager", None)
     return EventSourceResponse(_display_stream(config_manager=config_mgr))
 
 
 @router.get("/logs")
-async def stream_logs():
+async def stream_logs() -> EventSourceResponse:
     """SSE stream of journalctl log entries (every 5 s)."""
     return EventSourceResponse(_logs_stream())

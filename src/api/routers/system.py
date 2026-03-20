@@ -37,7 +37,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -107,8 +107,8 @@ def _get_git_version() -> str:
 # ---- system routes ----------------------------------------------------------
 
 
-@router.get("/system/status")
-async def get_system_status():
+@router.get("/system/status", response_model=None)
+async def get_system_status() -> dict[str, Any] | JSONResponse:
     """Return system metrics (CPU, memory, disk, temp)."""
     try:
         import psutil
@@ -150,8 +150,8 @@ async def get_system_status():
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.get("/system/version")
-async def get_system_version():
+@router.get("/system/version", response_model=None)
+async def get_system_version() -> dict[str, Any]:
     """Return version info."""
     return _success(
         data={
@@ -162,8 +162,8 @@ async def get_system_version():
     )
 
 
-@router.post("/system/action")
-async def execute_system_action(request: Request):
+@router.post("/system/action", response_model=None)
+async def execute_system_action(request: Request) -> dict[str, Any] | JSONResponse:
     """Execute a system action (start/stop/restart service, reboot, git pull)."""
     try:
         body = await request.json()
@@ -207,7 +207,7 @@ async def execute_system_action(request: Request):
     )
 
 
-async def _handle_git_pull():
+async def _handle_git_pull() -> dict[str, Any] | JSONResponse:
     """Run git pull with auto-stash for local changes."""
     # Check for local changes
     rc, stdout, _ = await _run_cmd(
@@ -251,11 +251,11 @@ async def _handle_git_pull():
 # ---- health -----------------------------------------------------------------
 
 
-@router.get("/health")
+@router.get("/health", response_model=None)
 async def get_health(
     config_manager: ConfigManager = Depends(get_config_manager),
     plugin_manager: PluginManager = Depends(get_plugin_manager),
-):
+) -> dict[str, Any]:
     """Comprehensive health check."""
     checks: dict[str, Any] = {}
     all_healthy = True
@@ -310,8 +310,8 @@ async def get_health(
 # ---- logs -------------------------------------------------------------------
 
 
-@router.get("/logs")
-async def get_logs():
+@router.get("/logs", response_model=None)
+async def get_logs() -> dict[str, Any] | JSONResponse:
     """Fetch recent ledmatrix service logs via journalctl."""
     rc, stdout, stderr = await _run_cmd(
         "sudo",
@@ -333,15 +333,15 @@ async def get_logs():
 # ---- errors -----------------------------------------------------------------
 
 
-def _get_aggregator():
+def _get_aggregator() -> Any:
     """Lazy import to avoid circular deps."""
     from src.error_aggregator import get_error_aggregator
 
     return get_error_aggregator()
 
 
-@router.get("/errors/summary")
-async def get_error_summary():
+@router.get("/errors/summary", response_model=None)
+async def get_error_summary() -> dict[str, Any] | JSONResponse:
     """Return error aggregator summary."""
     try:
         aggregator = _get_aggregator()
@@ -350,8 +350,8 @@ async def get_error_summary():
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.get("/errors/plugin/{plugin_id}")
-async def get_plugin_errors(plugin_id: str):
+@router.get("/errors/plugin/{plugin_id}", response_model=None)
+async def get_plugin_errors(plugin_id: str) -> dict[str, Any] | JSONResponse:
     """Return error health for a specific plugin."""
     try:
         aggregator = _get_aggregator()
@@ -360,8 +360,8 @@ async def get_plugin_errors(plugin_id: str):
         return _error("SYSTEM_ERROR", str(exc), 500)
 
 
-@router.post("/errors/clear")
-async def clear_errors(request: Request):
+@router.post("/errors/clear", response_model=None)
+async def clear_errors(request: Request) -> dict[str, Any] | JSONResponse:
     """Clear error records older than max_age_hours."""
     try:
         body = await request.json()

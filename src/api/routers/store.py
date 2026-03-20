@@ -36,7 +36,7 @@ def _error(error_code: str, message: str, status: int = 400) -> JSONResponse:
     )
 
 
-def _success(data: Any = None, message: str | None = None):
+def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
     resp: dict[str, Any] = {"status": "success"}
     if data is not None:
         resp["data"] = data
@@ -48,14 +48,14 @@ def _success(data: Any = None, message: str | None = None):
 # ---- store browsing ---------------------------------------------------------
 
 
-@router.get("/store/list")
+@router.get("/store/list", response_model=None)
 async def list_store_plugins(
     query: str = Query("", description="Search query"),
     category: str = Query("", description="Filter by category"),
     tags: str = Query("", description="Comma-separated tags"),
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """List available plugins from the store registry."""
     try:
         tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
@@ -73,10 +73,10 @@ async def list_store_plugins(
         return _error("STORE_LIST_FAILED", str(exc), 500)
 
 
-@router.get("/store/github-status")
+@router.get("/store/github-status", response_model=None)
 async def get_github_auth_status(
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Check GitHub API authentication status and rate limit."""
     try:
         token = store_manager.github_token
@@ -117,11 +117,11 @@ async def get_github_auth_status(
         return _error("GITHUB_STATUS_FAILED", str(exc), 500)
 
 
-@router.post("/store/refresh")
+@router.post("/store/refresh", response_model=None)
 async def refresh_store(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Force refresh the plugin registry from GitHub."""
     try:
         body = await request.json()
@@ -143,13 +143,13 @@ async def refresh_store(
 # ---- install / update / uninstall ------------------------------------------
 
 
-@router.post("/install")
+@router.post("/install", response_model=None)
 async def install_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
     state_manager: PluginStateManager = Depends(get_plugin_state_manager),
     operation_queue: PluginOperationQueue = Depends(get_operation_queue),
-):
+) -> dict[str, Any] | JSONResponse:
     """Install a plugin from the official registry."""
     try:
         body = await request.json()
@@ -176,12 +176,12 @@ async def install_plugin(
         return _error("INSTALL_FAILED", str(exc), 500)
 
 
-@router.post("/install-from-url")
+@router.post("/install-from-url", response_model=None)
 async def install_from_url(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
     state_manager: PluginStateManager = Depends(get_plugin_state_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Install a plugin from a custom GitHub URL."""
     try:
         body = await request.json()
@@ -212,12 +212,12 @@ async def install_from_url(
         return _error("INSTALL_FAILED", str(exc), 500)
 
 
-@router.post("/update")
+@router.post("/update", response_model=None)
 async def update_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
     state_manager: PluginStateManager = Depends(get_plugin_state_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Update an installed plugin to the latest version."""
     try:
         body = await request.json()
@@ -242,13 +242,13 @@ async def update_plugin(
         return _error("UPDATE_FAILED", str(exc), 500)
 
 
-@router.post("/uninstall")
+@router.post("/uninstall", response_model=None)
 async def uninstall_plugin(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
     state_manager: PluginStateManager = Depends(get_plugin_state_manager),
     plugin_manager: PluginManager = Depends(get_plugin_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Uninstall a plugin."""
     try:
         body = await request.json()
@@ -277,11 +277,11 @@ async def uninstall_plugin(
 # ---- registry from URL ------------------------------------------------------
 
 
-@router.post("/registry-from-url")
+@router.post("/registry-from-url", response_model=None)
 async def get_registry_from_url(
     request: Request,
     store_manager: PluginStoreManager = Depends(get_plugin_store_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Fetch a plugin registry from a custom GitHub repo URL."""
     try:
         body = await request.json()
@@ -308,10 +308,10 @@ async def get_registry_from_url(
 # ---- saved repositories ----------------------------------------------------
 
 
-@router.get("/saved-repositories")
+@router.get("/saved-repositories", response_model=None)
 async def list_saved_repositories(
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Return all saved repositories."""
     try:
         repos = saved_repos.get_all()
@@ -320,11 +320,11 @@ async def list_saved_repositories(
         return _error("REPOS_FETCH_FAILED", str(exc), 500)
 
 
-@router.post("/saved-repositories")
+@router.post("/saved-repositories", response_model=None)
 async def add_saved_repository(
     request: Request,
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Add a saved repository."""
     try:
         body = await request.json()
@@ -345,11 +345,11 @@ async def add_saved_repository(
         return _error("REPO_ADD_FAILED", str(exc), 500)
 
 
-@router.delete("/saved-repositories")
+@router.delete("/saved-repositories", response_model=None)
 async def remove_saved_repository(
     request: Request,
     saved_repos: SavedRepositoriesManager = Depends(get_saved_repositories_manager),
-):
+) -> dict[str, Any] | JSONResponse:
     """Remove a saved repository."""
     try:
         body = await request.json()
