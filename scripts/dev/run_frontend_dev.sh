@@ -14,12 +14,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+FASTAPI_PID=""
+NG_PID=""
+
 cleanup() {
     echo ""
     echo "Stopping servers..."
-    # Kill all child processes
-    kill 0 2>/dev/null || true
-    wait 2>/dev/null || true
+    for pid in "${FASTAPI_PID:-}" "${NG_PID:-}"; do
+        if [[ -n "$pid" ]]; then
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+        fi
+    done
     echo "Done."
 }
 trap cleanup EXIT INT TERM

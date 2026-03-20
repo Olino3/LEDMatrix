@@ -60,7 +60,9 @@ class TestSPAMount:
         app = self._create_app_with_spa(tmp_path)
         client = TestClient(app)
 
-        response = client.get("/api/v3/system/health")
+        response = client.get("/api/v3/system/status")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("application/json")
         assert "Angular App" not in response.text
 
     def test_spa_catch_all_does_not_intercept_docs(self, tmp_path: Path):
@@ -75,13 +77,18 @@ class TestSPAMount:
         assert "Angular App" not in response.text
 
     def test_spa_catch_all_does_not_intercept_v3(self, tmp_path: Path):
-        """HTMX pages at /v3/ must NOT be intercepted by the SPA catch-all."""
+        """HTMX pages at /v3/ must NOT be intercepted by the SPA catch-all.
+
+        /v3 (no trailing slash) must redirect to /v3/ — the explicit v3_redirect
+        route ensures redirect_slashes works even when the SPA catch-all is mounted.
+        """
         from fastapi.testclient import TestClient
 
         app = self._create_app_with_spa(tmp_path)
         client = TestClient(app)
 
-        response = client.get("/v3")
+        response = client.get("/v3", follow_redirects=False)
+        assert response.status_code == 307
         assert "Angular App" not in response.text
 
     def test_no_spa_mount_when_dist_missing(self, tmp_path: Path):
@@ -96,3 +103,24 @@ class TestSPAMount:
         # Root should still redirect to /v3
         response = client.get("/", follow_redirects=False)
         assert response.status_code == 307
+
+    def test_spa_catch_all_does_not_intercept_bare_api(self, tmp_path: Path):
+        """Bare /api path must NOT be intercepted by the SPA catch-all."""
+        from fastapi.testclient import TestClient
+
+        app = self._create_app_with_spa(tmp_path)
+        client = TestClient(app)
+
+        response = client.get("/api")
+        assert "Angular App" not in response.text
+
+    def test_spa_missing_asset_returns_404(self, tmp_path: Path):
+        """Requests for missing files with extensions must return 404, not index.html."""
+        from fastapi.testclient import TestClient
+
+        app = self._create_app_with_spa(tmp_path)
+        client = TestClient(app)
+
+        response = client.get("/missing.js")
+        assert response.status_code == 404
+        assert "Angular App" not in response.text
