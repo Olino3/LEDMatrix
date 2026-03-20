@@ -83,6 +83,7 @@ class TestPartials:
         "general", "display", "durations", "schedule",
         "plugins", "fonts", "logs", "raw-json",
         "wifi", "cache", "operation-history",
+        "weather", "stocks",
     ])
     def test_all_partials_return_200(self, partial):
         client = _make_client()
