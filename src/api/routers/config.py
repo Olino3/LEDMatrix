@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from src.api.dependencies import get_config_manager, get_plugin_store_manager
+from src.api.models.common import API_RESPONSES
 from src.config_manager import ConfigManager
 from src.logging_config import get_logger
 from src.plugin_system.store_manager import PluginStoreManager
@@ -84,7 +85,7 @@ def _success(data: Any = None, message: str | None = None) -> dict[str, Any]:
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/main", response_model=None)
+@router.get("/main", response_model=None, responses=API_RESPONSES)
 async def get_main_config(
     config_manager: ConfigManager = Depends(get_config_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -96,7 +97,7 @@ async def get_main_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/main", response_model=None)
+@router.post("/main", response_model=None, responses=API_RESPONSES)
 async def save_main_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
@@ -125,7 +126,7 @@ async def save_main_config(
     return _success(message="Configuration saved successfully")
 
 
-@router.get("/schedule", response_model=None)
+@router.get("/schedule", response_model=None, responses=API_RESPONSES)
 async def get_schedule_config(
     config_manager: ConfigManager = Depends(get_config_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -137,7 +138,7 @@ async def get_schedule_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/schedule", response_model=None)
+@router.post("/schedule", response_model=None, responses=API_RESPONSES)
 async def save_schedule_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
@@ -194,7 +195,7 @@ async def save_schedule_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.get("/dim-schedule", response_model=None)
+@router.get("/dim-schedule", response_model=None, responses=API_RESPONSES)
 async def get_dim_schedule_config(
     config_manager: ConfigManager = Depends(get_config_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -214,7 +215,7 @@ async def get_dim_schedule_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/dim-schedule", response_model=None)
+@router.post("/dim-schedule", response_model=None, responses=API_RESPONSES)
 async def save_dim_schedule_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
@@ -284,7 +285,7 @@ async def save_dim_schedule_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.get("/secrets", response_model=None)
+@router.get("/secrets", response_model=None, responses=API_RESPONSES)
 async def get_secrets_config(
     config_manager: ConfigManager = Depends(get_config_manager),
 ) -> dict[str, Any] | JSONResponse:
@@ -296,7 +297,7 @@ async def get_secrets_config(
         return _error("CONFIG_LOAD_FAILED", str(exc), 500)
 
 
-@router.post("/raw/main", response_model=None)
+@router.post("/raw/main", response_model=None, responses=API_RESPONSES)
 async def save_raw_main_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),
@@ -314,7 +315,7 @@ async def save_raw_main_config(
         return _error("CONFIG_SAVE_FAILED", str(exc), 500)
 
 
-@router.post("/raw/secrets", response_model=None)
+@router.post("/raw/secrets", response_model=None, responses=API_RESPONSES)
 async def save_raw_secrets_config(
     request: Request,
     config_manager: ConfigManager = Depends(get_config_manager),

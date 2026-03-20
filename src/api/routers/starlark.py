@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
 
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.logging_config import get_logger
 
 logger = get_logger("api.starlark")
@@ -117,7 +118,7 @@ async def _run_cmd(
 # ---- routes -----------------------------------------------------------------
 
 
-@router.get("/status", response_model=None)
+@router.get("/status", response_model=None, responses=API_RESPONSES)
 async def get_starlark_status() -> dict[str, Any] | JSONResponse:
     """Check if pixlet is available and count installed apps."""
     pixlet_available = _is_pixlet_available()
@@ -142,7 +143,7 @@ async def get_starlark_status() -> dict[str, Any] | JSONResponse:
     )
 
 
-@router.get("/apps", response_model=None)
+@router.get("/apps", response_model=None, responses=API_RESPONSES_WITH_404)
 async def list_apps() -> dict[str, Any] | JSONResponse:
     """List all starlark apps from the manifest."""
     if not STARLARK_DIR.exists():
@@ -158,7 +159,7 @@ async def list_apps() -> dict[str, Any] | JSONResponse:
     return _success(data={"apps": apps})
 
 
-@router.get("/apps/{app_id}", response_model=None)
+@router.get("/apps/{app_id}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_app(app_id: str) -> dict[str, Any] | JSONResponse:
     """Get details for a single starlark app."""
     if not STARLARK_DIR.exists():
@@ -172,7 +173,7 @@ async def get_app(app_id: str) -> dict[str, Any] | JSONResponse:
     return _success(data=detail)
 
 
-@router.post("/upload", response_model=None)
+@router.post("/upload", response_model=None, responses=API_RESPONSES_WITH_404)
 async def upload_app(
     file: UploadFile = File(...),
     name: str = Form(...),
@@ -218,7 +219,7 @@ async def upload_app(
         return _error("STARLARK_ERROR", str(exc), 500)
 
 
-@router.delete("/apps/{app_id}", response_model=None)
+@router.delete("/apps/{app_id}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def delete_app(app_id: str) -> dict[str, Any] | JSONResponse:
     """Remove a starlark app and its files."""
     if not STARLARK_DIR.exists():
@@ -241,7 +242,7 @@ async def delete_app(app_id: str) -> dict[str, Any] | JSONResponse:
     return _success(message=f"App '{app_id}' deleted")
 
 
-@router.get("/apps/{app_id}/config", response_model=None)
+@router.get("/apps/{app_id}/config", response_model=None, responses=API_RESPONSES_WITH_404)
 async def get_app_config(app_id: str) -> dict[str, Any] | JSONResponse:
     """Read a starlark app's config JSON."""
     if not STARLARK_DIR.exists():
@@ -258,7 +259,7 @@ async def get_app_config(app_id: str) -> dict[str, Any] | JSONResponse:
         return _error("STARLARK_ERROR", f"Failed to read config: {exc}", 500)
 
 
-@router.put("/apps/{app_id}/config", response_model=None)
+@router.put("/apps/{app_id}/config", response_model=None, responses=API_RESPONSES_WITH_404)
 async def update_app_config(app_id: str, request: Request) -> dict[str, Any] | JSONResponse:
     """Write a starlark app's config JSON."""
     if not STARLARK_DIR.exists():
@@ -280,7 +281,7 @@ async def update_app_config(app_id: str, request: Request) -> dict[str, Any] | J
         return _error("STARLARK_ERROR", str(exc), 500)
 
 
-@router.post("/apps/{app_id}/toggle", response_model=None)
+@router.post("/apps/{app_id}/toggle", response_model=None, responses=API_RESPONSES_WITH_404)
 async def toggle_app(app_id: str) -> dict[str, Any] | JSONResponse:
     """Toggle the enabled state of a starlark app in the manifest."""
     if not STARLARK_DIR.exists():
@@ -300,7 +301,7 @@ async def toggle_app(app_id: str) -> dict[str, Any] | JSONResponse:
     )
 
 
-@router.post("/apps/{app_id}/render", response_model=None)
+@router.post("/apps/{app_id}/render", response_model=None, responses=API_RESPONSES_WITH_404)
 async def render_app(app_id: str) -> dict[str, Any] | JSONResponse:
     """Trigger a render of a starlark app via pixlet."""
     if not STARLARK_DIR.exists():
@@ -336,7 +337,7 @@ async def render_app(app_id: str) -> dict[str, Any] | JSONResponse:
         return _error("STARLARK_ERROR", str(exc), 500)
 
 
-@router.get("/repository/browse", response_model=None)
+@router.get("/repository/browse", response_model=None, responses=API_RESPONSES)
 async def browse_repository() -> dict[str, Any] | JSONResponse:
     """Fetch the app catalog from the tronbyte repository."""
     try:
@@ -355,7 +356,7 @@ async def browse_repository() -> dict[str, Any] | JSONResponse:
         return _error("REPOSITORY_ERROR", str(exc), 502)
 
 
-@router.post("/repository/install", response_model=None)
+@router.post("/repository/install", response_model=None, responses=API_RESPONSES_WITH_404)
 async def install_from_repository(request: Request) -> dict[str, Any] | JSONResponse:
     """Install an app from the tronbyte repository."""
     if not STARLARK_DIR.exists():
@@ -417,7 +418,7 @@ async def install_from_repository(request: Request) -> dict[str, Any] | JSONResp
         return _error("REPOSITORY_ERROR", str(exc), 502)
 
 
-@router.get("/repository/categories", response_model=None)
+@router.get("/repository/categories", response_model=None, responses=API_RESPONSES)
 async def list_repository_categories() -> dict[str, Any] | JSONResponse:
     """List available categories from the tronbyte repository."""
     try:
@@ -446,7 +447,7 @@ async def list_repository_categories() -> dict[str, Any] | JSONResponse:
         return _error("REPOSITORY_ERROR", str(exc), 502)
 
 
-@router.post("/install-pixlet", response_model=None)
+@router.post("/install-pixlet", response_model=None, responses=API_RESPONSES)
 async def install_pixlet() -> dict[str, Any] | JSONResponse:
     """Install the pixlet binary by downloading the latest release."""
     if _is_pixlet_available():

@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 
+from src.api.models.common import API_RESPONSES, API_RESPONSES_WITH_404
 from src.logging_config import get_logger
 
 logger = get_logger("api.assets")
@@ -80,7 +81,7 @@ def _file_metadata(path: Path) -> dict[str, Any]:
 # ---- asset upload / delete / list -------------------------------------------
 
 
-@router.post("/assets/upload", response_model=None)
+@router.post("/assets/upload", response_model=None, responses=API_RESPONSES)
 async def upload_assets(
     plugin_id: str = Form(...),
     files: list[UploadFile] = File(...),
@@ -129,7 +130,7 @@ async def upload_assets(
     return _success(data=data, message=f"Uploaded {len(uploaded)} file(s)")
 
 
-@router.post("/assets/delete", response_model=None)
+@router.post("/assets/delete", response_model=None, responses=API_RESPONSES_WITH_404)
 async def delete_asset(request: Request) -> dict[str, Any] | JSONResponse:
     """Delete an asset file. Expects {plugin_id, image_id}."""
     try:
@@ -160,7 +161,7 @@ async def delete_asset(request: Request) -> dict[str, Any] | JSONResponse:
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.get("/assets/list", response_model=None)
+@router.get("/assets/list", response_model=None, responses=API_RESPONSES)
 async def list_assets(plugin_id: str = Query(...)) -> dict[str, Any] | JSONResponse:
     """List asset files for a plugin."""
     if not plugin_id:
@@ -181,7 +182,7 @@ async def list_assets(plugin_id: str = Query(...)) -> dict[str, Any] | JSONRespo
 # ---- static file serving ----------------------------------------------------
 
 
-@router.get("/{plugin_id}/static/{file_path:path}", response_model=None)
+@router.get("/{plugin_id}/static/{file_path:path}", response_model=None, responses=API_RESPONSES_WITH_404)
 async def serve_plugin_static(plugin_id: str, file_path: str) -> FileResponse | JSONResponse:
     """Serve a static file from a plugin's directory."""
     plugin_dir = _resolve_plugin_dir(plugin_id)
@@ -202,7 +203,7 @@ async def serve_plugin_static(plugin_id: str, file_path: str) -> FileResponse | 
 # ---- of-the-day JSON upload / delete ----------------------------------------
 
 
-@router.post("/of-the-day/json/upload", response_model=None)
+@router.post("/of-the-day/json/upload", response_model=None, responses=API_RESPONSES)
 async def upload_of_the_day_json(
     files: UploadFile = File(...),
 ) -> dict[str, Any] | JSONResponse:
@@ -235,7 +236,7 @@ async def upload_of_the_day_json(
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.post("/of-the-day/json/delete", response_model=None)
+@router.post("/of-the-day/json/delete", response_model=None, responses=API_RESPONSES_WITH_404)
 async def delete_of_the_day_json(request: Request) -> dict[str, Any] | JSONResponse:
     """Delete a JSON data file. Expects {file_id}."""
     try:
@@ -267,7 +268,7 @@ async def delete_of_the_day_json(request: Request) -> dict[str, Any] | JSONRespo
 # ---- calendar credentials ---------------------------------------------------
 
 
-@router.post("/calendar/upload-credentials", response_model=None)
+@router.post("/calendar/upload-credentials", response_model=None, responses=API_RESPONSES)
 async def upload_calendar_credentials(
     file: UploadFile = File(...),
 ) -> dict[str, Any] | JSONResponse:
@@ -302,7 +303,7 @@ async def upload_calendar_credentials(
         return _error("ASSET_ERROR", str(exc), 500)
 
 
-@router.get("/calendar/list-calendars", response_model=None)
+@router.get("/calendar/list-calendars", response_model=None, responses=API_RESPONSES_WITH_404)
 async def list_calendars() -> dict[str, Any] | JSONResponse:
     """List Google calendars using stored credentials."""
     creds_path = PROJECT_ROOT / "config" / "google_calendar_credentials.json"

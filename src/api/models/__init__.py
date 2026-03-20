@@ -1,6 +1,12 @@
 """Pydantic request/response models for the FastAPI application."""
 
-from src.api.models.common import ErrorResponse, PaginatedResponse, SuccessResponse
+from src.api.models.common import (
+    API_RESPONSES,
+    API_RESPONSES_WITH_404,
+    ErrorResponse,
+    PaginatedResponse,
+    SuccessResponse,
+)
 from src.api.models.config import (
     ConfigUpdateRequest,
     DisplayHardwareConfig,
@@ -20,6 +26,8 @@ from src.api.models.system import (
 )
 
 __all__ = [
+    "API_RESPONSES",
+    "API_RESPONSES_WITH_404",
     "ConfigUpdateRequest",
     "DisplayHardwareConfig",
     "ErrorResponse",

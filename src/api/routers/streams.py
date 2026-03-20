@@ -26,6 +26,10 @@ except ImportError:  # pragma: no cover
 
 router = APIRouter(prefix="/stream", tags=["streams"])
 
+SSE_RESPONSES: dict[int | str, dict[str, Any]] = {
+    200: {"description": "Server-Sent Event stream", "content": {"text/event-stream": {}}},
+}
+
 SNAPSHOT_PATH = "/tmp/led_matrix_preview.png"
 
 
@@ -214,14 +218,14 @@ async def _logs_stream() -> AsyncGenerator[str, None]:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/stats")
+@router.get("/stats", responses=SSE_RESPONSES)
 @limiter.limit("20/minute")
 async def stream_stats(request: Request) -> EventSourceResponse:
     """SSE stream of system status metrics (every 10 s)."""
     return EventSourceResponse(_stats_stream())
 
 
-@router.get("/display")
+@router.get("/display", responses=SSE_RESPONSES)
 @limiter.limit("20/minute")
 async def stream_display(request: Request) -> EventSourceResponse:
     """SSE stream of display preview snapshots (~2 Hz)."""
@@ -229,7 +233,7 @@ async def stream_display(request: Request) -> EventSourceResponse:
     return EventSourceResponse(_display_stream(config_manager=config_mgr))
 
 
-@router.get("/logs")
+@router.get("/logs", responses=SSE_RESPONSES)
 @limiter.limit("20/minute")
 async def stream_logs(request: Request) -> EventSourceResponse:
     """SSE stream of journalctl log entries (every 5 s)."""
