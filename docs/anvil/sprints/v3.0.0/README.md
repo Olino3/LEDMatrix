@@ -11,11 +11,14 @@
 | ID | Title | Status | Depends On |
 |---|---|---|---|
 | [FRONT-001](FRONT-001-angular-project-scaffold.md) | Angular project scaffold | **Done** | -- |
-| [FRONT-002](FRONT-002-primeng-theme-layout.md) | PrimeNG integration and dark theme layout | Open | FRONT-001 |
-| [FRONT-003](FRONT-003-api-service-layer.md) | API service layer and SSE client | Open | FRONT-001 |
+| [FRONT-002](FRONT-002-primeng-theme-layout.md) | PrimeNG integration and dark theme layout | **Done** | FRONT-001 |
+| [FRONT-003](FRONT-003-api-service-layer.md) | API service layer and SSE client | **Done** | FRONT-001 |
+| [FRONT-003a](FRONT-003a-font-service.md) | Font service | Open | FRONT-003 |
+| [FRONT-003b](FRONT-003b-wifi-service.md) | WiFi service | Open | FRONT-003 |
+| [FRONT-003c](FRONT-003c-starlark-service.md) | Starlark service | Open | FRONT-003 |
 | [FRONT-004](FRONT-004-dashboard-module.md) | Dashboard feature module | Open | FRONT-002, FRONT-003 |
-| [FRONT-005](FRONT-005-plugins-module.md) | Plugins feature module | Open | FRONT-002, FRONT-003 |
-| [FRONT-006](FRONT-006-settings-module.md) | Settings feature module | Open | FRONT-002, FRONT-003 |
+| [FRONT-005](FRONT-005-plugins-module.md) | Plugins feature module | Open | FRONT-002, FRONT-003, FRONT-003c |
+| [FRONT-006](FRONT-006-settings-module.md) | Settings feature module | Open | FRONT-002, FRONT-003, FRONT-003a, FRONT-003b |
 | [FRONT-007](FRONT-007-logs-store-modules.md) | Logs and Store feature modules | Open | FRONT-002, FRONT-003 |
 | [FRONT-008](FRONT-008-htmx-removal-cleanup.md) | HTMX removal and legacy frontend cleanup | Open | FRONT-004, FRONT-005, FRONT-006, FRONT-007 |
 | [SPIKE-001](SPIKE-001-angular-unit-test-setup.md) | Angular unit test setup | Open | FRONT-001 |
@@ -40,6 +43,12 @@ FRONT-001 (Angular scaffold)
   |     +-- FRONT-007 (Logs + Store modules)
   |           +-- SPIKE-003 (Operation history)
   +-- FRONT-003 (API service layer + SSE)
+  |     +-- FRONT-003a (Font service)
+  |     |     +-- FRONT-006 (Settings module)
+  |     +-- FRONT-003b (WiFi service)
+  |     |     +-- FRONT-006 (Settings module)
+  |     +-- FRONT-003c (Starlark service)
+  |     |     +-- FRONT-005 (Plugins module)
   |     +-- FRONT-004 (Dashboard module)
   |     +-- FRONT-005 (Plugins module)
   |     +-- FRONT-006 (Settings module)

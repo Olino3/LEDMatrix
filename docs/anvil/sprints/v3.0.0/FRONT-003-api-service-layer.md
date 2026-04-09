@@ -6,7 +6,7 @@
 **Phase:** v3.0.0 — Frontend Modernization
 **Type:** Feat
 **Depends on:** [FRONT-001](FRONT-001-angular-project-scaffold.md)
-**Blocks:** [FRONT-004](FRONT-004-dashboard-module.md), [FRONT-005](FRONT-005-plugins-module.md), [FRONT-006](FRONT-006-settings-module.md), [FRONT-007](FRONT-007-logs-store-modules.md)
+**Blocks:** [FRONT-003a](FRONT-003a-font-service.md), [FRONT-003b](FRONT-003b-wifi-service.md), [FRONT-003c](FRONT-003c-starlark-service.md), [FRONT-004](FRONT-004-dashboard-module.md), [FRONT-005](FRONT-005-plugins-module.md), [FRONT-006](FRONT-006-settings-module.md), [FRONT-007](FRONT-007-logs-store-modules.md)
 
 ---
 
