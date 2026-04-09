@@ -1,0 +1,37 @@
+version: 1
+
+project:
+  name: LEDMatrix
+  default_branch: develop
+  branch_prefix: feature/
+
+components:
+  - name: core
+    language: python
+    source_dir: src/
+    test_dir: test/
+    test_pattern: test/test_{module}.py
+    test_command: >-
+      distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator &&
+      EMULATOR=true .venv/bin/pytest test/ -q --override-ini="addopts=" --ignore=test/plugins'
+    type_check_command: >-
+      distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator &&
+      .venv/bin/mypy src/'
+
+  - name: cli
+    language: python
+    source_dir: scripts/
+    test_dir: test/
+    test_pattern: test/test_matrix_cli*.py
+    test_command: >-
+      distrobox enter debian-trixie -- bash -c 'uv sync --extra test --extra dev --extra emulator &&
+      EMULATOR=true .venv/bin/pytest test/test_matrix_cli*.py -q --override-ini="addopts="'
+
+  - name: frontend
+    language: typescript
+    source_dir: frontend/src/
+    test_dir: frontend/src/
+    test_pattern: "{module}.spec.ts"
+    test_command: cd frontend && npx ng test --watch=false --browsers=ChromeHeadless
+    build_command: cd frontend && npx ng build
+    lint_command: cd frontend && npx ng lint

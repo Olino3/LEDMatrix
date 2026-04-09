@@ -1,0 +1,30 @@
+<div class="app-layout">
+  <app-topbar (toggleSidebar)="toggleSidebar()" />
+
+  @if (isMobile()) {
+    <!-- Mobile: PrimeNG Drawer overlay -->
+    <p-drawer
+      [(visible)]="sidebarVisible"
+      [modal]="true"
+      [showCloseIcon]="true"
+      position="left"
+      styleClass="app-sidebar-drawer"
+    >
+      <ng-template #header>
+        <span class="drawer-title">LEDMatrix</span>
+      </ng-template>
+      <app-sidebar />
+    </p-drawer>
+  } @else {
+    <!-- Desktop: static sidebar -->
+    @if (sidebarVisible()) {
+      <aside class="app-sidebar">
+        <app-sidebar />
+      </aside>
+    }
+  }
+
+  <main class="app-content" [class.sidebar-open]="!isMobile() && sidebarVisible()">
+    <router-outlet />
+  </main>
+</div>

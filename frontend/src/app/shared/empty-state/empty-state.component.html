@@ -1,0 +1,7 @@
+<div class="empty-container">
+  <i [class]="icon() + ' empty-icon'"></i>
+  <p class="empty-message">{{ message() }}</p>
+  @if (actionLabel()) {
+    <p-button [label]="actionLabel()!" (click)="onAction()" severity="secondary" />
+  }
+</div>
